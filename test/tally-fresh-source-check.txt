@@ -1,0 +1,5 @@
+created temporary source: HTTP 201 148910657-9A01322D-7D9D-4DEF-A36A-98FBD4543CE2
+live slot 1:  fresh(slot 1, (PHA), filters 0, connected true) = program  |  NDI PH-B(slot 2) = in-use  |  old NDI PH-A (not in switcher) = program
+live slot 2:  fresh(slot 1, (PHA), filters 0, connected true) = in-use  |  NDI PH-B(slot 2) = program  |  old NDI PH-A (not in switcher) = program
+live slot 1:  fresh(slot 1, (PHA), filters 0, connected true) = program  |  NDI PH-B(slot 2) = in-use  |  old NDI PH-A (not in switcher) = program
+restored: slot 1 = NDI PH-A, temporary source DELETE 204, 0 left

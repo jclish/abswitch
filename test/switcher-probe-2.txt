@@ -1,0 +1,21 @@
+start: slot 1 (out 1) | switcher tally 1=40 2=10 | source A=program B=in-use
+
+== a. Dis_2 ==
+  +   14 ms: slot 1 (out 1) | switcher tally 1=40 2=10 | source A=program B=in-use
+  +   93 ms: slot 1 (out 1) | switcher tally 1=30 2=30 | source A=effect B=effect
+  +  567 ms: slot 2 (out 2) | switcher tally 1=10 2=40 | source A=in-use B=program
+
+== b. Dis_1, then Cut_1 200 ms later ==
+  (back on 1 first: slot 1 (out 1) | switcher tally 1=40 2=10 | source A=program B=in-use)
+  Dis_2 sent at +0, Cut_1 sent at +202 ms
+  +  219 ms: slot 1 (out 1) | switcher tally 1=30 2=30 | source A=effect B=effect
+  +  541 ms: slot 2 (out 2) | switcher tally 1=30 2=30 | source A=effect B=effect
+  +  585 ms: slot 2 (out 2) | switcher tally 1=10 2=40 | source A=in-use B=program
+
+== c. second Cut_1, sent after that dissolve is over ==
+  +   15 ms: slot 1 (out 1) | switcher tally 1=40 2=10 | source A=program B=in-use
+
+== d. WebSocket events for AB Switcher (connect burst ends at 1558 ms; run lasted 8802 ms) ==
+     153 ms (connect burst) layers values-changed {"output-values":{"tvOut_TimeRemaining":-1}}
+  after the connect burst: 0 events
+end: slot 1 (out 1) | switcher tally 1=40 2=10 | source A=program B=in-use

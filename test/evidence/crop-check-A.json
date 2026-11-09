@@ -1,0 +1,30 @@
+[
+ {
+  "zoom": 100,
+  "readback": {
+   "mode": 0,
+   "w": 1920,
+   "h": 1080,
+   "zoom": 100,
+   "result": "1920x1080"
+  },
+  "frameH": 1080,
+  "redRows": "24 rows (0..23)",
+  "clip": "~/Movies/PH-MASTER 2026-11-09 09-12-44.mov",
+  "png": "test/evidence/master-pgm-A-zoom100.png"
+ },
+ {
+  "zoom": 105,
+  "readback": {
+   "mode": 0,
+   "w": 1920,
+   "h": 1080,
+   "zoom": 105,
+   "result": "1920x1080"
+  },
+  "frameH": 1080,
+  "redRows": "none",
+  "clip": "~/Movies/PH-MASTER 2026-11-09 09-12-48.mov",
+  "png": "test/evidence/master-pgm-A-zoom105.png"
+ }
+]

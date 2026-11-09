@@ -1,0 +1,7 @@
+    11ms  slot=1 tally[A=program B=in-use] TALLY[A=live B=off] takectl[pgm=A busy=false err=]
+  1928ms  slot=1 tally[A=program B=in-use] TALLY[A=live B=live] takectl[pgm=B busy=true err=]
+  1979ms  slot=1 tally[A=program B=effect] TALLY[A=live B=live] takectl[pgm=B busy=true err=]
+  2439ms  slot=2 tally[A=program B=effect] TALLY[A=live B=live] takectl[pgm=B busy=true err=]
+  2490ms  slot=2 tally[A=program B=program] TALLY[A=live B=live] takectl[pgm=B busy=true err=]
+  2689ms  slot=2 tally[A=program B=program] TALLY[A=shutdown B=live] takectl[pgm=B busy=false err=]
+  2739ms  slot=2 tally[A=program B=program] TALLY[A=off B=live] takectl[pgm=B busy=false err=]

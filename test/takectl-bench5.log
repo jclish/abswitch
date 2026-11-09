@@ -1,0 +1,8 @@
+20:21:51.105 A="PH-A" B="PH-B" MASTER="PH-MASTER" switcher="AB Switcher" slots A=1 B=2
+20:21:51.106 signals cut={"1":"tvGroup_Control__Cut_1_TypeSignal","2":"tvGroup_Control__Cut_2_TypeSignal","3":"tvGroup_Control__Cut_3_TypeSignal","4":"tvGroup_Control__Cut_4_TypeSignal","5":"tvGroup_Control__Cut_5_TypeSignal","6":"tvGroup_Control__Cut_6_TypeSignal","7":"tvGroup_Control__Cut_7_TypeSignal","8":"tvGroup_Control__Cut_8_TypeSignal"} dis={"1":"tvGroup_Control__Dis_1_TypeSignal","2":"tvGroup_Control__Dis_2_TypeSignal","3":"tvGroup_Control__Dis_3_TypeSignal","4":"tvGroup_Control__Dis_4_TypeSignal","5":"tvGroup_Control__Dis_5_TypeSignal","6":"tvGroup_Control__Dis_6_TypeSignal","7":"tvGroup_Control__Dis_7_TypeSignal","8":"tvGroup_Control__Dis_8_TypeSignal"}
+20:21:51.130 websocket connected ws://localhost:8989/api/v1/socket
+20:21:51.133 takectl listening on http://0.0.0.0:8991  (GET / operator page; /state /take /cut /mirror /panic /resync /pvw/layer-set/<name>)
+20:21:52.249 PGM changed outside takectl (socket): A → B; re-syncing tally
+20:21:54.382 PGM changed outside takectl (socket): B → A; re-syncing tally
+20:21:56.556 PGM changed outside takectl (socket): A → B; re-syncing tally
+20:21:58.154 PGM changed outside takectl (socket): B → A; re-syncing tally

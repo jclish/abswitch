@@ -1,0 +1,16 @@
+
+PH-A
+
+PH-B
+
+PH-MASTER
+  NDI PH-A -> "STUDIO-MAC-MINI.LOCAL (PHA)"
+  NDI PH-B -> "STUDIO-MAC-MINI.LOCAL (PHB)"
+  AB Switcher reports no audio path (volume=null)
+  NDI PH-A: Scale & Transform zoom 105 % (crops the 24-px TALLY bar)
+  NDI PH-B: Scale & Transform zoom 105 % (crops the 24-px TALLY bar)
+
+Shows started: PH-A, PH-B, PH-MASTER.
+Layer Sets: all recorded (PH-A, PH-B).
+
+MANUAL STEPS (0):

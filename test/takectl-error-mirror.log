@@ -1,0 +1,20 @@
+20:18:50.655 A="PH-A" B="PH-B" MASTER="PH-MASTER" switcher="AB Switcher" slots A=1 B=2
+20:18:50.657 signals cut={"1":"tvGroup_Control__Cut_1_TypeSignal","2":"tvGroup_Control__Cut_2_TypeSignal","3":"tvGroup_Control__Cut_3_TypeSignal","4":"tvGroup_Control__Cut_4_TypeSignal","5":"tvGroup_Control__Cut_5_TypeSignal","6":"tvGroup_Control__Cut_6_TypeSignal","7":"tvGroup_Control__Cut_7_TypeSignal","8":"tvGroup_Control__Cut_8_TypeSignal"} dis={"1":"tvGroup_Control__Dis_1_TypeSignal","2":"tvGroup_Control__Dis_2_TypeSignal","3":"tvGroup_Control__Dis_3_TypeSignal","4":"tvGroup_Control__Dis_4_TypeSignal","5":"tvGroup_Control__Dis_5_TypeSignal","6":"tvGroup_Control__Dis_6_TypeSignal","7":"tvGroup_Control__Dis_7_TypeSignal","8":"tvGroup_Control__Dis_8_TypeSignal"}
+20:18:50.677 takectl listening on http://0.0.0.0:8991  (GET / operator page; /state /take /cut /mirror /panic /resync /pvw/layer-set/<name>)
+20:18:50.678 websocket connected ws://localhost:8989/api/v1/socket
+20:18:51.655 REFUSED TAKE → B: B document is not live (show not started)
+20:18:57.298 TAKE → B (slot 2, dissolve)
+20:18:59.682 PANIC: cut to A
+20:18:59.948 PANIC: A confirmed on air (slot 1, codes 40/10) after 1 round(s), 276 ms
+20:19:01.481 REFUSED TAKE → B: B NDI output is not live
+20:19:04.038 CUT → B (slot 2, cut)
+20:19:05.270 PANIC: cut to A
+20:19:05.544 PANIC: A confirmed on air (slot 1, codes 40/10) after 1 round(s), 281 ms
+20:19:07.898 REFUSED TAKE → B: B NDI output is not live
+20:19:10.424 PANIC: cut to A
+20:19:10.688 PANIC: A confirmed on air (slot 1, codes 40/10) after 1 round(s), 271 ms
+20:19:11.726 TAKE → B (slot 2, dissolve)
+20:19:17.320 PGM changed outside takectl (socket): B → A; re-syncing tally
+20:19:18.088 MIRROR: A "Speaker Wide" → B
+20:19:18.107 PANIC: cut to A
+20:19:18.375 PANIC: A confirmed on air (slot 1, codes 40/10) after 1 round(s), 274 ms

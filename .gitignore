@@ -1,0 +1,3 @@
+# Local config (copy of takectl.config.example.json with your hosts); never committed
+takectl.config.json
+.DS_Store

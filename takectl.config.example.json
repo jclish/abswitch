@@ -1,0 +1,29 @@
+{
+  "_comment": "Hosts may be the same Mac (three documents open in one mimoLive) or three Macs. mimoLive advertises itself on the LAN as <machine>.local:8989.",
+
+  "a":      { "host": "http://localhost:8989", "documentName": "PH-A" },
+  "b":      { "host": "http://localhost:8989", "documentName": "PH-B" },
+  "master": {
+    "host": "http://localhost:8989",
+    "documentName": "PH-MASTER",
+    "sourceNameA": "NDI PH-A",
+    "sourceNameB": "NDI PH-B",
+    "slotA": null,
+    "slotB": null
+  },
+
+  "switcherLayerName": "AB Switcher",
+  "tallyLayerName": "TALLY",
+
+  "dissolveMs": 500,
+  "settleMs": 250,
+  "pollMs": 5000,
+  "preflight": true,
+
+  "stateStoreId": "abswitch-state",
+  "apiPasswordSha256": null,
+  "httpTimeoutMs": 3000,
+
+  "port": 8991,
+  "companion": { "host": "http://localhost:8000" }
+}

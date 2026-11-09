@@ -1,0 +1,24 @@
+19:16:39.751 A="PH-A" B="PH-B" MASTER="PH-MASTER" switcher="AB Switcher" slots A=1 B=2
+19:16:39.752 signals cut={"1":"tvGroup_Control__Cut_1_TypeSignal","2":"tvGroup_Control__Cut_2_TypeSignal","3":"tvGroup_Control__Cut_3_TypeSignal","4":"tvGroup_Control__Cut_4_TypeSignal","5":"tvGroup_Control__Cut_5_TypeSignal","6":"tvGroup_Control__Cut_6_TypeSignal","7":"tvGroup_Control__Cut_7_TypeSignal","8":"tvGroup_Control__Cut_8_TypeSignal"} dis={"1":"tvGroup_Control__Dis_1_TypeSignal","2":"tvGroup_Control__Dis_2_TypeSignal","3":"tvGroup_Control__Dis_3_TypeSignal","4":"tvGroup_Control__Dis_4_TypeSignal","5":"tvGroup_Control__Dis_5_TypeSignal","6":"tvGroup_Control__Dis_6_TypeSignal","7":"tvGroup_Control__Dis_7_TypeSignal","8":"tvGroup_Control__Dis_8_TypeSignal"}
+19:16:39.771 takectl listening on http://0.0.0.0:8991  (GET /state /take /cut /mirror /panic /resync)
+19:16:39.772 websocket connected ws://localhost:8989/api/v1/socket
+19:16:39.874 PANIC: cut to A
+19:16:40.138 PANIC: A confirmed on air (switcher slot 1) after 1 cut(s), 269 ms
+19:16:41.679 TAKE → B (slot 2, dissolve)
+19:16:41.701 PANIC: cut to A mid-transition; second cut to A at +948 ms
+19:16:42.911 PANIC: A confirmed on air (switcher slot 1) after 2 cut(s), 1215 ms
+19:16:45.222 TAKE → B (slot 2, dissolve)
+19:16:45.392 PANIC: cut to A mid-transition; second cut to A at +800 ms
+19:16:46.453 PANIC: A confirmed on air (switcher slot 1) after 2 cut(s), 1067 ms
+19:16:48.794 TAKE → B (slot 2, dissolve)
+19:16:49.361 PANIC: cut to A mid-transition; second cut to A at +400 ms
+19:16:50.019 PANIC: A confirmed on air (switcher slot 1) after 2 cut(s), 665 ms
+19:16:52.319 PANIC: cut to A
+19:16:52.340 TAKE → B (slot 2, dissolve)
+19:16:54.851 PANIC: cut to A
+19:16:55.118 PANIC: A confirmed on air (switcher slot 1) after 1 cut(s), 275 ms
+19:16:57.529 PANIC: cut to A
+19:16:57.793 PANIC: A confirmed on air (switcher slot 1) after 1 cut(s), 270 ms
+19:16:57.887 PGM changed outside takectl (socket): A → B; re-syncing tally
+19:16:59.869 PANIC: cut to A
+19:17:00.135 PANIC: A confirmed on air (switcher slot 1) after 1 cut(s), 273 ms

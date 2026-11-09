@@ -1,0 +1,6 @@
+1. B's TALLY after setLive, setOff 15 ms later, then 1.5 s: "shutdown" (attempt 5; pgm=A)
+PASS  1. the stuck state was produced ("shutdown")
+FAIL  2. /take to B: slot 2, pgm B, B's TALLY +5:shutdown → "shutdown", A's TALLY "off" (want slot 2, B live, A off)
+   takectl log: (no repair lines)
+restored: live slot 1, COUNTER {"A":"live","B":"live"}, TALLY A=live B=off
+1 FAIL(S)

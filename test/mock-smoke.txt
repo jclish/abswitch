@@ -1,0 +1,29 @@
+PASS  takectl started against the mock: pgm=A, switcher {"slot":1,"codes":{"A":40,"B":10},"inFlight":false}
+PASS  GET / serves operator.html: HTTP 200, text/html; charset=utf-8, 16535 bytes, identical to the file: true
+PASS  /take → B: mock slot 2, pgm B
+PASS  /take → A: mock slot 1
+PASS  /mirror refused mid-TAKE (busy: a transition is in progress; MIRROR would have to guess which document is PVW) and mid outside dissolve (busy: the switcher is mid-transition; MIRROR would have to guess which document is PVW); allowed once landed: {"ok":true,"layerSet":"Speaker Wide","pvw":"B"}
+PASS  /panic 200 ms into a /take: {"ok":true,"pgm":"A","rounds":2,"ms":1043}, mock slot 1
+PASS  /take and /panic together: take {"ok":false,"error":"TAKE not completed: /panic arrived during preflight; signal not sent"}, panic {"ok":true,"pgm":"A","rounds":1,"ms":261}, mock slot 1
+PASS  /panic 200 ms into a dissolve fired at the mock: {"ok":true,"pgm":"A","rounds":2,"ms":775}, mock slot 1
+takectl log:
+    20:16:19.589 A="PH-A.tvshow" B="PH-B.tvshow" MASTER="PH-MASTER.tvshow" switcher="AB Switcher" slots A=1 B=2
+    20:16:19.590 signals cut={"1":"tvGroup_Control__Cut_1_TypeSignal","2":"tvGroup_Control__Cut_2_TypeSignal"} dis={"1":"tvGroup_Control__Dis_1_TypeSignal","2":"tvGroup_Control__Dis_2_TypeSignal"}
+    20:16:19.601 websocket connected ws://localhost:18989/api/v1/socket
+    20:16:19.603 takectl listening on http://0.0.0.0:18991  (GET / operator page; /state /take /cut /mirror /panic /resync /pvw/layer-set/<name>)
+    20:16:19.758 TAKE → B (slot 2, dissolve)
+    20:16:20.993 TAKE → A (slot 1, dissolve)
+    20:16:22.221 TAKE → B (slot 2, dissolve)
+    20:16:23.942 PGM changed outside takectl (socket): B → A; re-syncing tally
+    20:16:24.613 MIRROR: A "Speaker Wide" → B
+    20:16:24.623 TAKE → B (slot 2, dissolve)
+    20:16:24.835 PANIC: cut to A
+    20:16:25.091 PANIC: round 1 read slot 1, codes 30/30 (in flight: the cut was overridden); cutting to A again in 523 ms
+    20:16:25.875 PANIC: A confirmed on air (slot 1, codes 40/10) after 2 round(s), 1043 ms
+    20:16:26.394 PANIC: cut to A
+    20:16:26.396 TAKE not completed: /panic arrived during preflight; signal not sent
+    20:16:26.653 PANIC: A confirmed on air (slot 1, codes 40/10) after 1 round(s), 261 ms
+    20:16:28.076 PANIC: cut to A
+    20:16:28.341 PANIC: round 1 read slot 1, codes 30/30 (in flight: the cut was overridden); cutting to A again in 250 ms
+    20:16:28.848 PANIC: A confirmed on air (slot 1, codes 40/10) after 2 round(s), 775 ms
+ALL PASS

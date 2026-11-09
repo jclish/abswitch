@@ -1,0 +1,10 @@
+start: shows {"A":"off","B":"off","M":"off"}, pgm A
+FAIL  6a. refused: "B document is not live (show not started)"; lastError set at undefined, age undefined → undefined ms, still set 3 s later (undefined ms)
+FAIL  6b. /take ok → lastError "B document is not live (show not started)" right after the answer (before verify)
+FAIL  6c. B's NDI output off → /take refused, lastError "B NDI output is not live"; output on → /cut ok → lastError "B NDI output is not live"
+PASS  6d. refused again ("B NDI output is not live"), then /panic ok → lastError null
+FAIL  13e. /mirror during takectl's TAKE: "{\"ok\":true,\"layerSet\":\"Speaker Wide\",\"pvw\":\"A\"}"
+FAIL  13f. /mirror 0.8 s into a 4 s outside dissolve (takectl busy=false): "{\"ok\":true,\"layerSet\":\"Speaker Wide\",\"pvw\":\"A\"}"
+PASS  13g. after it lands: /mirror → {"ok":true,"layerSet":"Speaker Wide","pvw":"B"}
+restored: shows {"A":"off","B":"off","M":"off"}, slot 1, transition 0.5 s, TALLY off
+5 FAIL(S)

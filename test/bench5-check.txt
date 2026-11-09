@@ -1,0 +1,10 @@
+start: slot 1, takectl pgm=A
+PASS  outside Cut_2 → B: switcher slot changed at +24 ms, /state pgm + both TALLYs followed at +63 ms (39 ms later; limit 500)
+PASS  outside Dis_1 → A: switcher slot changed at +547 ms, /state pgm + both TALLYs followed at +624 ms (77 ms later; limit 500)
+PASS  outside Dis_2 → B: switcher slot changed at +564 ms, /state pgm + both TALLYs followed at +604 ms (40 ms later; limit 500)
+PASS  outside Cut_1 → A: switcher slot changed at +54 ms, /state pgm + both TALLYs followed at +94 ms (40 ms later; limit 500)
+stopping takectl with pgm=A; datastore pgm=A
+while takectl was down: Dis_2 by hand → slot 2; datastore still pgm=A; TALLY A=live B=off
+PASS  restart: /state pgm=B (switcher slot 2), TALLY A=off B=live, datastore rewritten to pgm=B (want B, off, live, B)
+restored: slot 1, TALLY A=live B=off (datastore left at pgm=B; takectl rewrites it at its next start)
+ALL PASS

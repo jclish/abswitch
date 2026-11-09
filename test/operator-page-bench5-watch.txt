@@ -1,0 +1,15 @@
+Operator page (GET /, loaded at http://192.0.2.10:8991/ in the Claude app's browser pane) sampled
+every 40 ms while test/bench5-check.mjs ran (2026-11-09, UTC times). Bench 5's own results:
+test/bench5-check.txt. Sequence: outside Cut_2, Dis_1, Dis_2, Cut_1; takectl stopped; Dis_2 by hand;
+takectl restarted (comes up B from the switcher); takectl stopped at the end.
+
+    42 ms (19:39:14.013)  conn=ok A=red/PGM B=green/PVW take=on
+  7722 ms (19:39:21.693)  conn=ok A=green/PVW B=red/PGM take=on                    outside Cut_2
+  9241 ms (19:39:23.212)  conn=ok A=red/TRANSITION B=red/TRANSITION take=off       outside Dis_1 in flight
+  9760 ms (19:39:23.731)  conn=ok A=red/PGM B=green/PVW take=on                    landed (519 ms)
+ 11281 ms (19:39:25.252)  conn=ok A=red/TRANSITION B=red/TRANSITION take=off       outside Dis_2 in flight
+ 11801 ms (19:39:25.772)  conn=ok A=green/PVW B=red/PGM take=on                    landed (520 ms)
+ 13560 ms (19:39:27.531)  conn=ok A=red/PGM B=green/PVW take=on                    outside Cut_1
+ 16881 ms (19:39:30.852)  conn=offline A=grey/— B=grey/— take=off                  takectl stopped (>2 s): "takectl unreachable"
+ 17400 ms (19:39:31.371)  conn=ok A=green/PVW B=red/PGM take=on                    takectl restarted: B from the switcher
+ 19922 ms (19:39:33.893)  conn=offline A=grey/— B=grey/— take=off                  takectl stopped at the end of the test

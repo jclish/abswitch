@@ -1,0 +1,8 @@
+PASS  1. agreement: pgm=A, warning=undefined, source tally {"A":"program","B":"in-use"}
+   slot 1 now holds NDI PH-B; source tally {"A":"off","B":"program"}
+FAIL  2. warning raised after null ms: undefined
+FAIL  2. roles not moved by the witness: pgm=B, TALLY A=off B=live (switcher says slot undefined)
+FAIL  2. one WARNING line for the episode after 8126 ms: 0 line(s)
+FAIL  3. slot 1 back to NDI PH-A: warning cleared after 3 ms, log: (none)
+restored: slot 1 = NDI PH-A, live slot 1
+4 FAIL(S)

@@ -1,0 +1,2 @@
+   0.06s  live slot 2 | NDI PH-A=in-use | NDI PH-B=program
+  56.37s  live slot 1 | NDI PH-A=program | NDI PH-B=in-use

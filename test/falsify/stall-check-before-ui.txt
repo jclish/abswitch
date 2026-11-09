@@ -1,0 +1,8 @@
+transition duration 4 s; takectl stall threshold 2000 ms (TAKECTL_STALL_MS); start pgm=A
+  +   12 ms  pgm=A inFlight=undefined warning=null
+  + 4179 ms  pgm=B inFlight=undefined warning=null
+FAIL  warning raised at +undefined ms: undefined (want ≥ 2000 ms, format "transition stalled (N ms)")
+FAIL  no decision while stalled: pgm stayed A in every stalled read
+FAIL  settled at +4179 ms: pgm=B, warning=null; log: 
+restored: transition 0.5 s, live slot 1, TALLY {"A":"live","B":"off"}
+3 FAIL(S)

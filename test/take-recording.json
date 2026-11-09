@@ -1,0 +1,68 @@
+{
+ "clip": "~/Movies/PH-MASTER 2026-11-09 08-45-22.mov",
+ "take": {
+  "ok": true,
+  "pgm": "B",
+  "pvw": "A",
+  "transition": "dissolve",
+  "ms": 500
+ },
+ "stateAfter": {
+  "pgm": "B",
+  "lastError": null,
+  "tally": {
+   "A": "program",
+   "B": "program"
+  }
+ },
+ "takeAfterRecordStartMs": 1532,
+ "counterOffsetAminusB_s": -0.007,
+ "offsetReads": [
+  {
+   "a": "0:00.26",
+   "b": "0:00.30",
+   "aMinusB": -0.04
+  },
+  {
+   "a": "0:00.46",
+   "b": "0:00.46",
+   "aMinusB": 0
+  },
+  {
+   "a": "0:00.63",
+   "b": "0:00.63",
+   "aMinusB": 0
+  },
+  {
+   "a": "0:00.83",
+   "b": "0:00.83",
+   "aMinusB": 0
+  },
+  {
+   "a": "0:01.00",
+   "b": "0:01.00",
+   "aMinusB": 0
+  },
+  {
+   "a": "0:01.16",
+   "b": "0:01.16",
+   "aMinusB": 0
+  }
+ ],
+ "restored": {
+  "shows": {
+   "A": "off",
+   "B": "off",
+   "M": "off"
+  },
+  "counter": {
+   "A": "live",
+   "B": "live"
+  },
+  "tally": {
+   "A": "off",
+   "B": "live"
+  },
+  "slot": 1
+ }
+}

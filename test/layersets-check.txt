@@ -1,0 +1,19 @@
+== PH-A
+  Speaker Wide: {"Cam PiP":"off","Two Shot":"off","Cam Wide":"live","Slides":"off"} = table
+  Two Shot: {"Cam PiP":"off","Two Shot":"live","Cam Wide":"off","Slides":"off"} = table
+  Slides PiP: {"Cam PiP":"live","Two Shot":"off","Cam Wide":"off","Slides":"live"} = table
+  Full Slides: {"Cam PiP":"off","Two Shot":"off","Cam Wide":"off","Slides":"live"} = table
+  recall Two Shot: {"Two Shot":"live","Cam Wide":"off","Cam PiP":"off","Slides":"off"} active=["Two Shot"] TALLY/COUNTER=off/live
+  recall Slides PiP: {"Slides":"live","Cam PiP":"live","Cam Wide":"off","Two Shot":"off"} active=["Slides PiP"] TALLY/COUNTER=off/live
+  recall Full Slides: {"Slides":"live","Cam Wide":"off","Two Shot":"off","Cam PiP":"off"} active=["Full Slides"] TALLY/COUNTER=off/live
+  recall Speaker Wide: {"Cam Wide":"live","Two Shot":"off","Cam PiP":"off","Slides":"off"} active=["Speaker Wide"] TALLY/COUNTER=off/live
+== PH-B
+  Speaker Wide: {"Cam PiP":"off","Two Shot":"off","Cam Wide":"live","Slides":"off"} = table
+  Two Shot: {"Cam PiP":"off","Two Shot":"live","Cam Wide":"off","Slides":"off"} = table
+  Slides PiP: {"Cam PiP":"live","Two Shot":"off","Cam Wide":"off","Slides":"live"} = table
+  Full Slides: {"Cam PiP":"off","Two Shot":"off","Cam Wide":"off","Slides":"live"} = table
+  recall Two Shot: {"Two Shot":"live","Cam Wide":"off","Cam PiP":"off","Slides":"off"} active=["Two Shot"] TALLY/COUNTER=live/live
+  recall Slides PiP: {"Slides":"live","Cam PiP":"live","Cam Wide":"off","Two Shot":"off"} active=["Slides PiP"] TALLY/COUNTER=live/live
+  recall Full Slides: {"Slides":"live","Cam Wide":"off","Two Shot":"off","Cam PiP":"off"} active=["Full Slides"] TALLY/COUNTER=live/live
+  recall Speaker Wide: {"Cam Wide":"live","Two Shot":"off","Cam PiP":"off","Slides":"off"} active=["Speaker Wide"] TALLY/COUNTER=live/live
+ALL PASS

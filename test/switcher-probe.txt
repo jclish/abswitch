@@ -1,0 +1,114 @@
+switcher layer 43E6E8E0-4ED7-4419-AD88-A357FE109D98  (NDI PH-A=148910657-B2AC9F24-8493-4272-9119-CFB70B544DE4, NDI PH-B=148910657-544D6F9F-D5FF-467E-890B-8EB4338EA330)
+before: live slot 1, A=program B=in-use
+after Cut_2: live slot 2, A=in-use B=program
+
+== 1. diff of the switcher layer across one cut (every key that changed) ==
+  input-values.tvGroup_Hidden_Inputs__currentLiveSource: 1  →  2
+  output-values.tvOut_tvIn_VideoSourceAImageTallyState: 40  →  10
+  output-values.tvOut_tvIn_VideoSourceBImageTallyState: 10  →  40
+  output-values.tvSet_tvGroup_Hidden_Inputs__currentLiveSource: 1  →  2
+  (output-values has 55 keys: tvOut_hide_tvGroup_Control__Dis_1_TypeSignal, tvOut_hide_tvGroup_Control__Cut_2_TypeSignal, tvOut_tvIn_VideoSourceBImageTallyState, tvSetSignal_tvGroup_Hidden_Inputs__switchToSource, tvOut_TimeRemaining, tvOut_hide_tvGroup_Control__Dis_2_TypeSignal, tvOut_hide_tvGroup_Control__Cut_3_TypeSignal, tvOut_Done, tvOut_hide_tvIn_VideoSourceFImage, tvOut_hide_tvGroup_Control__Cut_4_TypeSignal, tvOut_hide_tvGroup_Control__Dis_3_TypeSignal, tvOut_hide_tvGroup_Content__Source_Name_1, tvOut_hide_tvGroup_Preview__Label_Size_TypeBoinxY, tvOut_hide_tvGroup_Control__Cut_5_TypeSignal, tvOut_hide_tvGroup_Content__Source_Name_2, tvOut_ControlRepresentations, tvOut_hide_tvGroup_Control__Dis_4_TypeSignal, tvOut_tvIn_VideoSourceGImageTallyState, tvOut_hide_tvGroup_Content__Source_Name_3, tvOut_hide_tvGroup_Control__Cut_6_TypeSignal, tvOut_hide_tvGroup_Control__Dis_5_TypeSignal, tvOut_hide_tvGroup_Content__Source_Name_4, tvOut_tvIn_VideoSourceDImageTallyState, tvOut_hide_tvGroup_Content__Source_Name_5, tvOut_hide_tvIn_VideoSourceHImage, tvOut_hide_tvGroup_Control__Dis_6_TypeSignal, tvOut_hide_tvGroup_Control__Cut_7_TypeSignal, tvOut_hide_tvGroup_Content__Source_Name_6, tvSet_tvGroup_Hidden_Inputs__currentLiveSource, tvOut_hide_tvGroup_Content__Source_Name_7, tvOut_SettingName, tvOut_hide_tvGroup_Control__Cut_8_TypeSignal, tvOut_hide_tvGroup_Control__Dis_7_TypeSignal, tvOut_tvIn_VideoSourceAImageTallyState, tvSetSignal_tvGroup_Hidden_Inputs__currentLiveSource, tvOut_hide_tvGroup_Content__Source_Name_8, tvOut_hide_tvGroup_Control__Dis_8_TypeSignal, tvOut_hide_tvIn_VideoSourceEImage, tvOut_RemoteControl_ShowLayersBelow, tvOut_tvIn_VideoSourceFImageTallyState, tvOut_hide_tvGroup_Backgrounds_Optional__Background_4, tvSet_tvGroup_Hidden_Inputs__switchToSource, tvOut_hide_tvGroup_Backgrounds_Optional__Background_5, tvOut_hide_tvGroup_Backgrounds_Optional__Background_6, tvOut_hide_tvGroup_Backgrounds_Optional__Background_7, tvOut_hide_tvGroup_Backgrounds_Optional__Background_8, tvOut_tvIn_VideoSourceCImageTallyState, tvOut_hide_tvIn_VideoSourceGImage, tvSetSignal_tvGroup_Hidden_Inputs__dissolveToSource, tvSet_tvGroup_Hidden_Inputs__dissolveToSource, tvOut_tvIn_VideoSourceHImageTallyState, tvOut_hide_tvGroup_Control__Cut_1_TypeSignal, tvOut_hide_tvIn_VideoSourceDImage, tvOut_Cursor, tvOut_tvIn_VideoSourceEImageTallyState)
+  description of currentLiveSource: {"uiName":"currentLiveSource","value-min":0,"group-name":"Hidden Inputs","hidden":false,"mimoLiveType":"","type":"index","index":62}
+
+== 2. Dis_1 sampled (slot / tally) ==
+  +   14 ms after Dis_1: slot 2 | A=in-use B=program
+  +   64 ms after Dis_1: slot 2 | A=effect B=effect
+  +  568 ms after Dis_1: slot 1 | A=program B=in-use
+
+== 3. WebSocket events (times relative to Cut_2 / Dis_1) ==
+  before -417    variants values-changed  7FE317FF-D844-4E0D-98D6-B9924A1605B6  keys: layer-id,data,ts
+  before -417    variants values-changed  51D99226-DB35-4F25-8E60-B91EA4858EBB  keys: layer-id,data,ts
+  before -417    layers values-changed  BD6106D4-475D-4F24-B066-2FD8BF3D0B9A  keys: data,ts
+  before -417    variants values-changed  D72B0A81-703C-4C1A-9575-410B1E709300  keys: layer-id,data,ts
+  before -417    variants values-changed  46DB0BFA-E62A-4D3B-935A-8E18EFA59EF9  keys: layer-id,data,ts
+  before -417    variants values-changed  C0B9E8EA-0F92-40EC-A0C2-DD6F7DF7A0B9  keys: layer-id,data,ts
+  before -417    variants values-changed  78FCA1E6-DB15-4BDE-BA32-195BEF8D1989  keys: layer-id,data,ts
+  before -417    layers values-changed  0285711C-7F6E-4768-903C-13F9A94688B9  keys: data,ts
+  before -417    variants values-changed  7864597F-B105-47C6-AB79-015583F37571  keys: layer-id,data,ts
+  before -417    variants values-changed  AD6A6299-2DA8-4565-BA30-563A200278F1  keys: layer-id,data,ts
+  before -417    layers values-changed  975DFF38-76CE-495D-ADFD-616A95E5EB45  keys: data,ts
+  before -417    variants values-changed  4706EF6E-C9C4-4559-990C-9856F0C18864  keys: layer-id,data,ts
+  before -417    layers values-changed  AB Switcher  keys: data,ts
+  before -417    variants values-changed  611A0DFC-E532-437E-9CFE-E7407ACEA4CA  keys: layer-id,data,ts
+  before -356    variants changed  F76B01BC-E874-4051-84F0-EC77D9C51BF1  keys: layer-id,data,ts
+  before -324    variants changed  F76B01BC-E874-4051-84F0-EC77D9C51BF1  keys: layer-id,data,ts
+  before -263    variants changed  A3A201F8-C320-4651-940B-FB0079548D84  keys: layer-id,data,ts
+  before -230    variants changed  A3A201F8-C320-4651-940B-FB0079548D84  keys: layer-id,data,ts
+  before -218    layers values-changed  975DFF38-76CE-495D-ADFD-616A95E5EB45  keys: data,ts
+  before -101    documents changed  148910657  keys: data,ts
+  before -24     layers values-changed  975DFF38-76CE-495D-ADFD-616A95E5EB45  keys: data,ts
+  before -23     variants changed  F76B01BC-E874-4051-84F0-EC77D9C51BF1  keys: layer-id,data,ts
+  Cut_2 +18      variants changed  611A0DFC-E532-437E-9CFE-E7407ACEA4CA  keys: layer-id,data,ts
+  Cut_2 +18      sources changed  NDI PH-B  keys: data,ts
+  Cut_2 +19      sources changed  NDI PH-A  keys: data,ts
+  Cut_2 +68      documents changed  784926277  keys: data,ts
+  Cut_2 +71      variants changed  A3A201F8-C320-4651-940B-FB0079548D84  keys: layer-id,data,ts
+  Cut_2 +103     variants changed  A3A201F8-C320-4651-940B-FB0079548D84  keys: layer-id,data,ts
+  Cut_2 +176     layers values-changed  975DFF38-76CE-495D-ADFD-616A95E5EB45  keys: data,ts
+  Cut_2 +252     documents changed  702635873  keys: data,ts
+  Cut_2 +278     variants changed  F76B01BC-E874-4051-84F0-EC77D9C51BF1  keys: layer-id,data,ts
+  Cut_2 +310     variants changed  F76B01BC-E874-4051-84F0-EC77D9C51BF1  keys: layer-id,data,ts
+  Cut_2 +326     variants changed  611A0DFC-E532-437E-9CFE-E7407ACEA4CA  keys: layer-id,data,ts
+  Cut_2 +379     layers values-changed  975DFF38-76CE-495D-ADFD-616A95E5EB45  keys: data,ts
+  Cut_2 +403     variants changed  A3A201F8-C320-4651-940B-FB0079548D84  keys: layer-id,data,ts
+  Cut_2 +436     variants changed  A3A201F8-C320-4651-940B-FB0079548D84  keys: layer-id,data,ts
+  Cut_2 +584     layers values-changed  975DFF38-76CE-495D-ADFD-616A95E5EB45  keys: data,ts
+  Cut_2 +611     variants changed  F76B01BC-E874-4051-84F0-EC77D9C51BF1  keys: layer-id,data,ts
+  Cut_2 +643     variants changed  F76B01BC-E874-4051-84F0-EC77D9C51BF1  keys: layer-id,data,ts
+  Cut_2 +737     variants changed  A3A201F8-C320-4651-940B-FB0079548D84  keys: layer-id,data,ts
+  Cut_2 +770     variants changed  A3A201F8-C320-4651-940B-FB0079548D84  keys: layer-id,data,ts
+  Cut_2 +782     layers values-changed  975DFF38-76CE-495D-ADFD-616A95E5EB45  keys: data,ts
+  Cut_2 +899     documents changed  148910657  keys: data,ts
+  Cut_2 +944     variants changed  F76B01BC-E874-4051-84F0-EC77D9C51BF1  keys: layer-id,data,ts
+  Cut_2 +977     variants changed  F76B01BC-E874-4051-84F0-EC77D9C51BF1  keys: layer-id,data,ts
+  Cut_2 +977     layers values-changed  975DFF38-76CE-495D-ADFD-616A95E5EB45  keys: data,ts
+  Dis_1 +40      documents changed  784926277  keys: data,ts
+  Dis_1 +43      variants changed  A3A201F8-C320-4651-940B-FB0079548D84  keys: layer-id,data,ts
+  Dis_1 +58      variants changed  611A0DFC-E532-437E-9CFE-E7407ACEA4CA  keys: layer-id,data,ts
+  Dis_1 +58      sources changed  NDI PH-A  keys: data,ts
+  Dis_1 +59      sources changed  NDI PH-B  keys: data,ts
+  Dis_1 +150     layers values-changed  975DFF38-76CE-495D-ADFD-616A95E5EB45  keys: data,ts
+  Dis_1 +225     documents changed  702635873  keys: data,ts
+  Dis_1 +251     variants changed  F76B01BC-E874-4051-84F0-EC77D9C51BF1  keys: layer-id,data,ts
+  Dis_1 +283     variants changed  F76B01BC-E874-4051-84F0-EC77D9C51BF1  keys: layer-id,data,ts
+  Dis_1 +344     variants changed  A3A201F8-C320-4651-940B-FB0079548D84  keys: layer-id,data,ts
+  Dis_1 +356     layers values-changed  975DFF38-76CE-495D-ADFD-616A95E5EB45  keys: data,ts
+  Dis_1 +376     variants changed  A3A201F8-C320-4651-940B-FB0079548D84  keys: layer-id,data,ts
+  Dis_1 +525     variants changed  611A0DFC-E532-437E-9CFE-E7407ACEA4CA  keys: layer-id,data,ts
+  Dis_1 +555     layers values-changed  975DFF38-76CE-495D-ADFD-616A95E5EB45  keys: data,ts
+  Dis_1 +557     sources changed  NDI PH-A  keys: data,ts
+  Dis_1 +559     sources changed  NDI PH-B  keys: data,ts
+  Dis_1 +583     variants changed  F76B01BC-E874-4051-84F0-EC77D9C51BF1  keys: layer-id,data,ts
+  Dis_1 +677     variants changed  A3A201F8-C320-4651-940B-FB0079548D84  keys: layer-id,data,ts
+  Dis_1 +709     variants changed  A3A201F8-C320-4651-940B-FB0079548D84  keys: layer-id,data,ts
+  Dis_1 +755     layers values-changed  975DFF38-76CE-495D-ADFD-616A95E5EB45  keys: data,ts
+  Dis_1 +827     variants changed  611A0DFC-E532-437E-9CFE-E7407ACEA4CA  keys: layer-id,data,ts
+  Dis_1 +871     documents changed  148910657  keys: data,ts
+  Dis_1 +883     variants changed  F76B01BC-E874-4051-84F0-EC77D9C51BF1  keys: layer-id,data,ts
+  Dis_1 +955     layers values-changed  975DFF38-76CE-495D-ADFD-616A95E5EB45  keys: data,ts
+  Dis_1 +1011    variants changed  A3A201F8-C320-4651-940B-FB0079548D84  keys: layer-id,data,ts
+  Dis_1 +1041    documents changed  784926277  keys: data,ts
+  Dis_1 +1043    variants changed  A3A201F8-C320-4651-940B-FB0079548D84  keys: layer-id,data,ts
+  Dis_1 +1150    layers values-changed  975DFF38-76CE-495D-ADFD-616A95E5EB45  keys: data,ts
+  Dis_1 +1184    variants changed  F76B01BC-E874-4051-84F0-EC77D9C51BF1  keys: layer-id,data,ts
+  Dis_1 +1216    variants changed  F76B01BC-E874-4051-84F0-EC77D9C51BF1  keys: layer-id,data,ts
+  Dis_1 +1225    documents changed  702635873  keys: data,ts
+  Dis_1 +1343    variants changed  A3A201F8-C320-4651-940B-FB0079548D84  keys: layer-id,data,ts
+  Dis_1 +1355    layers values-changed  975DFF38-76CE-495D-ADFD-616A95E5EB45  keys: data,ts
+  Dis_1 +1376    variants changed  A3A201F8-C320-4651-940B-FB0079548D84  keys: layer-id,data,ts
+  Dis_1 +1517    variants changed  F76B01BC-E874-4051-84F0-EC77D9C51BF1  keys: layer-id,data,ts
+  Dis_1 +1550    variants changed  F76B01BC-E874-4051-84F0-EC77D9C51BF1  keys: layer-id,data,ts
+  Dis_1 +1550    layers values-changed  975DFF38-76CE-495D-ADFD-616A95E5EB45  keys: data,ts
+  Dis_1 +1676    variants changed  A3A201F8-C320-4651-940B-FB0079548D84  keys: layer-id,data,ts
+  Dis_1 +1755    layers values-changed  975DFF38-76CE-495D-ADFD-616A95E5EB45  keys: data,ts
+  Dis_1 +1851    variants changed  F76B01BC-E874-4051-84F0-EC77D9C51BF1  keys: layer-id,data,ts
+  Dis_1 +1872    documents changed  148910657  keys: data,ts
+  Dis_1 +1884    variants changed  F76B01BC-E874-4051-84F0-EC77D9C51BF1  keys: layer-id,data,ts
+  Dis_1 +1957    layers values-changed  975DFF38-76CE-495D-ADFD-616A95E5EB45  keys: data,ts
+  Dis_1 +1977    variants changed  A3A201F8-C320-4651-940B-FB0079548D84  keys: layer-id,data,ts
+  Dis_1 +2009    variants changed  A3A201F8-C320-4651-940B-FB0079548D84  keys: layer-id,data,ts
+  Dis_1 +2040    documents changed  784926277  keys: data,ts
+  Dis_1 +2149    layers values-changed  975DFF38-76CE-495D-ADFD-616A95E5EB45  keys: data,ts
+  Dis_1 +2184    variants changed  F76B01BC-E874-4051-84F0-EC77D9C51BF1  keys: layer-id,data,ts
+
+sample switcher event: {"id":"43E6E8E0-4ED7-4419-AD88-A357FE109D98","data":{"output-values":{"tvOut_TimeRemaining":-1}},"ts":1794249943374,"type":"layers","event":"values-changed","document-id":"148910657"}

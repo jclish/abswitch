@@ -1,0 +1,74 @@
+{
+  "pgm": "A",
+  "pvw": "B",
+  "busy": false,
+  "switcher": {
+    "slot": 1,
+    "codes": {
+      "A": 40,
+      "B": 10
+    },
+    "inFlight": false
+  },
+  "tally": {
+    "A": "program",
+    "B": "in-use"
+  },
+  "warning": null,
+  "lastTake": null,
+  "lastError": null,
+  "layerSets": [],
+  "docs": {
+    "A": {
+      "id": "702635873",
+      "name": "PH-A",
+      "host": "http://localhost:8989",
+      "live": "live",
+      "ndi": "live",
+      "tallyLayer": true
+    },
+    "B": {
+      "id": "784926277",
+      "name": "PH-B",
+      "host": "http://localhost:8989",
+      "live": "live",
+      "ndi": "live",
+      "tallyLayer": true
+    },
+    "MASTER": {
+      "id": "148910657",
+      "name": "PH-MASTER",
+      "host": "http://localhost:8989",
+      "switcher": "AB Switcher",
+      "slotA": "1",
+      "slotB": "2"
+    }
+  },
+  "events": [],
+  "signals": {
+    "cut": {
+      "1": "tvGroup_Control__Cut_1_TypeSignal",
+      "2": "tvGroup_Control__Cut_2_TypeSignal",
+      "3": "tvGroup_Control__Cut_3_TypeSignal",
+      "4": "tvGroup_Control__Cut_4_TypeSignal",
+      "5": "tvGroup_Control__Cut_5_TypeSignal",
+      "6": "tvGroup_Control__Cut_6_TypeSignal",
+      "7": "tvGroup_Control__Cut_7_TypeSignal",
+      "8": "tvGroup_Control__Cut_8_TypeSignal"
+    },
+    "dis": {
+      "1": "tvGroup_Control__Dis_1_TypeSignal",
+      "2": "tvGroup_Control__Dis_2_TypeSignal",
+      "3": "tvGroup_Control__Dis_3_TypeSignal",
+      "4": "tvGroup_Control__Dis_4_TypeSignal",
+      "5": "tvGroup_Control__Dis_5_TypeSignal",
+      "6": "tvGroup_Control__Dis_6_TypeSignal",
+      "7": "tvGroup_Control__Dis_7_TypeSignal",
+      "8": "tvGroup_Control__Dis_8_TypeSignal"
+    }
+  }
+}
+
+PROBLEMS:
+ - A has a live "COUNTER" layer (bench stopwatch) — it would go to air; switch it off or delete it in "PH-A"
+ - B has a live "COUNTER" layer (bench stopwatch) — it would go to air; switch it off or delete it in "PH-B"

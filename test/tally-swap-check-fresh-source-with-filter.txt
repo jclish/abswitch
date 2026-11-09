@@ -1,0 +1,10 @@
+-- 1. as built
+   live slot 2:  NDI PH-A [slot 1, sender (PHA), connected true] = program  |  NDI PH-B [slot 2, sender (PHB), connected true] = program
+   live slot 1:  NDI PH-A [slot 1, sender (PHA), connected true] = program  |  NDI PH-B [slot 2, sender (PHB), connected true] = in-use
+-- 2. senders swapped (source objects and their filters stay in place)
+   live slot 2:  NDI PH-A [slot 1, sender (PHB), connected true] = program  |  NDI PH-B [slot 2, sender (PHA), connected true] = program
+   live slot 1:  NDI PH-A [slot 1, sender (PHB), connected true] = program  |  NDI PH-B [slot 2, sender (PHA), connected true] = in-use
+-- 3. switcher slots swapped
+   live slot 2:  NDI PH-A [slot 2, sender (PHA), connected true] = program  |  NDI PH-B [slot 1, sender (PHB), connected true] = in-use
+   live slot 1:  NDI PH-A [slot 2, sender (PHA), connected true] = program  |  NDI PH-B [slot 1, sender (PHB), connected true] = program
+-- restored: NDI PH-A [slot 1, sender (PHA), connected true] = program  |  NDI PH-B [slot 2, sender (PHB), connected true] = in-use

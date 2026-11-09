@@ -1,0 +1,25 @@
+20:20:37.394 A="PH-A" B="PH-B" MASTER="PH-MASTER" switcher="AB Switcher" slots A=1 B=2
+20:20:37.395 signals cut={"1":"tvGroup_Control__Cut_1_TypeSignal","2":"tvGroup_Control__Cut_2_TypeSignal","3":"tvGroup_Control__Cut_3_TypeSignal","4":"tvGroup_Control__Cut_4_TypeSignal","5":"tvGroup_Control__Cut_5_TypeSignal","6":"tvGroup_Control__Cut_6_TypeSignal","7":"tvGroup_Control__Cut_7_TypeSignal","8":"tvGroup_Control__Cut_8_TypeSignal"} dis={"1":"tvGroup_Control__Dis_1_TypeSignal","2":"tvGroup_Control__Dis_2_TypeSignal","3":"tvGroup_Control__Dis_3_TypeSignal","4":"tvGroup_Control__Dis_4_TypeSignal","5":"tvGroup_Control__Dis_5_TypeSignal","6":"tvGroup_Control__Dis_6_TypeSignal","7":"tvGroup_Control__Dis_7_TypeSignal","8":"tvGroup_Control__Dis_8_TypeSignal"}
+20:20:37.421 takectl listening on http://0.0.0.0:8991  (GET / operator page; /state /take /cut /mirror /panic /resync /pvw/layer-set/<name>)
+20:20:37.424 websocket connected ws://localhost:8989/api/v1/socket
+20:20:37.508 PANIC: cut to A
+20:20:37.774 PANIC: A confirmed on air (slot 1, codes 40/10) after 1 round(s), 273 ms
+20:20:39.310 TAKE → B (slot 2, dissolve)
+20:20:39.334 PANIC: cut to A
+20:20:39.601 PANIC: round 1 read slot 1, codes 30/30 (in flight: the cut was overridden); cutting to A again in 677 ms
+20:20:40.144 [B] TALLY reads "shutdown" while off is wanted; repairing
+20:20:40.544 PANIC: A confirmed on air (slot 1, codes 40/10) after 2 round(s), 1215 ms
+20:20:40.852 [B] TALLY after repair: "off"
+20:20:42.851 TAKE → B (slot 2, dissolve)
+20:20:43.025 PANIC: cut to A
+20:20:43.288 PANIC: round 1 read slot 1, codes 30/30 (in flight: the cut was overridden); cutting to A again in 533 ms
+20:20:44.086 PANIC: A confirmed on air (slot 1, codes 40/10) after 2 round(s), 1067 ms
+20:20:46.416 TAKE → B (slot 2, dissolve)
+20:20:46.994 PANIC: cut to A
+20:20:47.281 PANIC: A confirmed on air (slot 1, codes 40/10) after 1 round(s), 298 ms
+20:20:49.929 PANIC: cut to A
+20:20:49.945 TAKE not completed: /panic arrived during preflight; signal not sent
+20:20:50.205 PANIC: A confirmed on air (slot 1, codes 40/10) after 1 round(s), 287 ms
+20:20:53.697 PANIC: cut to A
+20:20:53.964 PANIC: round 1 read slot 1, codes 30/30 (in flight: the cut was overridden); cutting to A again in 250 ms
+20:20:54.479 PANIC: A confirmed on air (slot 1, codes 40/10) after 2 round(s), 792 ms

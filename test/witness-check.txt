@@ -1,0 +1,9 @@
+PASS  1. agreement: pgm=A, warning=null, source tally {"A":"program","B":"in-use"}
+   slot 1 now holds NDI PH-B; source tally {"A":"off","B":"program"}
+PASS  2. warning raised after 420 ms: "source tally disagrees with switcher (A=off, B=program, slot=1)"
+PASS  2. roles not moved by the witness: pgm=A, TALLY A=live B=off (switcher says slot 1)
+PASS  2. one WARNING line for the episode after 6523 ms: 1 line(s)
+      20:21:44.125 WARNING source tally disagrees with switcher (A=off, B=program, slot=1); switcher per-slot codes in the same read A=40 B=10 (40 program, 30 effect, 10 in-use); disagreeing since 2026-11-09T20:21:43.814Z
+PASS  3. slot 1 back to NDI PH-A: warning cleared after 107 ms, log: 20:21:50.353 source tally agrees with switcher again (A=program, B=in-use, slot=1)
+restored: slot 1 = NDI PH-A, live slot 1, TALLY {"A":"live","B":"off"}
+ALL PASS

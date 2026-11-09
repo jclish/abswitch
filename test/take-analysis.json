@@ -1,0 +1,128 @@
+{
+ "clip": "test/evidence/take/take-A-to-B.mov (copy of ~/Movies/PH-MASTER 2026-11-09 08-45-22.mov)",
+ "fps": 30,
+ "frames": 119,
+ "dissolve": {
+  "firstFrame": 45,
+  "lastFrame": 58,
+  "frames": 14,
+  "ms": 467,
+  "midpointFrame": 51,
+  "midpointMix": 0.47,
+  "monotonic": true,
+  "contiguous": true,
+  "mixPerFrame": [
+   0.06,
+   0.13,
+   0.2,
+   0.26,
+   0.33,
+   0.4,
+   0.47,
+   0.54,
+   0.6,
+   0.67,
+   0.73,
+   0.8,
+   0.87,
+   0.94
+  ]
+ },
+ "tallyEdge": {
+  "worstOverClip": {
+   "bandDiff": 2.93,
+   "edge": 0.5
+  },
+  "duringDissolve": [
+   {
+    "n": 45,
+    "mix": 0.06,
+    "bandDiff": 0,
+    "edge": 0
+   },
+   {
+    "n": 46,
+    "mix": 0.13,
+    "bandDiff": 0,
+    "edge": 0
+   },
+   {
+    "n": 47,
+    "mix": 0.2,
+    "bandDiff": 0,
+    "edge": 0
+   },
+   {
+    "n": 48,
+    "mix": 0.26,
+    "bandDiff": 0,
+    "edge": 0
+   },
+   {
+    "n": 49,
+    "mix": 0.33,
+    "bandDiff": 0,
+    "edge": 0
+   },
+   {
+    "n": 50,
+    "mix": 0.4,
+    "bandDiff": 0,
+    "edge": 0
+   },
+   {
+    "n": 51,
+    "mix": 0.47,
+    "bandDiff": 0,
+    "edge": 0
+   },
+   {
+    "n": 52,
+    "mix": 0.54,
+    "bandDiff": 0,
+    "edge": 0
+   },
+   {
+    "n": 53,
+    "mix": 0.6,
+    "bandDiff": 0,
+    "edge": 0
+   },
+   {
+    "n": 54,
+    "mix": 0.67,
+    "bandDiff": 0,
+    "edge": 0
+   },
+   {
+    "n": 55,
+    "mix": 0.73,
+    "bandDiff": 0,
+    "edge": 0
+   },
+   {
+    "n": 56,
+    "mix": 0.8,
+    "bandDiff": 0,
+    "edge": 0
+   },
+   {
+    "n": 57,
+    "mix": 0.87,
+    "bandDiff": 0,
+    "edge": 0
+   },
+   {
+    "n": 58,
+    "mix": 0.94,
+    "bandDiff": 0,
+    "edge": 0
+   }
+  ],
+  "control_uncropped_png": {
+   "bandDiff": 98.49,
+   "edge": 72.4
+  }
+ },
+ "blackStarts": 0
+}

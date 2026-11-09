@@ -1,0 +1,10 @@
+start: shows {"A":"off","B":"off","M":"off"}, pgm A
+PASS  6a. refused: "B document is not live (show not started)"; lastError set at 2026-11-09T20:18:51.655Z, age 3 → 1205 ms, still set 3 s later (3011 ms)
+PASS  6b. /take ok → lastError null right after the answer (before verify)
+PASS  6c. B's NDI output off → /take refused, lastError "B NDI output is not live"; output on → /cut ok → lastError null
+PASS  6d. refused again ("B NDI output is not live"), then /panic ok → lastError null
+PASS  13e. /mirror during takectl's TAKE: "busy: a transition is in progress; MIRROR would have to guess which do"
+PASS  13f. /mirror 0.8 s into a 4 s outside dissolve (takectl busy=false): "busy: the switcher is mid-transition; MIRROR would have to guess which"
+PASS  13g. after it lands: /mirror → {"ok":true,"layerSet":"Speaker Wide","pvw":"B"}
+restored: shows {"A":"off","B":"off","M":"off"}, slot 1, transition 0.5 s, TALLY off
+ALL PASS

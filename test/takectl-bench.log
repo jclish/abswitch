@@ -1,0 +1,16 @@
+01:36:42.948 A="PH-A" B="PH-B" MASTER="PH-MASTER" switcher="AB Switcher" slots A=1 B=2
+01:36:42.953 signals cut={"1":"tvGroup_Control__Cut_1_TypeSignal","2":"tvGroup_Control__Cut_2_TypeSignal","3":"tvGroup_Control__Cut_3_TypeSignal","4":"tvGroup_Control__Cut_4_TypeSignal","5":"tvGroup_Control__Cut_5_TypeSignal","6":"tvGroup_Control__Cut_6_TypeSignal","7":"tvGroup_Control__Cut_7_TypeSignal","8":"tvGroup_Control__Cut_8_TypeSignal"} dis={"1":"tvGroup_Control__Dis_1_TypeSignal","2":"tvGroup_Control__Dis_2_TypeSignal","3":"tvGroup_Control__Dis_3_TypeSignal","4":"tvGroup_Control__Dis_4_TypeSignal","5":"tvGroup_Control__Dis_5_TypeSignal","6":"tvGroup_Control__Dis_6_TypeSignal","7":"tvGroup_Control__Dis_7_TypeSignal","8":"tvGroup_Control__Dis_8_TypeSignal"}
+01:36:42.972 takectl listening on http://0.0.0.0:8991  (GET /state /take /cut /mirror /panic /resync)
+01:36:42.973 websocket connected ws://localhost:8989/api/v1/socket
+01:36:51.272 REFUSED CUT → B: B document is not live (show not started)
+01:36:54.331 REFUSED CUT → B: B document is not live (show not started)
+01:36:57.395 REFUSED TAKE → B: B document is not live (show not started)
+01:37:00.456 REFUSED TAKE → B: B document is not live (show not started)
+01:37:51.699 CUT → B (slot 2, cut)
+01:37:54.751 CUT → A (slot 1, cut)
+01:37:57.799 TAKE → B (slot 2, dissolve)
+01:38:00.857 TAKE → A (slot 1, dissolve)
+01:38:25.138 TAKE → B (slot 2, dissolve)
+01:38:28.742 PGM changed outside takectl (socket): B → A; re-syncing tally
+01:38:31.740 PGM changed outside takectl (socket): A → B; re-syncing tally
+01:38:35.807 PGM changed outside takectl (socket): B → A; re-syncing tally

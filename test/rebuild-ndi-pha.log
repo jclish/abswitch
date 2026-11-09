@@ -1,0 +1,21 @@
+
+PH-A
+  - removed 8 auto-created placeholder sources
+
+PH-B
+  - removed 8 auto-created placeholder sources
+
+PH-MASTER
+  + source NDI PH-A (deviceVideoSource)
+  NDI PH-A -> "STUDIO-MAC-MINI.LOCAL (PHA)"
+  NDI PH-B -> "STUDIO-MAC-MINI.LOCAL (PHB)"
+  AB Switcher reports no audio path (volume=null)
+  - removed 8 auto-created placeholder sources
+  NDI PH-B: Scale & Transform zoom 105 % (crops the 24-px TALLY bar)
+
+Shows started: PH-A, PH-B, PH-MASTER.
+Layer Sets exist by name but are EMPTY — the API cannot record their contents.
+
+MANUAL STEPS (2):
+  1. In PH-MASTER, add a "Scale & Transform" filter to source "NDI PH-A" and set Width 1920, Height 1080, Zoom 105 (or add it with any settings and re-run this script, which sets them).
+  2. In PH-A and PH-B, record each Layer Set with TALLY and COUNTER NOT AFFECTED (not recorded as off) and the other four layers explicitly on or off: Speaker Wide = Cam Wide on; Two Shot = Two Shot on; Slides PiP = Slides + Cam PiP on; Full Slides = Slides on; every other content layer off.

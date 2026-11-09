@@ -1,0 +1,36 @@
+page http://192.0.2.10:8991/ in Chrome/157.0.8103.38 (headless, throwaway profile)
+{
+  "conn": "ok",
+  "tiles": [
+    {
+      "tile": "A",
+      "border": "red",
+      "role": "PGM",
+      "feed": "ok",
+      "picture": "960x540",
+      "src": "http://192.0.2.10:8989/api/v1/documents/702635873/programOut?format=mjpeg&fps=10&width=960"
+    },
+    {
+      "tile": "B",
+      "border": "green",
+      "role": "PVW",
+      "feed": "ok",
+      "picture": "960x540",
+      "src": "http://192.0.2.10:8989/api/v1/documents/784926277/programOut?format=mjpeg&fps=10&width=960"
+    }
+  ],
+  "layerSetButtons": [
+    "Speaker Wide",
+    "Two Shot",
+    "Slides PiP",
+    "Full Slides"
+  ],
+  "status": {
+    "roles": "PGM A  ·  PVW B",
+    "last": "TAKE → A · dissolve 500 ms · 11:52:19 AM",
+    "warning": "none",
+    "error": "none"
+  }
+}
+PASS  both program-out pictures decode inside the page (A 960x540, B 960x540)
+screenshot: ~/abswitch/operator-page.png

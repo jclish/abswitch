@@ -1,0 +1,27 @@
+Operator page controls, checked 2026-11-09 in the Claude app's browser pane, page loaded at
+http://192.0.2.10:8991/ (the Mac's LAN address, as an iPad would reach it), takectl running,
+COUNTER live in A and B (so takectl refuses TAKE and CUT: good for the toast).
+
+Keyboard (real key presses, computer tool):
+  Space  -> GET /take; refused; toast (28 px, 6 s): 'A has a live "COUNTER" layer (bench stopwatch) — it would go
+            to air; switch it off or delete it in "PH-A"; B has a live "COUNTER" layer …'; ERROR line shows the same
+  C      -> GET /cut; refused; same toast
+  M      -> GET /mirror (intercepted in the page so B was not changed)
+  P, Enter, and keys on a focused PANIC button -> no request (no key can panic)
+
+PANIC arming (pointer events, touch; /panic intercepted in the page):
+  one tap                        -> no request; label "TAP AGAIN TO PANIC"; back to "PANIC" after 1 s
+  two taps 400 ms apart          -> one /panic
+  two taps 1.3 s apart           -> no request (each tap re-arms)
+  hold 800 ms                    -> one /panic, fired at 715 ms (before release)
+  hold 400 ms                    -> no request; counts as one tap (armed)
+
+Layer Set row (real click, no intercept), PGM A / PVW B:
+  click "Two Shot" -> GET /pvw/layer-set/Two%20Shot; toast "Two Shot → B"
+    PH-A: TALLY+COUNTER+Cam Wide -> TALLY+COUNTER+Cam Wide   (unchanged; on air, red)
+    PH-B: COUNTER+Cam Wide       -> COUNTER+Two Shot          (changed; the green tile); active set "Two Shot"
+  B's layers were then put back by hand.
+
+Pictures: the browser pane refuses a page's sub-requests to a second origin (mimoLive :8989 from the
+page on :8991), even a plain fetch; the same MJPEG URL opened as its own tab plays. So the pictures
+were checked in headless Chrome instead: test/operator-page-chrome.txt (both 960x540, PASS).

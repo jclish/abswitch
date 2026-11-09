@@ -1,0 +1,16 @@
+19:48:24.623 A="PH-A" B="PH-B" MASTER="PH-MASTER" switcher="AB Switcher" slots A=1 B=2
+19:48:24.624 signals cut={"1":"tvGroup_Control__Cut_1_TypeSignal","2":"tvGroup_Control__Cut_2_TypeSignal","3":"tvGroup_Control__Cut_3_TypeSignal","4":"tvGroup_Control__Cut_4_TypeSignal","5":"tvGroup_Control__Cut_5_TypeSignal","6":"tvGroup_Control__Cut_6_TypeSignal","7":"tvGroup_Control__Cut_7_TypeSignal","8":"tvGroup_Control__Cut_8_TypeSignal"} dis={"1":"tvGroup_Control__Dis_1_TypeSignal","2":"tvGroup_Control__Dis_2_TypeSignal","3":"tvGroup_Control__Dis_3_TypeSignal","4":"tvGroup_Control__Dis_4_TypeSignal","5":"tvGroup_Control__Dis_5_TypeSignal","6":"tvGroup_Control__Dis_6_TypeSignal","7":"tvGroup_Control__Dis_7_TypeSignal","8":"tvGroup_Control__Dis_8_TypeSignal"}
+19:48:24.643 websocket connected ws://localhost:8989/api/v1/socket
+19:48:24.647 takectl listening on http://0.0.0.0:8991  (GET / operator page; /state /take /cut /mirror /panic /resync /pvw/layer-set/<name>)
+19:48:24.788 REFUSED TAKE → B: A has a live "COUNTER" layer (bench stopwatch) — it would go to air; switch it off or delete it in "PH-A"; B has a live "COUNTER" layer (bench stopwatch) — it would go to air; switch it off or delete it in "PH-B"
+19:48:27.181 TAKE → B (slot 2, dissolve)
+19:48:29.744 TAKE → A (slot 1, dissolve)
+19:48:32.298 CUT → B (slot 2, cut)
+19:48:34.354 CUT → A (slot 1, cut)
+19:48:36.408 TAKE → B (slot 2, dissolve)
+19:48:37.059 PANIC: cut to A
+19:48:37.323 PANIC: A confirmed on air (slot 1, codes 40/10) after 1 round(s), 274 ms
+19:48:41.168 TAKE → B (slot 2, dissolve)
+19:48:41.343 PANIC: cut to A
+19:48:41.611 PANIC: round 1 read slot 1, codes 30/30 (in flight: the cut was overridden); cutting to A again in 527 ms
+19:48:42.405 PANIC: A confirmed on air (slot 1, codes 40/10) after 2 round(s), 1068 ms

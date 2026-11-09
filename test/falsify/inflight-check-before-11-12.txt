@@ -1,0 +1,8 @@
+switcher transition duration 0.5 s → 2 s (takectl config still dissolveMs 500)
+   +1.3 s, verify() done, dissolve still running: switcher {"slot":1,"codes":{"A":30,"B":30}}, pgm=B, lastError="verify failed: expected B on air, switcher live slot 1 (still mid-transition after 3 retries)", TALLY A=off B=live
+FAIL  V. verify() at its last retry still saw 30/30 and decided nothing (lastError "verify failed: expected B on air, switcher live slot 1 (still mid-transition after 3 retries)")
+FAIL  V. the next settled read decided: pgm=B, slot 2, TALLY A=off B=live, lastError="verify failed: expected B on air, switcher live slot 1 (still mid-transition after 3 retries)"; log: 19:17:04.974 verify failed: expected B on air, switcher live slot 1 (still mid-transition after 3 retries)
+switcher transition duration → 4 s
+FAIL  D. doctor 200 ms into a 4 s dissolve (ran 1820 ms): pgm null, no mid-transition line (doctor-mid-transition.txt)
+restored: transition 0.5 s, live slot 1, COUNTER {"A":"live","B":"live"}, TALLY {"A":"off","B":"off"}
+3 FAIL(S)

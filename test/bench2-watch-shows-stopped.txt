@@ -1,0 +1,2 @@
+    11ms  slot=1 tally[A=program B=in-use] TALLY[A=live B=off] takectl[pgm=A busy=false err=]
+  1440ms  slot=1 tally[A=program B=in-use] TALLY[A=live B=off] takectl[pgm=A busy=false err=B document is not live (show not started)]

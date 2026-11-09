@@ -1,0 +1,4 @@
+on program: NDI PH-A
+clip: ~/Movies/PH-MASTER 2026-11-08 17-36-19.mov
+counter region mean abs diff over 2 s: 2.58 (threshold 1.0)
+PASS: the on-program composition kept updating in MASTER

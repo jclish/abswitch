@@ -1,0 +1,16 @@
+PASS  doctor with COUNTER live exits 1 and names COUNTER (doctor-counter-live.txt)
+PASS  /take with COUNTER live refused: "A has a live \"COUNTER\" layer (bench stopwatch) — it would go to air; switch it off or delete it in \"PH-A\"; B has a live \"COUNTER\" layer (bench stopwatch) — it would go to air; switch it off or delete it in \"PH-B\""
+PASS  MASTER live slot unchanged by the refused take (slot 1)
+PASS  doctor with COUNTER off exits 0 (doctor-real.txt)
+requests (ms from first request; the watcher's clock starts ~700 ms earlier):
+     0ms  /take -> {"ok":true,"pgm":"B","pvw":"A","transition":"dissolve","ms":500}
+  2555ms  /take -> {"ok":true,"pgm":"A","pvw":"B","transition":"dissolve","ms":500}
+  5110ms  /cut -> {"ok":true,"pgm":"B","pvw":"A","transition":"cut","ms":0}
+  7163ms  /cut -> {"ok":true,"pgm":"A","pvw":"B","transition":"cut","ms":0}
+  9220ms  /take -> {"ok":true,"pgm":"B","pvw":"A","transition":"dissolve","ms":500}
+  9898ms  /panic -> {"ok":true,"pgm":"A","rounds":1,"ms":274}
+PASS  after /take + /panic at 620 ms: MASTER slot=1, pgm=A, TALLY A=live B=off (want 1, A, live, off)
+PASS  stale verify() did not act: lastError=null
+FINDING  /panic 150 ms into a dissolve to B: MASTER slot=1 (1 = A), takectl pgm=A, tally={"A":"program","B":"in-use"}
+restored: slot 1, COUNTER {"A":"live","B":"live"}, TALLY {"A":"live","B":"off"}, shows {"A":"live","B":"live","M":"live"}
+ALL PASS

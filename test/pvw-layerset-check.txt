@@ -1,0 +1,7 @@
+start: pgm=A pvw=B; layer sets offered: ["Speaker Wide","Two Shot","Slides PiP","Full Slides"]
+PASS  1. PGM A: Two Shot → {"ok":true,"layerSet":"Two Shot","pvw":"B","document":"PH-B"}; A Cam Wide → Cam Wide (unchanged), B Cam Wide → Two Shot, B active set "Two Shot"
+PASS  2. unknown name refused: "no Layer Set named \"Nope\" in B (\"PH-B\")"; nothing changed: true
+PASS  3. during a TAKE: "a transition is in progress; wait for it to land"; nothing changed: true
+PASS  4. PGM B: Two Shot → {"ok":true,"layerSet":"Two Shot","pvw":"A","document":"PH-A"}; B Two Shot → Two Shot (unchanged, on air), A Cam Wide → Two Shot
+restored: live slot 1, every layer in A and B as before: true
+ALL PASS

@@ -1,0 +1,57 @@
+-- /take, then /panic 0 ms after the /take request
+    /take returned at +53 ms: {"ok":true,"pgm":"B","pvw":"A","transition":"dissolve","ms":500}
+    /panic sent at +54 ms, returned at +1272 ms: {"ok":true,"pgm":"A","cuts":2,"ms":1215}
+    +    7 ms  slot 1 codes 40/10 | takectl pgm=A busy=false
+    +   45 ms  slot 1 codes 40/10 | takectl pgm=A busy=true
+    +  121 ms  slot 1 codes 30/30 | takectl pgm=A busy=true
+    +  581 ms  slot 2 codes 30/30 | takectl pgm=A busy=true
+    +  621 ms  slot 2 codes 10/40 | takectl pgm=A busy=true
+    + 1045 ms  slot 1 codes 40/10 | takectl pgm=A busy=true
+    + 1279 ms  slot 1 codes 40/10 | takectl pgm=A busy=false
+PASS  /take, then /panic 0 ms after the /take request: MASTER slot=1 codes 40/10, takectl pgm=A, TALLY A=live B=off, lastError=null (want slot 1, pgm A, TALLY A live / B off, no error, /panic ok)
+-- /take, then /panic 200 ms after the /take request
+    /take returned at +55 ms: {"ok":true,"pgm":"B","pvw":"A","transition":"dissolve","ms":500}
+    /panic sent at +200 ms, returned at +1271 ms: {"ok":true,"pgm":"A","cuts":2,"ms":1067}
+    +    7 ms  slot 1 codes 40/10 | takectl pgm=A busy=false
+    +   44 ms  slot 1 codes 40/10 | takectl pgm=A busy=true
+    +   82 ms  slot 1 codes 40/10 | takectl pgm=B busy=true
+    +  120 ms  slot 1 codes 30/30 | takectl pgm=B busy=true
+    +  237 ms  slot 1 codes 30/30 | takectl pgm=A busy=true
+    +  575 ms  slot 2 codes 30/30 | takectl pgm=A busy=true
+    +  615 ms  slot 2 codes 10/40 | takectl pgm=A busy=true
+    + 1043 ms  slot 1 codes 40/10 | takectl pgm=A busy=true
+    + 1272 ms  slot 1 codes 40/10 | takectl pgm=A busy=false
+PASS  /take, then /panic 200 ms after the /take request: MASTER slot=1 codes 40/10, takectl pgm=A, TALLY A=live B=off, lastError=null (want slot 1, pgm A, TALLY A live / B off, no error, /panic ok)
+-- /take, then /panic 600 ms after the /take request
+    /take returned at +61 ms: {"ok":true,"pgm":"B","pvw":"A","transition":"dissolve","ms":500}
+    /panic sent at +601 ms, returned at +1269 ms: {"ok":true,"pgm":"A","cuts":2,"ms":665}
+    +    8 ms  slot 1 codes 40/10 | takectl pgm=A busy=false
+    +   84 ms  slot 1 codes 40/10 | takectl pgm=B busy=true
+    +  122 ms  slot 1 codes 30/30 | takectl pgm=B busy=true
+    +  576 ms  slot 2 codes 30/30 | takectl pgm=B busy=true
+    +  613 ms  slot 2 codes 10/40 | takectl pgm=B busy=true
+    +  651 ms  slot 1 codes 40/10 | takectl pgm=A busy=true
+    + 1265 ms  slot 1 codes 40/10 | takectl pgm=A busy=false
+PASS  /take, then /panic 600 ms after the /take request: MASTER slot=1 codes 40/10, takectl pgm=A, TALLY A=live B=off, lastError=null (want slot 1, pgm A, TALLY A live / B off, no error, /panic ok)
+-- 11: /take and /panic sent together (/take not yet answered)
+    /take returned at +1 ms: {"ok":true,"pgm":"B","pvw":"A","transition":"dissolve","ms":500}
+    /panic sent at +2 ms, returned at +291 ms: {"ok":true,"pgm":"A","superseded":true}
+    +    7 ms  slot 1 codes 40/10 | takectl pgm=A busy=false
+    +   44 ms  slot 1 codes 40/10 | takectl pgm=A busy=true
+    +   83 ms  slot 1 codes 40/10 | takectl pgm=B busy=true
+    +  122 ms  slot 1 codes 30/30 | takectl pgm=B busy=true
+    +  585 ms  slot 2 codes 30/30 | takectl pgm=B busy=true
+    +  623 ms  slot 2 codes 10/40 | takectl pgm=B busy=true
+    +  775 ms  slot 2 codes 10/40 | takectl pgm=B busy=false
+FAIL  11: /take and /panic sent together (/take not yet answered): MASTER slot=2 codes 10/40, takectl pgm=B, TALLY A=off B=live, lastError=null (want slot 1, pgm A, TALLY A live / B off, no error, /panic ok, /take refused)
+-- 12: Dis_2 fired outside takectl, /panic 200 ms later
+    /take (outside): {"outside":"Dis_2 fired at MASTER directly"}
+    /panic sent at +201 ms, returned at +473 ms: {"ok":true,"pgm":"A","cuts":1,"ms":270}
+    +    7 ms  slot 1 codes 40/10 | takectl pgm=A busy=false
+    +   82 ms  slot 1 codes 30/30 | takectl pgm=A busy=false
+    +  532 ms  slot 2 codes 30/30 | takectl pgm=A busy=false
+    +  572 ms  slot 2 codes 10/40 | takectl pgm=A busy=false
+    +  609 ms  slot 2 codes 10/40 | takectl pgm=B busy=false
+FAIL  12: Dis_2 fired outside takectl, /panic 200 ms later: MASTER slot=2 codes 10/40, takectl pgm=B, TALLY A=off B=live, lastError=null (want slot 1, pgm A, TALLY A live / B off, no error, /panic ok)
+restored: slot 1, COUNTER {"A":"live","B":"live"}, TALLY {"A":"off","B":"off"}
+2 FAIL(S)
