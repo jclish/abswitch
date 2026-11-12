@@ -286,7 +286,8 @@ place when the state changes.
 - **Header:** lamps for A live, B live, MASTER and the doctor (each opens `/doctor`). **WATCH PGM**
   (see [Working live](#working-live)). **REC** and **STREAM** light when MASTER's File Recording or Live
   Streaming output is running. They are display only, and hidden when MASTER has no such output. A
-  one-line status reads ready, in transition, fade to black, or SAFE ON AIR. **⛶** goes full screen.
+  one-line status reads ready, in transition, fade to black, or SAFE ON AIR. **⛶** goes full screen. **?** opens the user's guide on clish.com in a new tab, so
+  the panel stays put; it is left out at 1150 px wide and below, where the header has no room.
 - **Monitors:** Program on the left in red, Preview on the right in green. They never swap sides;
   only the document letter in the header changes, and each header shows that document's look. Each
   picture is exactly 16:9, with no bars beside it: on a wide, short screen the monitors are no wider than

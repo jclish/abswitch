@@ -56,6 +56,8 @@
   #status[data-kind="warn"] { color: var(--warn); } #status[data-kind="red"] { color: #fff; background: var(--red); border-color: var(--red-hi); }
   #status[data-kind="safe"] { color: #04140a; background: var(--green-hi); border-color: var(--green-hi); }
   #fs { flex: none; font-size: 0.75rem; padding: 0 0.7rem; }
+  /* the user's guide on clish.com, in a new tab: the panel itself never navigates away */
+  #guide { justify-content: center; min-width: var(--hit); background: var(--key); border-radius: 0.55rem; font-size: 0.75rem; letter-spacing: .04em; padding: 0 0.7rem; }
 
   /* ---- monitors + readout */
   /* Each monitor's picture is exactly 16:9 (no bars beside it): where its height is capped (--monh), the monitor
@@ -190,7 +192,7 @@
   #panic .txt { position: relative; } #panic small { display: block; font: 800 0.6rem/1.2 var(--sans); letter-spacing: .1em; margin-top: 0.2rem; }
 
   /* ---- view-only (/?view=monitor): monitors, header, readout and look lamps; nothing to press */
-  body[data-view="monitor"] .trans, body[data-view="monitor"] .steps, body[data-view="monitor"] .util, body[data-view="monitor"] .rbtns, body[data-view="monitor"] #fs, body[data-view="monitor"] #watchPgm { display: none; }
+  body[data-view="monitor"] .trans, body[data-view="monitor"] .steps, body[data-view="monitor"] .util, body[data-view="monitor"] .rbtns, body[data-view="monitor"] #fs, body[data-view="monitor"] #guide, body[data-view="monitor"] #watchPgm { display: none; }
   body[data-view="monitor"] .bottom { grid-template-columns: 1fr; }
   body[data-view="monitor"] .looks { grid-template-rows: auto auto minmax(0, 1fr); }
   body[data-view="monitor"] .top { --monh: 46vh; }
@@ -208,6 +210,7 @@
   /* Up to 1150 px (an iPad mini in landscape is 1133): the downstream keys get a row of their own, so the five
      utility keys are wide enough for their reasons (round 4: at 1133 "no Program look" was cut in SAFE). */
   @media (max-width: 1150px) {
+    #guide { display: none; } /* no room in the header at 1133 (iPad mini) and 1024: the guide is a desk read, not a show control */
     .util { grid-template-columns: repeat(5, minmax(0, 1fr)); } .util > span { display: none; } .util > .dsk { grid-column: 1 / -1; order: -1; } .util > button { font-size: 0.75rem; }
     .dsk { grid-template-columns: auto 1fr; align-items: center; } .dsk .row { flex-wrap: nowrap; }
   }
@@ -246,6 +249,7 @@
     <span class="lamp out" id="lampRec" hidden title="MASTER's File Recording output (display only)"><i></i>REC</span>
     <span class="lamp out" id="lampStream" hidden title="MASTER's Live Streaming output (display only)"><i></i>STREAM</span>
     <span id="status">connecting…</span>
+    <a class="lamp" id="guide" href="https://clish.com/abswitch-guide.html" target="_blank" rel="noopener" title="User's guide (clish.com, opens in a new tab)" aria-label="User's guide">?</a>
     <button id="fs" title="Full screen">⛶<span class="lbl"> Full screen</span></button>
   </header>
 

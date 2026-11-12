@@ -1284,6 +1284,30 @@ was ruled, the chip on the picture at its corner.
 matched); only page reads ran in that time, after the state runs and the screenshots. The bench is back as
 Jourdan left it: A on air with Speaker Wide, B on Full Slides, takectl stopped.
 
+## After v0.2.0, 2026-11-12: the user's guide link (unreleased)
+
+The pen drafted a TD user's guide; it is built as `abswitch-guide.html` for clish.com and linked from the
+panel's header, the site page and the tools entry. Only the panel's part lives in this repository.
+
+**Decisions made at the keyboard, flagged:**
+- **[ROUTE]** None. **[CONFIG]** None. **[AIR]** None.
+- **A "?" key in the header**, between the status line and ⛶, opens `https://clish.com/abswitch-guide.html`
+  in a new tab (`target="_blank"`), so the panel itself never navigates away mid-show. On the iPad's Home
+  Screen it opens in Safari.
+- **"?" alone, at every size.** With a "GUIDE" label at 1440 it cut the status line to "READY · tally witness
+  ag…"; without it the status line is whole again.
+- **Left out at 1150 px wide and below** (an iPad mini, a 1024 iPad): the header has no room. With it there,
+  ⛶ was pushed 44 px off the right edge at 1133 and 1024. The guide is a desk read, not a show control.
+- **Left out in view-only mode**, like ⛶ and WATCH PGM.
+- **It needs internet** on the device that opens it; nothing about the guide is served by takectl.
+
+**Tested** (real app): `panel-chrome --states` at 1440×900, 1180×820, 1133×744 and 1024×768, and view-only:
+all pass, no key moved, nothing cut off, the status line whole at 1440. `mock-smoke`, `round3-offline-check`
+and `round4-offline-check`: 8, 23 and 37, all pass.
+
+**Fixed in the test:** the look-key check measured the steps strip even in view-only mode, where it is hidden
+(a false "look keys run into the steps strip"); it now skips hidden rows.
+
 ## Next
 
 **v0.2.1:** when a key's hooks text does not fit whole beside the count, show a small hook marker instead of
