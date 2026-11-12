@@ -1,0 +1,23 @@
+start: slot 1 codes A-H 40/10/10/10/10/10/10/10
+Cut_4 
+  94 ms slot 9 codes A-H 10/10/10/10/10/10/10/10
+Cut_1 
+  14 ms slot 9 codes A-H 10/10/10/10/10/10/10/10
+  73 ms slot 1 codes A-H 40/10/10/10/10/10/10/10
+Dis_4 
+  24 ms slot 1 codes A-H 40/10/10/10/10/10/10/10
+  83 ms slot 1 codes A-H 30/10/10/10/10/10/10/10
+  550 ms slot 9 codes A-H 10/10/10/10/10/10/10/10
+Dis_1 
+  12 ms slot 9 codes A-H 10/10/10/10/10/10/10/10
+  130 ms slot 9 codes A-H 30/10/10/10/10/10/10/10
+  541 ms slot 1 codes A-H 30/10/10/10/10/10/10/10
+  599 ms slot 1 codes A-H 40/10/10/10/10/10/10/10
+Dis_3 
+  14 ms slot 1 codes A-H 40/10/10/10/10/10/10/10
+  73 ms slot 1 codes A-H 30/10/30/10/10/10/10/10
+  542 ms slot 3 codes A-H 10/10/40/10/10/10/10/10
+Cut_1 
+  13 ms slot 3 codes A-H 10/10/40/10/10/10/10/10
+  72 ms slot 1 codes A-H 40/10/10/10/10/10/10/10
+end: slot 1 codes A-H 40/10/10/10/10/10/10/10 shows restored {"PH-MASTER":"off","PH-A":"off","PH-B":"off"}

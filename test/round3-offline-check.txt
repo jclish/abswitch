@@ -1,0 +1,24 @@
+PASS  C1. STINGER selected (from the config), CUT → cut; STINGER untouched; post-hook ran: 16:MASTER cut 2 | 19:PH-B TALLY setLive | 283:PH-A TALLY setOff | 289:PH-B Lower Third setLive
+PASS  C2. UNDO of that CUT → cut, no stinger: 16:MASTER cut 1 | 18:PH-A TALLY setLive | 279:PH-B TALLY setOff
+PASS  C3. TAKE with STINGER selected still uses it → stinger
+PASS  R1. /rate?s=1.5 → switcher reads 1.5; TAKE timed 1560 ms (1.5 s + 60), progress bar total 1560 ms
+PASS  R2. duration changed in "mimoLive" to 2 s: the next TAKE read it → 2060 ms
+PASS  R3. clamped: 9 → 5 s, 0 → 0.1 s
+PASS  M. selector: STINGER → stinger, MIX → mix, "wipe" → "mode must be mix or stinger"
+PASS  F/D1. mid-transition FTB on, DSK Bug on → FTB live, Bug live; PANIC to SAFE leaves FTB live; in SAFE: FTB off, Clock on → live
+PASS  F/D2. not logged (history: ["take","panic"]); /state.dsk [{"label":"Clock","on":true},{"label":"Bug","on":true}]
+PASS  F/D3. unknown label → "no downstream key \"Nope\" (MASTER layers named \"DSK <label>\" above the switcher: Clock, Bug)"; warning "\"DSK Low\" is below the switcher, so not a downstream key"
+PASS  T1. 5 looks recalled in Preview (names ["../../evil","a/b","c\\d","..","Slides PiP"]): thumbs/ holds 6 files, all hashed (+ index.json); nothing new outside it
+PASS  T2. /thumb/<name> serves each look's own still: [["../../evil",200,"../../evil"],["a/b",200,"a/b"],["c\\d",200,"c\\d"],["..",200,".."],["Slides PiP",200,"Slides PiP"]]
+PASS  T3. paths and odd names never reach a file: [["..%2F..%2Ftakectl.config.json",404],["..%2Ftakectl.config.json",404],["%2E%2E%2Findex.json",404],["index.json",404],["constructor",404],["__proto__",404],["?name=../takectl.config.json",404],["?name=../../takectl.config.json",404],["?name=index.json",404],["?name=toString",404]]
+PASS  T4. Start Over → "ok"; thumbs/ left with 0 files
+PASS  S1. 10 Layer Sets → warning "10 Layer Sets: the keys show the first 8 (A's order)"
+PASS  S2. tie → every tied look is NEXT: {"from":"Speaker Wide","left":4,"events":8,"follow":{"Slides PiP":2,"Two Shot":2},"top":["Slides PiP","Two Shot"]}
+PASS  S3. on air for: "Speaker Wide" since 187 ms
+PASS  S4. REC lamp: live → true, off → false; no streaming output → null
+PASS  S5. B's show stopped → /state.docs.B.live "off" after 929 ms
+PASS  S6. LAST in SAFE: "PANIC: SAFE on air. Next TAKE goes to document B"
+PASS  P1. STALE: at rest ["","",""]; B's show stopped → Preview ["","1","PH-B.tvshow: show not running"]; started → ["","",""]; MASTER's stills stalled → Program ["1","",""]; resumed → ["","",""]
+PASS  P2. key "1" → Preview recall of slot 1: 10:PH-B recall Speaker Wide; selected key "Speaker Wide"
+PASS  P3. /?view=monitor: 0 buttons; Space and "2" sent nothing: (no commands)
+ALL PASS

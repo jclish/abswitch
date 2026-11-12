@@ -1,0 +1,36 @@
+panel-chrome's NEXT and count checks (ruling 2026-11-12: only the slot number on the picture; the count in the
+band, right-aligned; the word NEXT beside the name only where it fits whole), on the real mimoLive 7.0b3, with
+--selftest, at 1440x900 and 1180x820. The fixed build passes the same runs (panel-chrome-next-final-*.txt).
+
+before = the build before the change (count and NEXT on the picture's top-right);
+always = the fixed build with the fit test removed (NEXT always shown);
+never  = the fixed build with NEXT never shown.
+With the bench's look names the word never fits at any of the four sizes, so "never" passes the rest-state
+checks: only the selftest (a short name put on the NEXT key) catches it.
+
+== before: page http://localhost:8994/ at 1440×900 @1x in Chrome/157.0.8103.51
+   FAIL  look keys: 8 keys, all 97x110, picture 93x52 (16:9, 4 with a thumbnail, fitted, never cropped), name band underneath, slot number on the picture, keys not stretched: Speaker Wide: ×1 sits on the picture; Two Shot: ×3 sits on the picture; Two Shot: NEXT sits on the picture; Two Shot: NEXT shown where it does not fit beside the name; Full Slides: ×1 sits on the picture
+   1 FAIL(S)
+
+== before: page http://localhost:8994/ at 1180×820 @2x in Chrome/157.0.8103.51
+   FAIL  look keys: 8 keys, all 64x83, picture 60x34 (16:9, 4 with a thumbnail, fitted, never cropped), name band underneath, slot number on the picture, keys not stretched: Speaker Wide: ×1 sits on the picture; Two Shot: ×3 sits on the picture; Two Shot: NEXT sits on the picture; Two Shot: NEXT shown where it does not fit beside the name; Full Slides: ×1 sits on the picture
+   1 FAIL(S)
+
+== always: page http://localhost:8995/ at 1440×900 @1x in Chrome/157.0.8103.51
+   FAIL  look keys: 8 keys, all 97x110, picture 93x52 (16:9, 4 with a thumbnail, fitted, never cropped), name band underneath, slot number on the picture, keys not stretched: Two Shot: NEXT shown where it does not fit beside the name; Two Shot: NEXT over the name
+   FAIL  selftest: NEXT shows whole beside a short name ("Cam": true) and is dropped beside a long one (false)
+   2 FAIL(S)
+
+== always: page http://localhost:8995/ at 1180×820 @2x in Chrome/157.0.8103.51
+   FAIL  look keys: 8 keys, all 64x83, picture 60x34 (16:9, 4 with a thumbnail, fitted, never cropped), name band underneath, slot number on the picture, keys not stretched: Two Shot: NEXT shown where it does not fit beside the name; Two Shot: NEXT over the name
+   FAIL  selftest: NEXT shows whole beside a short name ("Cam": true) and is dropped beside a long one (false)
+   2 FAIL(S)
+
+== never: page http://localhost:8996/ at 1440×900 @1x in Chrome/157.0.8103.51
+   FAIL  selftest: NEXT shows whole beside a short name ("Cam": false) and is dropped beside a long one (true)
+   1 FAIL(S)
+
+== never: page http://localhost:8996/ at 1180×820 @2x in Chrome/157.0.8103.51
+   FAIL  selftest: NEXT shows whole beside a short name ("Cam": false) and is dropped beside a long one (true)
+   1 FAIL(S)
+

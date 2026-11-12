@@ -1,0 +1,7 @@
+picture-path delay: 58, 89, 89, 90 ms → median 89 ms; frame interval ~39 ms
+stinger colour (mid-hold) rgb(25, 28, 39)
+coverage by frame (ms after "on", less the delay): -286:0% -246:0% -208:0% -168:0% -129:0% -91:0% -51:0% -12:0% 26:13% 66:28% 107:41% 144:51% 183:63% 224:72% 262:84% 299:91% 340:94% 378:97% 416:100% 457:100% 496:100% 534:100% 573:100% 612:100% 652:100% 691:100% 729:100% 767:100% 807:100%
+coverage after "off": -81:100% -43:100% -5:100% 33:97% 71:94% 110:91% 148:78% 188:72% 226:63% 266:51% 305:41% 343:28% 383:0% 422:0% 463:0% 500:0% 539:0% 580:0%
+fully covered from ~416 ms after "on" until ~-5 ms after "off"
+→ stingerCoverMs = 500 (cover-in + 2 frames), stingerOffMs = 120 (3 frames after the commit)
+written to takectl.config.json

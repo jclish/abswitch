@@ -1,0 +1,15 @@
+FAIL  setup: takectl running (pgm A), safe source undefined in slot undefined
+FAIL  P0. PANIC 0 ms after TAKE → {"ok":true,"pgm":"A","rounds":1,"ms":277}; slots seen 7:1; TALLY live/off; target B; take → "TAKE not completed: /panic arrived during preflight; signal not sent"
+FAIL  P200. PANIC 200 ms after TAKE → {"ok":true,"pgm":"A","rounds":2,"ms":1106}; slots seen 6:1 601:2 1094:1; TALLY live/off; target B; take → "dissolve"
+FAIL  P600. PANIC 600 ms after TAKE → {"ok":true,"pgm":"A","rounds":1,"ms":272}; slots seen 11:1 607:2 672:1; TALLY live/off; target B; take → "dissolve"
+FAIL  P-stinger. PANIC 200 ms into a stinger TAKE: take → "TAKE not completed: /panic arrived under the stinger; signal not sent"; slots seen 7:1 (B never live); STINGER off; target B
+FAIL  P-outside. PANIC 200 ms into a dissolve to B started outside takectl → {"ok":true,"rounds":2,"ms":789}; slots seen 9:1 524:2 758:1
+FAIL  T. TAKE out of SAFE → A: dissolve; slot 2; pgm B; TALLY off/live; UNDO null
+FAIL  T. CUT out of SAFE → B: cut; slot 2; pgm B; TALLY off/live; UNDO null
+FAIL  T. CUT out of SAFE → A: cut; slot 2; pgm B; TALLY off/live; UNDO null
+FAIL  T. TAKE out of SAFE → B: dissolve; slot 2; pgm B; TALLY off/live; UNDO null
+FAIL  O. Cut_3 outside → undefined, target undefined, TALLY live/off; Cut_4 (empty) → undefined slot undefined, warning undefined; PUSH → undefined; TAKE → A (slot 9)
+FAIL  A. PANIC with SAFE on air → {"ok":true,"rounds":1,"ms":271}; slots seen 6:1
+PASS  N. no safe source, B on air: PANIC → {"ok":true,"pgm":"A","rounds":1}; slot 1
+restored: slot 1, TALLY off/off, shows {"PH-A":"live","PH-B":"live","PH-MASTER":"live"}
+12 FAIL(S)

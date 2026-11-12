@@ -1,0 +1,26 @@
+1. STILLS (document A's program out)
+   format=jpeg              → HTTP 200, image/jpeg, 51744 bytes, 17 ms
+   format=jpeg&width=320    → HTTP 200, image/jpeg, 4852 bytes, 9 ms
+   format=png&width=320     → HTTP 200, image/png, 7348 bytes, 7 ms
+   format=image             → HTTP 409, application/vnd.api+json; charset=utf8, 172 bytes, 2 ms
+
+2. VIDEO SWITCHER: duration / transition inputs
+   tvIn_TransitionDuration = 0.5  (uiName "Duration", type number, min 0, max 5)
+   wrote 0.25 s → reads 0.25; dissolve 1→2: in flight from 69 ms, settled on slot 2 at 335 ms; 2→1: settled at 356 ms
+   wrote 1 s → reads 1; dissolve 1→2: in flight from 70 ms, settled on slot 2 at 1067 ms; 2→1: settled at 1060 ms
+   wrote 2 s → reads 2; dissolve 1→2: in flight from 71 ms, settled on slot 2 at 2079 ms; 2→1: settled at 2063 ms
+   wrote 6 s → reads 6; dissolve 1→2: in flight from 67 ms, settled on slot 2 at 5042 ms; 2→1: settled at 5069 ms
+   wrote 0.5 s → reads 0.5; dissolve 1→2: in flight from 72 ms, settled on slot 2 at 550 ms; 2→1: settled at 571 ms
+
+3. FTB (MASTER's program out, mean brightness 0–255, frames at 30 fps)
+   FTB setLive → state "live"; brightness after "on": 29:147 67:147 107:147 147:147 187:147 226:128 264:118 303:108 343:98 385:89 424:78 463:60 502:49 540:39 579:29 618:20 655:10 696:0 734:0 773:0 811:0 848:0 888:0 927:0 965:0
+   Cut_2 under FTB → slot 2; brightness meanwhile: 2:0 41:0 84:0 123:0 162:0 201:0 239:0 277:0 316:0 355:0 394:0 432:0 474:0 512:0 551:0 589:0
+   FTB setOff → state "off"; brightness after "off" (B now): 30:0 66:0 105:0 142:0 182:0 221:4 260:9 299:18 338:21 376:26 416:30 455:35 492:40 532:44 571:52 609:56 656:61 688:65 726:65 765:65 804:65 843:65 882:65 921:65 961:65 999:65
+
+4. MASTER LAYERS, top first (index 0 = top)
+    0  FTB              com.boinx.boinxtv.layer.simplebox  off
+    1  STINGER          com.boinx.boinxtv.layer.simplebox  off
+    2  Program Audio    com.boinx.boinxtv.layer.audioonly  live
+    3  AB Switcher      com.boinx.boinxtv.layer.videoswitcher  live
+
+left: duration 0.5 s, FTB off, slot 1

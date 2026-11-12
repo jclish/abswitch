@@ -1,0 +1,38 @@
+switcher "AB Switcher": Source Count = 1 (["9 Sources","4 Sources"])
+slot 3 as found: tvIn_VideoSourceCImage=null, tvIn_VideoSourceCName="None", tally key tvOut_tvIn_VideoSourceCImageTallyState=10
+signals: Cut_3 exists, Dis_3 exists
+source "SAFE Test Pattern": type com.boinx.boinxtv.layer.videooutputtest, Test Image = 0 (["Philips PM5544","SMPTE Color Bars","Screen Dimensions","Alpha Channel Test"]), video-device-connected undefined, tally off
+slot 3 ← source: PUT → 200; read back tvIn_VideoSourceCImage="148910657-20EE32D5-D9ED-4CDD-9234-FFE1A6DB8402", name "SAFE Test Pattern"
+
+cut 1 → 3 (Cut_3):
+    16 ms  slot 3  codes A/B/C 10/10/40  tally in-use/in-use/program
+  websocket: 10 ms A in-use, 10 ms SAFE program
+
+cut 3 → 1 (Cut_1):
+    14 ms  slot 3  codes A/B/C 10/10/40  tally in-use/in-use/program
+    80 ms  slot 1  codes A/B/C 40/10/10  tally program/in-use/in-use
+  websocket: 40 ms A program, 40 ms SAFE in-use
+
+dissolve 1 → 3 (Dis_3):
+    15 ms  slot 1  codes A/B/C 40/10/10  tally program/in-use/in-use
+    86 ms  slot 1  codes A/B/C 30/10/30  tally effect/in-use/effect
+   569 ms  slot 3  codes A/B/C 10/10/40  tally in-use/in-use/program
+  websocket: 65 ms A effect, 65 ms SAFE effect, 563 ms A in-use, 564 ms SAFE program
+
+dissolve 3 → 1 (Dis_1):
+    15 ms  slot 3  codes A/B/C 10/10/40  tally in-use/in-use/program
+    81 ms  slot 3  codes A/B/C 30/10/30  tally effect/in-use/effect
+   567 ms  slot 1  codes A/B/C 40/10/10  tally program/in-use/in-use
+  websocket: 64 ms A effect, 64 ms SAFE effect, 562 ms A program, 563 ms SAFE in-use
+
+cut 2 → 3 (Cut_3):
+    16 ms  slot 2  codes A/B/C 10/40/10  tally in-use/in-use/program
+    84 ms  slot 3  codes A/B/C 10/10/40  tally in-use/in-use/program
+  websocket: 15 ms B in-use, 16 ms SAFE program
+
+cut 3 → 1 (Cut_1):
+    13 ms  slot 3  codes A/B/C 10/10/40  tally in-use/in-use/program
+    82 ms  slot 1  codes A/B/C 40/10/10  tally program/in-use/in-use
+  websocket: 30 ms A program, 30 ms SAFE in-use
+
+left: MASTER on slot 1; slot 3 holds "SAFE Test Pattern" (unsaved); shows as found {"PH-A":"off","PH-B":"off","PH-MASTER":"off"}

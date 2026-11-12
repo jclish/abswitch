@@ -1,0 +1,13 @@
+PASS  S1. no config: / → 302 /setup, /state ready=false mode=setup, /take → 503 "not set up yet: open /setup"
+PASS  S2. /setup page 200; documents on the mock: ["PH-A.tvshow","PH-B.tvshow","PH-MASTER.tvshow"]
+PASS  S3. suggestions: {"sourceNameA":"NDI PH-A","sourceNameB":"NDI PH-B","switcherLayerName":"AB Switcher","sourceNameSafe":"SAFE Test Pattern"}
+PASS  S4. refused: A=B → 400 "A, B and MASTER must be three different documents."; unknown source → 400 "MASTER has the source \"NDI NOPE\": Add a Camera source in \"PH-MASTER.tvshow\" that receives "; no config written
+PASS  S5. saved takectl.config.json: a=PH-A.tvshow master=PH-MASTER.tvshow sources=NDI PH-A/NDI PH-B switcher=AB Switcher; running, pgm=A
+PASS  S6. second Save → 409 "takectl is already set up (takectl.config.json). To start over, stop t"; /setup shows the saved setup
+PASS  D1. /doctor.json on the mock: 23/23 green
+PASS  D2. mock stopped: 1 red, first "mimoLive answers at http://localhost:18989" → "Start mimoLive on that Mac and turn on Settings → Remote Control → Allow Remote Control Access."; /state.doctor.ok=false; CLI exit 1
+PASS  F1. keys absent: started (pgm=A), truth="source tally", warning="running on source tally: this mimoLive does not expose the switcher's live slot (see /doctor)", doctor live-slot/codes red=true
+PASS  F2. on source tally: /take → pgm B, lastError null; /panic → {"ok":true,"rounds":1}, pgm A
+PASS  L1. no Node → exit 1: "abswitch needs Node.js 22 or later, and this Mac does not have it. Install the L"; Node 20 → exit 1: "abswitch needs Node.js 22 or later; this Mac has v20.11.0. Install the"
+PASS  L2. real Node: takectl started (ready=true), page opened at "http://localhost:8991/"; second double-click → exit 0 "takectl is already running: opening http://localhost:8991/", opens: 2
+ALL PASS

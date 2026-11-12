@@ -1,0 +1,12 @@
+round4-probe "idle-takectl-on": 10 s of http://<host>:8989/api/v1/socket, started 20:06:28
+documents: PH-MASTER (live), PH-A (live), PH-B (live)
+
+
+92 messages in 10 s. By kind: layers values-changed 50, variants changed 10, documents changed 32
+Live values (counted, not listed):
+     50  PH-MASTER · layers values-changed Program Audio · tvGroup_Source__Audio_TypeAudioAudioLevel1 tvGroup_Source__Audio_TypeAudioAudioLevel0
+     10  PH-MASTER · variants changed DSK Clock › ◸ Dissolve · output-values/tvOut_TimeString
+     10  PH-B · documents changed PH-B · duration formatted-duration
+     10  PH-MASTER · documents changed PH-MASTER · duration formatted-duration
+     10  PH-A · documents changed PH-A · duration formatted-duration
+      2  PH-MASTER · documents changed PH-MASTER · duration

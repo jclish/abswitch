@@ -1,0 +1,23 @@
+demo-run: 1 s between steps, against http://localhost:8991
+ 1. Compose in Preview: Two Shot (key 2)                       → ok
+ 2. TAKE — a 0.5 s MIX                                         → {"pgm":"B","transition":"dissolve","look":"Two Shot"}
+ 3. Rate to 1.5 s, Preview: Slides PiP                         → ok
+ 4. TAKE — a 1.5 s MIX                                         → {"pgm":"A","transition":"dissolve","look":"Slides PiP"}
+ 5. STINGER selected, Preview: Speaker Wide                    → ok
+ 6. TAKE — under the stinger; then the Lower Third hook        → {"pgm":"B","transition":"stinger","look":"Speaker Wide"}
+ 7. CUT — always bare, even with STINGER selected              → {"pgm":"A","transition":"cut","look":"Slides PiP"}
+ 8. UNDO — back to the previous look                           → {"pgm":"B","transition":"cut","look":"Speaker Wide"}
+ 9. Preview: Full Slides, then PUSH it onto Program            → {"pgm":"B","transition":"stinger","look":"Full Slides"}
+10. Steps: Two Shot, then Speaker Wide, queued                 → ok
+11. PUSH STEPS — instant, under one stinger                    → ok
+12. Downstream: Bug on                                         → {"label":"Bug","on":true}
+13. Downstream: Clock on                                       → {"label":"Clock","on":true}
+14. FTB — fade to black (video only)                           → ok
+15. TAKE underneath FTB                                        → {"pgm":"A","transition":"dissolve","look":"Speaker Wide"}
+16. FTB off                                                    → ok
+17. PANIC — cut to the safe source                             → {"pgm":"SAFE"}
+18. SAFE: choose document A as the TAKE target                 → {"pgm":"SAFE"}
+19. TAKE out of SAFE to A                                      → {"pgm":"A","transition":"dissolve","look":"Speaker Wide"}
+20. Downstream keys off, steps cleared                         → ok
+done: A on air, mix 0.5 s, FTB off, DSKs Clock off, Bug off
+(Lower Thirds a hook brought in stay as the hooks left them: switch them off in mimoLive, or recall a look.)

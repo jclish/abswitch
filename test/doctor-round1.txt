@@ -1,0 +1,185 @@
+{
+  "ready": true,
+  "mode": "running",
+  "pgm": "A",
+  "pvw": "B",
+  "busy": false,
+  "busyKind": null,
+  "switcher": {
+    "slot": 1,
+    "codes": {
+      "A": 40,
+      "B": 10
+    },
+    "inFlight": false
+  },
+  "tally": {
+    "A": "program",
+    "B": "in-use"
+  },
+  "warning": null,
+  "truth": "switcher live slot",
+  "lastTake": null,
+  "lastError": null,
+  "lastErrorAt": null,
+  "lastErrorAgeMs": null,
+  "layerSets": [],
+  "layerSetsAll": [],
+  "now": 1794454766416,
+  "onAir": {
+    "look": null,
+    "since": null
+  },
+  "outputs": {
+    "rec": null,
+    "stream": null
+  },
+  "transition": {
+    "mode": "mix",
+    "rateS": null,
+    "rateMinS": 0.1,
+    "rateMaxS": 5,
+    "stingerMs": 1020,
+    "stingerLayer": true
+  },
+  "progress": null,
+  "ftb": null,
+  "dsk": [],
+  "thumbs": {},
+  "lookSlots": 8,
+  "lastLine": null,
+  "nextHooks": {
+    "look": null,
+    "key": null,
+    "chips": []
+  },
+  "safe": {
+    "configured": false,
+    "source": null,
+    "slot": null,
+    "problem": null,
+    "onAir": false,
+    "target": null,
+    "otherSlot": null,
+    "panicTo": "A"
+  },
+  "looks": {
+    "A": null,
+    "B": null
+  },
+  "push": {
+    "available": false,
+    "why": "Preview (B) has no active Layer Set",
+    "look": null
+  },
+  "undo": {
+    "available": false,
+    "why": "no TAKE or CUT yet"
+  },
+  "stinger": {
+    "on": false,
+    "layer": true,
+    "layerName": "STINGER",
+    "coverMs": 500,
+    "offMs": 120
+  },
+  "hooks": {
+    "from": null,
+    "chips": {},
+    "rehearse": false
+  },
+  "rehearsal": null,
+  "history": {
+    "from": null,
+    "left": 0,
+    "events": 0,
+    "follow": {},
+    "top": []
+  },
+  "steps": {
+    "list": [],
+    "recording": false,
+    "running": null,
+    "lists": []
+  },
+  "doctor": null,
+  "docs": {
+    "A": {
+      "id": "702635873",
+      "name": "PH-A",
+      "host": "http://localhost:8989",
+      "live": "live",
+      "ndi": "live",
+      "tallyLayer": true
+    },
+    "B": {
+      "id": "784926277",
+      "name": "PH-B",
+      "host": "http://localhost:8989",
+      "live": "live",
+      "ndi": "live",
+      "tallyLayer": true
+    },
+    "MASTER": {
+      "id": "148910657",
+      "name": "PH-MASTER",
+      "host": "http://localhost:8989",
+      "live": "live",
+      "switcher": "AB Switcher",
+      "slotA": "1",
+      "slotB": "2"
+    }
+  },
+  "events": [],
+  "signals": {
+    "cut": {
+      "1": "tvGroup_Control__Cut_1_TypeSignal",
+      "2": "tvGroup_Control__Cut_2_TypeSignal",
+      "3": "tvGroup_Control__Cut_3_TypeSignal",
+      "4": "tvGroup_Control__Cut_4_TypeSignal",
+      "5": "tvGroup_Control__Cut_5_TypeSignal",
+      "6": "tvGroup_Control__Cut_6_TypeSignal",
+      "7": "tvGroup_Control__Cut_7_TypeSignal",
+      "8": "tvGroup_Control__Cut_8_TypeSignal"
+    },
+    "dis": {
+      "1": "tvGroup_Control__Dis_1_TypeSignal",
+      "2": "tvGroup_Control__Dis_2_TypeSignal",
+      "3": "tvGroup_Control__Dis_3_TypeSignal",
+      "4": "tvGroup_Control__Dis_4_TypeSignal",
+      "5": "tvGroup_Control__Dis_5_TypeSignal",
+      "6": "tvGroup_Control__Dis_6_TypeSignal",
+      "7": "tvGroup_Control__Dis_7_TypeSignal",
+      "8": "tvGroup_Control__Dis_8_TypeSignal"
+    }
+  }
+}
+
+CHECKS:
+  ✓ mimoLive answers at http://localhost:8989
+  ✓ A document "PH-A" is open
+  ✓ A show is running
+  ✓ B document "PH-B" is open
+  ✓ B show is running
+  ✓ MASTER document "PH-MASTER" is open
+  ✓ MASTER show is running
+  ✓ A sends NDI
+  ✓ A has a "TALLY" layer
+  ✓ No live COUNTER layer in A
+  ✓ B sends NDI
+  ✓ B has a "TALLY" layer
+  ✓ No live COUNTER layer in B
+  ✓ MASTER has a Video Switcher layer
+  ✓ MASTER has the source "NDI PH-A"
+  ✓ MASTER receives A's NDI ("NDI PH-A")
+  ✓ "NDI PH-A" is in a switcher slot
+  ✓ MASTER has the source "NDI PH-B"
+  ✓ MASTER receives B's NDI ("NDI PH-B")
+  ✓ "NDI PH-B" is in a switcher slot
+  ✓ The switcher has cut and dissolve signals for both slots
+  ✓ The switcher reports its live slot
+  ✓ The switcher reports per-slot tally codes
+
+WARNING (not a failure): No safe source: PANIC cuts to document A, whatever it holds. Choose one in setup: a wide camera wired straight into MASTER, or a holding slide (never a test pattern on air).
+
+All checks pass.

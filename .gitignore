@@ -1,3 +1,7 @@
 # Local config (copy of takectl.config.example.json with your hosts); never committed
 takectl.config.json
+# Start Over keeps the old config beside it; same reason
+takectl.config.backup-*.json
+# Runtime: the look keys' stills, taken from the running show
+thumbs/
 .DS_Store

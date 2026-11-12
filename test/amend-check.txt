@@ -1,0 +1,6 @@
+PASS  N. A's document missing: ready=false, panicArmed=true; /take → 503; slot 2 → /panic {"ok":true,"rounds":1} → slot 1
+PASS  X. running on A; relay down → not ready after 2033 ms (fetch failed); MASTER cut to B directly; relay up → running after 2279 ms, pgm B read from the switcher
+SKIP  L. NDI link staging is opt-in (AMEND_NDI_LINK=1): it crashed mimoLive 7.0b3 once
+PASS  W. from the LAN address: Save → 403, Start Over → 403, /setup/info local=false; loopback Start Over with MASTER live → 409 "Stop the show in \"PH-MASTER\" first: Start Over is refused while MASTER is on air."; stopped → {"status":200,"ok":true,"backup":"w.backup-20261111-193941.json"}, mode setup, backup w.backup-20261111-193941.json
+restored: shows {"A":"live","B":"live","M":"live"}, slot 1, NDI titles {"A":"PH-A","B":"PH-B"}, connected A=true B=true
+ALL PASS

@@ -1,0 +1,40 @@
+round4-offline-check against the build before the flicker fix (the mock flickers source names as 7.0b3 does; takectl did not yet ignore it)
+
+PASS  setup: takectl running on the mock, PGM A, PVW B
+PASS  L0. /state.watch: on true, watched true (the socket open)
+PASS  L1. 3 s of live values (running time, audio levels, a variant's output values): no warning
+PASS  L2. a Layer Set's "active" flag flipped twice in Program (derived, ignored): no warning
+PASS  L3. TAKE to B (TALLY on in B, off in A; the hook's Lower Third in B): ok, no warning
+PASS  L4. Program's TALLY switched off and on by hand, outside any write of takectl's: no warning (TALLY is takectl's)
+PASS  W1. Cam Wide switched off by hand in Program B: change "Cam Wide off" (n 1); WARNING line starts "CHANGED IN MIMOLIVE: Cam Wide off"
+PASS  W2. a setting edited and a variant added by hand add to it: n 3, list ["Cam Wide off","Slides: VideoSourceAName","Slides: variant added"]; the header still names the first
+PASS  W3. two edits of Cam Wide 150 ms apart (typing) are one change: n 3 → 4, last "Cam Wide: VideoSourceAName"
+PASS  C1. a PUSH with the warning up: ok; the warning stays, nothing added (n 4 → 4)
+PASS  C2. TAKE with the warning up: ok (not blocked); cleared (PGM A)
+PASS  O1. a PUSH ("Speaker Wide" onto A: Cam Wide on, Slides off) does not warn (3.5 s): ok
+PASS  O2. the post-hook brings the Lower Third in on B: no warning (3.5 s, past the 3 s write window)
+PASS  O3. the hook's Lower Third ends by itself: no warning (ignored until it reads off)
+PASS  O4. having read off, it is watched again: switched on by hand → "Lower Third on"
+PASS  O5. a hand change to a different layer (Lower Third) 60 ms into a PUSH's settle window still warns: "Lower Third on"; the PUSH's own layers add nothing (n 1)
+PASS  O6. a hand change to one of the PUSH's own layers inside its window is not flagged (as ruled: the named layers only)
+PASS  D1. dismiss: accepted 1, cleared
+PASS  D2. Program as it is now is the new baseline: nothing comes back by itself (2 s, live values flowing)
+FAIL  D3. the next hand change warns again: "undefined"
+PASS  C3. CUT clears it (PGM A)
+FAIL  C4. UNDO clears it: ok (PGM B)
+PASS  C5. PANIC clears it ("Cam Wide off"; PANIC ok; PGM SAFE)
+PASS  P0. after a TAKE, UNDO is offered (PVW A, look "Speaker Wide")
+PASS  P1. Slides switched on by hand in Preview A: UNDO off ("Preview changed since the TAKE: Slides on, by hand in mimoLive", key "Preview changed"); no Program warning
+PASS  P2. /undo refused: UNDO not available: Preview changed since the TAKE: Slides on, by hand in mimoLive
+PASS  P3. ~1 s after Preview settles, "Speaker Wide"'s thumbnail is taken again (15352 ms newer)
+PASS  P4. REHEARSE HOOKS (takectl's own Lower Third in Preview): ok; UNDO says "Preview changed since the TAKE: rehearse hooks", not "by hand"; no Program warning
+PASS  G1. WATCH PGM off: a hand change in Program does not warn
+PASS  G2. WATCH PGM on again: nothing from while it was off is kept
+FAIL  G3. the next hand change warns: "undefined"
+PASS  N1. the socket dropped (and refused): watched false; WARNING "NOT WATCHED: no events from mimoLive"
+PASS  N2. a hand change while not watched cannot be seen yet
+PASS  N3. the socket back: the document is read again and the change found: "Slides on, while not watched"
+PASS  N4. NOT WATCHED gone once the socket is back
+PASS  I1. watchIgnoreLayers ["Slides", "Nope"]: Slides switched off by hand in Program does not warn
+PASS  I2. an unlisted layer still warns ("Lower Third on"); "Nope" is named as matching no layer
+3 FAIL(S)

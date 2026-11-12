@@ -1,0 +1,9 @@
+page http://localhost:8991/ at 1180×820 @2x in Chrome/157.0.8103.51
+{"conn":"ok","view":"","scroll":[1180,820,1180,820],"small":[],"buttons":31,"outside":[],"pics":[{"mon":"pgm","picture":"800x450","stale":""},{"mon":"pvw","picture":"800x450","stale":""}],"headers":["PROGRAM · DOCUMENT A","PREVIEW · DOCUMENT B"],"status":"READY · tally witness agrees"}
+PASS  takectl answered (conn ok)
+PASS  one screen: page 1180×820 in a 1180×820 viewport
+PASS  nothing is cut off at the edges
+PASS  every visible control ≥ 44 px (31 buttons)
+PASS  both monitors show a live picture: pgm 800x450, pvw 800x450
+screenshot: panel-ipad.png
+ALL PASS

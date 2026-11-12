@@ -1,0 +1,21 @@
+FAIL  C1. STINGER selected (from the config), CUT → stinger; STINGER untouched; post-hook ran: 16:PH-MASTER STINGER setLive | 519:MASTER cut 2 | 521:PH-B TALLY setLive | 642:PH-MASTER STINGER setOff | 782:PH-A TALLY setOff | 1047:PH-B Lower Third setLive
+FAIL  C2. UNDO of that CUT → stinger, no stinger: 19:PH-MASTER STINGER setLive | 523:MASTER cut 1 | 525:PH-A TALLY setLive | 646:PH-MASTER STINGER setOff | 787:PH-B TALLY setOff
+PASS  C3. TAKE with STINGER selected still uses it → stinger
+FAIL  R1. /rate?s=1.5 → switcher reads 0.5; TAKE timed 500 ms (1.5 s + 60), progress bar total undefined ms
+FAIL  R2. duration changed in "mimoLive" to 2 s: the next TAKE read it → 500 ms
+FAIL  R3. clamped: 9 → undefined s, 0 → undefined s
+FAIL  M. selector: STINGER → undefined, MIX → undefined, "wipe" → "unknown route"
+FAIL  F/D1. mid-transition FTB on, DSK Bug on → FTB off, Bug off; PANIC to SAFE leaves FTB off; in SAFE: FTB off, Clock on → off
+FAIL  F/D2. not logged (history: ["take","panic"]); /state.dsk undefined
+FAIL  F/D3. unknown label → "unknown route"; warning null
+FAIL  T1. 5 looks recalled in Preview (names ["../../evil","a/b","c\\d","..","Slides PiP"]): thumbs/ holds 0 files, all hashed (+ index.json); nothing new outside it
+FAIL  T2. /thumb/<name> serves each look's own still: [["../../evil",404,null],["a/b",404,null],["c\\d",404,null],["..",404,null],["Slides PiP",404,null]]
+PASS  T3. paths and odd names never reach a file: [["..%2F..%2Ftakectl.config.json",404],["..%2Ftakectl.config.json",404],["%2E%2E%2Findex.json",404],["index.json",404],["constructor",404],["__proto__",404],["?name=../takectl.config.json",404],["?name=../../takectl.config.json",404],["?name=index.json",404],["?name=toString",404]]
+PASS  T4. Start Over → "ok"; thumbs/ left with 0 files
+FAIL  S1. undefined Layer Sets → warning undefined
+PASS  S2. tie → every tied look is NEXT: {"from":"Speaker Wide","left":4,"events":8,"follow":{"Slides PiP":2,"Two Shot":2},"top":["Slides PiP","Two Shot"]}
+FAIL  S3. on air for: "undefined" since ? ms
+FAIL  S4. REC lamp: live → undefined, off → undefined; no streaming output → undefined
+FAIL  S5. B's show stopped → /state.docs.B.live "off" after 3001 ms
+FAIL  S6. LAST in SAFE: undefined
+16 FAIL(S)

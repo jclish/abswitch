@@ -1,0 +1,6 @@
+FAIL  N. A's document missing: ready=undefined, panicArmed=undefined; /take → 503; slot 2 → /panic {"ok":false} → slot 2
+FAIL  X. running on A; relay down → not ready after 15227 ms (undefined); MASTER cut to B directly; relay up → running after 3 ms, pgm B read from the switcher
+SKIP  L. NDI link staging is opt-in (AMEND_NDI_LINK=1): it crashed mimoLive 7.0b3 once
+FAIL  W. from the LAN address: Save → 409, Start Over → 404, /setup/info local=undefined; loopback Start Over with MASTER live → 404 "unknown setup route"; stopped → {"status":404,"ok":false,"error":"unknown setup route"}, mode running, backup undefined
+restored: shows {"A":"off","B":"off","M":"off"}, slot 1, NDI titles {"A":"PH-A","B":"PH-B"}, connected A=true B=true
+3 FAIL(S)

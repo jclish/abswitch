@@ -1,0 +1,22 @@
+PASS  P0. PANIC 0 ms after TAKE → {"ok":true,"pgm":"SAFE","rounds":1,"ms":261}; slot 3; TALLY A/B off/off; TAKE target B (Preview at the press: B); take → "TAKE not completed: /panic arrived during preflight; signal not sent"
+PASS  P200. PANIC 200 ms after TAKE → {"ok":true,"pgm":"SAFE","rounds":2,"ms":1061}; slot 3; TALLY A/B off/off; TAKE target A (Preview at the press: A); take → "dissolve"
+PASS  P600. PANIC 600 ms after TAKE → {"ok":true,"pgm":"SAFE","rounds":1,"ms":259}; slot 3; TALLY A/B off/off; TAKE target A (Preview at the press: A); take → "dissolve"
+PASS  P-stinger. PANIC 200 ms into a stinger TAKE: B never cut ("TAKE not completed: /panic arrived under the stinger; signal not sent"); slot 3; TALLY off/off; target B; 17:PH-MASTER STINGER setLive | 210:PH-MASTER STINGER setOff | 211:MASTER cut 3 | 214:PH-A TALLY setOff | 216:PH-B TALLY setOff
+PASS  P-outside. PANIC 200 ms into a dissolve to B started outside takectl → {"ok":true,"rounds":2,"ms":770}; slot 3; target B; 3:MASTER dissolve 2 | 209:PH-MASTER STINGER setOff | 213:PH-A TALLY setOff | 215:PH-B TALLY setOff | 723:MASTER cut 3
+PASS  T. TAKE→A: slot 1, pgm A, TALLY live/off, dissolve, UNDO "the TAKE came out of SAFE", history {"from":"SAFE","to":"Speaker Wide","kind":"take","safe":true,"ts":1794450770399}
+PASS  T. CUT→B: slot 2, pgm B, TALLY off/live, cut, UNDO "the TAKE came out of SAFE", history {"from":"SAFE","to":"Slides PiP","kind":"cut","safe":true,"ts":1794450771715}
+PASS  T. CUT→A: slot 1, pgm A, TALLY live/off, cut, UNDO "the TAKE came out of SAFE", history {"from":"SAFE","to":"Speaker Wide","kind":"cut","safe":true,"ts":1794450773528}
+PASS  T. TAKE→B: slot 2, pgm B, TALLY off/live, dissolve, UNDO "the TAKE came out of SAFE", history {"from":"SAFE","to":"Slides PiP","kind":"take","safe":true,"ts":1794450775840}
+PASS  R1. in SAFE: push → "PUSH is refused while SAFE is on air: TAKE or CUT to A first"; undo → "UNDO not available: SAFE is on air"; mirror → "MIRROR is refused while SAFE is on air: there is no Program look to copy"; steps → "steps push is refused while SAFE is on air: TAKE or CUT to A first"
+PASS  R2. Layer Set button with target A → recalled in A (9:PH-A recall Slides PiP); target → B: /state.pvw B
+PASS  R3. /safe/target with A on air → "the TAKE target can be chosen only while SAFE (or something else) is on air"
+PASS  H. Cut_3 outside → pgm SAFE, target B, TALLY off/off; Cut_4 (empty) → pgm OTHER, slot 9, warning "something else is on air: switcher slot 9 (no source: an empty slot was selected); commands behave as in SAFE"; PUSH → "PUSH is refused while something else is on air (switcher slot 9): TAKE or CUT to B first"; TAKE → B (slot 2)
+PASS  A. PANIC with SAFE already on air → {"ok":true,"already":true,"rounds":0,"ms":7}; switcher got 0 cut or dissolve signal(s)
+PASS  Y. 3 × (PANIC, TAKE out to A): log ["Speaker Wide→SAFE panic","SAFE→Speaker Wide take safe","Speaker Wide→SAFE panic","SAFE→Speaker Wide take safe","Speaker Wide→SAFE panic","SAFE→Speaker Wide take safe"]; "Speaker Wide" counted as left 0 times
+PASS  K. TAKE out of SAFE to B ("Slides PiP"): document pre-hook skipped, MASTER pre-hook ran, post-hook ran: 18:PH-MASTER STINGER setOff | 22:MASTER dissolve 2 | 25:PH-B TALLY setLive | 788:PH-A TALLY setOff | 794:PH-B Lower Third setLive
+PASS  N1. no safe source: PANIC → {"ok":true,"pgm":"A"}, slot 1; doctor warning "No safe source: PANIC cuts to document A, whatever it holds. Choose one in setup: a wide camera wired straight into MASTER, or a holding slide (never a test pattern on air)."
+PASS  N2. not ready (A missing), safe configured: PANIC armed true → {"ok":true,"pgm":"SAFE"}, slot 3
+FAIL  W. a read sent 50 ms before PANIC answers 250 ms into it: PANIC → {"ok":true,"pgm":"SAFE","ms":563}; /state.pgm afterwards A; slot 3
+FAIL  W2. a read sent 50 ms before a TAKE to B answers mid-dissolve: TAKE → {"ok":true,"pgm":"A"}; /state.pgm 1.3 s later B; slot 1
+PASS  S. setup suggests "SAFE Test Pattern" (slot 3); A's source as safe → 400 "The safe source must be a third source, not A's or B's."; unknown → 400; saved "SAFE Test Pattern"; doctor src-SAFE ✓, slot-SAFE ✓, signal-SAFE ✓
+2 FAIL(S)

@@ -1,0 +1,8 @@
+PASS  R1a. /setup lists ["PH-MASTER","PH-A","PH-B"]; suggests {"sourceNameA":"NDI PH-A","sourceNameB":"NDI PH-B","switcherLayerName":"AB Switcher","sourceNameSafe":"SAFE Test Pattern"}
+PASS  R1b. Save → config equals the hand-made one (["PH-A","PH-B","PH-MASTER","NDI PH-A","NDI PH-B","AB Switcher","http://localhost:8989","http://localhost:8989"]); running, pgm=A from switcher slot 1, truth="switcher live slot"
+PASS  R2a. shows stopped: 3 red — A show is running → "Press Start Show in "PH-A"." | B show is running → "Press Start Show in "PH-B"." | MASTER show is running → "Press Start Show in "PH-MASTER"."; /state.doctor.ok=false
+PASS  R2b. shows running: 23 checks, all green; `takectl doctor` exit 0 (doctor-round1.txt)
+PASS  R3a. A-only set: layerSetsAll {"name":"R1 Only In A","inA":true,"inB":false}; doctor ok=true (no Layer Set check); warning "Layer Sets in only one document (A: R1 Only In A; B: none); their buttons stay greyed"; recall into PVW B → "no Layer Set named \"R1 Only In A\" in B (\"PH-B\")"
+PASS  R3b. DELETE layer set → HTTP 204, gone=true; doctor all green again: true
+restored: shows {"A":"live","B":"live","M":"live"}, TALLY off
+ALL PASS

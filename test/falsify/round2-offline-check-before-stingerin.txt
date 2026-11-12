@@ -1,0 +1,32 @@
+PASS  P1. no active set in Preview → "Preview (B) has no active Layer Set to push"
+PASS  P2. a name Program lacks → "Program (A, \"PH-A.tvshow\") has no Layer Set named \"B Only\""
+PASS  P3. right after a TAKE → "busy: transition in progress (743 ms left)"; during an outside dissolve → "busy: the switcher is mid-transition"
+PASS  P4. PUSH → {"status":200,"ok":true,"pgm":"A","look":"Slides PiP","transition":"recall","ms":0}; mock: 12:PH-A recall Slides PiP; history {"from":"Speaker Wide","to":"Slides PiP","kind":"push","ts":1794448587214}
+PASS  P5. TAKE and PUSH together → TAKE ok, PUSH "busy: transition in progress (another TAKE, CUT, PUSH or UNDO is being prepared)"; mimoLive got 1 command(s): 20:MASTER dissolve 2
+PASS  S1. stinger TAKE: in→cut 504 ms (≥ coverMs 500), cut→off 126 ms (≥ offMs 120), off→post-hook 404 ms (≥ its 400 ms reveal); 18:PH-MASTER STINGER setLive | 522:MASTER cut 2 | 527:PH-B TALLY setLive | 648:PH-MASTER STINGER setOff | 789:PH-A TALLY setOff | 1052:PH-B Lower Third setLive
+PASS  S2. stinger CUT: in→cut 504 ms; 16:PH-MASTER STINGER setLive | 520:MASTER cut 1 | 524:PH-A TALLY setLive | 645:PH-MASTER STINGER setOff | 785:PH-B TALLY setOff
+PASS  S3. stinger PUSH: in→recall 504 ms, recall→off 124, off→post 402; 11:PH-MASTER STINGER setLive | 515:PH-A recall Slides PiP | 639:PH-MASTER STINGER setOff | 1041:PH-A Lower Third setLive
+PASS  S4. stinger live → "the stinger (\"STINGER\") is already live in \"PH-MASTER.tvshow\": switch it off there or press PANIC, then try again"; stuck in shutdown → "the stinger (\"STINGER\") is stuck in shutdown in \"PH-MASTER.tvshow\": press PANIC (it switches the stinger off), then try again"; after PANIC → ok (stinger)
+FAIL  S6. second stinger TAKE 18 ms after the first stopped being busy: STINGER off between its in and its cut: 396:PH-MASTER STINGER setOff; 18:PH-MASTER STINGER setLive | 396:PH-MASTER STINGER setOff | 521:MASTER cut 2 | 522:PH-B TALLY setLive | 644:PH-MASTER STINGER setOff | 781:PH-A TALLY setOff | 1048:PH-B Lower Third setLive
+PASS  S5. layer missing → dissolve; warning "stinger is on but \"PH-MASTER.tvshow\" has no \"STINGER\" layer: committed without it"
+PASS  H1. pre on outgoing A 304 ms before the signal (waitMs 300); post on B 970 ms after it (dissolve 500 + delayMs 200); MASTER action ran; 15:PH-A Lower Third setOff | 319:MASTER dissolve 2 | 323:PH-B TALLY setLive | 1081:PH-A TALLY setOff | 1087:PH-MASTER STINGER setLive | 1289:PH-B Lower Third setLive
+PASS  H2. pair "Slides PiP -> Speaker Wide" wins over "Speaker Wide"; its failure warns, the take stands: pgm=A, warning "hook failed (then: No Such Layer in): no layer named \"No Such Layer\" in \"PH-A.tvshow\""; 19:MASTER dissolve 1 | 20:PH-A TALLY setLive | 782:PH-B TALLY setOff
+PASS  H3. rehearse → {"status":200,"ok":true,"look":"Slides PiP","pvw":"B","ran":["then: Lower Third in +200 ms"],"skipped":"1 MASTER action(s) skipped: MASTER is on air"}; mock: 214:PH-B Lower Third setLive
+PASS  H5. POST /hooks invalid → 400 "body \"Speaker Wide\" post[0]: wants {\"layer\": name, \"set\": \"live\"|\"off\"} or {\"layerSet\": name}, optional \"in\": \"program\"|\"master\", \"delayMs\""; from the LAN address → 403; valid → {"status":200,"ok":true,"hooks":["Speaker Wide"]}; "Speaker Wide" now from datastore
+PASS  H4. PANIC 200 ms after a TAKE (dissolve in flight): no post-hook; take → "dissolve"; 16:MASTER dissolve 2 | 18:PH-B TALLY setLive | 205:PH-MASTER STINGER setOff | 210:PH-A TALLY setLive | 210:PH-B TALLY setOff | 1015:MASTER cut 1
+PASS  H6. PANIC 200 ms into a stinger TAKE: signal never sent ("TAKE not completed: /panic arrived under the stinger; signal not sent"), stinger off, no post-hook; 18:PH-MASTER STINGER setLive | 206:PH-MASTER STINGER setOff | 206:MASTER cut 1 | 208:PH-A TALLY setLive | 208:PH-B TALLY setOff
+PASS  H7. PANIC 700 ms into a stinger TAKE (after the cut, before the reveal): no post-hook; 16:PH-MASTER STINGER setLive | 519:MASTER cut 2 | 523:PH-B TALLY setLive | 644:PH-MASTER STINGER setOff | 705:PH-MASTER STINGER setOff | 705:MASTER cut 1 | 707:PH-A TALLY setLive | 708:PH-B TALLY setOff
+PASS  H8. dissolve in flight past verify: post-hook 2017 ms after the signal (dissolve 2000 ms); 15:MASTER dissolve 2 | 18:PH-B TALLY setLive | 2022:PH-B TALLY setLive | 2023:PH-A TALLY setOff | 2032:PH-B Lower Third setLive
+PASS  T1. recorded ["Speaker Wide","Slides PiP"]
+PASS  T2. pace original: Program A Speaker Wide → Slides PiP, gap 1511 ms (recorded ~1500); TAKE meanwhile → "steps are being pushed: wait for them, or press PANIC"
+PASS  T3. pace instant: gap 312 ms (each step waits for the last to land)
+PASS  T4. saved "show" in MASTER's datastore and loaded it back: ["Speaker Wide","Slides PiP"]
+PASS  T5. a 30 s recorded gap pushed 10005 ms apart (cap 10 s)
+PASS  T6. PANIC 500 ms into a 2-step push: 1 step pushed, running=null
+PASS  T7. a step Program lacks → "Program (A, \"PH-A.tvshow\") has no Layer Set named \"B Only\""
+PASS  Y1. after 2 leaves of "Speaker Wide": {"from":"Speaker Wide","left":2,"events":4,"follow":{},"top":[]}; after 3: {"from":"Speaker Wide","left":3,"events":6,"follow":{"Slides PiP":3},"top":["Slides PiP"]}
+PASS  Y2. after a restart 6 events kept; reset without confirm → "add ?confirm=1 (the page asks first)"; with → cleared 6, datastore {"status":200,"events":[]}
+PASS  U1. before a TAKE → "UNDO not available: no TAKE or CUT yet"; after → available; UNDO → pgm A, no hooks (15:MASTER dissolve 1 | 17:PH-A TALLY setLive | 778:PH-B TALLY setOff), history marks it, then "already undone"
+PASS  U2. after a Preview recall: "Preview changed since the TAKE: Layer Set \"Slides PiP\" recalled" (/undo → "UNDO not available: Preview changed since the TAKE: Layer Set \"Slides PiP\" recalled"); after a PUSH: "a PUSH changed Program since the TAKE"
+PASS  U3. pre-hooks on the outgoing document: "Preview changed since the TAKE: the pre-hooks changed it (first: Lower Third out)"
+1 FAIL(S)

@@ -1,0 +1,40 @@
+round4-offline-check against the build before round 4 (the final suite and mock). The "no warning" checks pass vacuously: that build watches nothing (round4-offline-check-mutants.txt shows they can fail).
+
+PASS  setup: takectl running on the mock, PGM A, PVW B
+FAIL  L0. /state.watch: on undefined, watched undefined (the socket open)
+PASS  L1. 3 s of live values (running time, audio levels, a variant's output values): no warning
+PASS  L2. a Layer Set's "active" flag flipped twice in Program (derived, ignored): no warning
+PASS  L3. TAKE to B (TALLY on in B, off in A; the hook's Lower Third in B): ok, no warning
+PASS  L4. Program's TALLY switched off and on by hand, outside any write of takectl's: no warning (TALLY is takectl's)
+FAIL  W1. Cam Wide switched off by hand in Program B: change "undefined" (n undefined); WARNING line starts "undefined"
+FAIL  W2. a setting edited and a variant added by hand add to it: n undefined, list undefined; the header still names the first
+FAIL  W3. two edits of Cam Wide 150 ms apart (typing) are one change: n 0 → undefined, last "undefined"
+FAIL  C1. a PUSH with the warning up: ok; the warning stays, nothing added (n undefined → undefined)
+PASS  C2. TAKE with the warning up: ok (not blocked); cleared (PGM A)
+PASS  O1. a PUSH ("Speaker Wide" onto A: Cam Wide on, Slides off) does not warn (3.5 s): ok
+PASS  O2. the post-hook brings the Lower Third in on B: no warning (3.5 s, past the 3 s write window)
+PASS  O3. the hook's Lower Third ends by itself: no warning (ignored until it reads off)
+FAIL  O4. having read off, it is watched again: switched on by hand → "undefined"
+FAIL  O5. a hand change to a different layer (Lower Third) 60 ms into a PUSH's settle window still warns: "undefined"; the PUSH's own layers add nothing (n undefined)
+PASS  O6. a hand change to one of the PUSH's own layers inside its window is not flagged (as ruled: the named layers only)
+FAIL  D1. dismiss: accepted undefined, cleared
+PASS  D2. Program as it is now is the new baseline: nothing comes back by itself (2 s, live values flowing)
+FAIL  D3. the next hand change warns again: "undefined"
+PASS  C3. CUT clears it (PGM A)
+FAIL  C4. UNDO clears it: ok (PGM B)
+FAIL  C5. PANIC clears it ("undefined"; PANIC ok; PGM SAFE)
+PASS  P0. after a TAKE, UNDO is offered (PVW A, look "Speaker Wide")
+FAIL  P1. Slides switched on by hand in Preview A: UNDO off ("undefined", key "undefined"); no Program warning
+FAIL  P2. /undo refused: undefined
+FAIL  P3. ~1 s after Preview settles, "Speaker Wide"'s thumbnail is taken again (not refreshed)
+PASS  P4. REHEARSE HOOKS (takectl's own Lower Third in Preview): ok; UNDO says "Preview changed since the TAKE: rehearse hooks", not "by hand"; no Program warning
+FAIL  G1. WATCH PGM off: a hand change in Program does not warn
+FAIL  G2. WATCH PGM on again: nothing from while it was off is kept
+FAIL  G3. the next hand change warns: "undefined"
+FAIL  N1. the socket dropped (and refused): watched undefined; WARNING "undefined"
+PASS  N2. a hand change while not watched cannot be seen yet
+FAIL  N3. the socket back: the document is read again and the change found: "undefined"
+FAIL  N4. NOT WATCHED gone once the socket is back
+PASS  I1. watchIgnoreLayers ["Slides", "Nope"]: Slides switched off by hand in Program does not warn
+FAIL  I2. an unlisted layer still warns ("undefined"); "Nope" is named as matching no layer
+21 FAIL(S)

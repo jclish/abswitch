@@ -1,0 +1,33 @@
+page http://localhost:8991/ at 1440×900 @1x in Chrome/157.0.8103.51
+{"conn":"ok","view":"","scroll":[1440,900,1440,900],"small":[],"buttons":33,"outside":[],"pics":[{"mon":"pgm","picture":"480x270","stale":""},{"mon":"pvw","picture":"480x270","stale":""}],"headers":["PROGRAM · DOCUMENT A","PREVIEW · DOCUMENT B"],"status":"READY · tally witness agrees"}
+PASS  takectl answered (conn ok)
+PASS  one screen: page 1440×900 in a 1440×900 viewport
+PASS  nothing is cut off at the edges
+PASS  every visible control ≥ 44 px (33 buttons)
+PASS  reasons whole on their keys, subtitle whole or hidden
+PASS  look-key labels ≥ 4.5:1 over any thumbnail: worst 8.6:1 (Speaker Wide .sub over white)
+PASS  both monitors show a live picture: pgm 480x270, pvw 480x270
+screenshot: st1440.png
+PASS  selftest: with the band removed the contrast check reads 1:1 (Speaker Wide .nm over white); a long reason on UNDO is caught: ["undoWhy: Preview changed since the TAKE: Layer Set \"Slides PiP\" recalled"]
+   /take → ok
+   /steps/record?on=1 → ok
+   /pvw/layer-set/Slides%20PiP → ok
+   /steps/add → ok
+   /transition?mode=stinger → ok
+   /push → ok
+   /take → ok
+   /take → ok
+   /ftb?on=1 → ok
+   /dsk/Bug?on=1 → ok
+   /ftb?on=0 → ok
+   /dsk/Bug?on=0 → ok
+   /transition?mode=mix → ok
+   /steps/push?pace=instant → ok
+   /panic → ok
+   /safe/target?doc=A → ok
+   /take → ok
+   /steps/clear → ok
+   /steps/record?on=0 → ok
+PASS  reasons whole and labels readable in every state
+PASS  no key moved across 19 state changes (TAKE, record, recall, add, STINGER, PUSH, TAKEs, FTB on/off, a DSK on/off, MIX, steps push, PANIC, SAFE target, TAKE out of SAFE)
+ALL PASS

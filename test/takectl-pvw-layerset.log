@@ -1,10 +1,11 @@
-20:21:35.473 A="PH-A" B="PH-B" MASTER="PH-MASTER" switcher="AB Switcher" slots A=1 B=2
-20:21:35.475 signals cut={"1":"tvGroup_Control__Cut_1_TypeSignal","2":"tvGroup_Control__Cut_2_TypeSignal","3":"tvGroup_Control__Cut_3_TypeSignal","4":"tvGroup_Control__Cut_4_TypeSignal","5":"tvGroup_Control__Cut_5_TypeSignal","6":"tvGroup_Control__Cut_6_TypeSignal","7":"tvGroup_Control__Cut_7_TypeSignal","8":"tvGroup_Control__Cut_8_TypeSignal"} dis={"1":"tvGroup_Control__Dis_1_TypeSignal","2":"tvGroup_Control__Dis_2_TypeSignal","3":"tvGroup_Control__Dis_3_TypeSignal","4":"tvGroup_Control__Dis_4_TypeSignal","5":"tvGroup_Control__Dis_5_TypeSignal","6":"tvGroup_Control__Dis_6_TypeSignal","7":"tvGroup_Control__Dis_7_TypeSignal","8":"tvGroup_Control__Dis_8_TypeSignal"}
-20:21:35.498 websocket connected ws://localhost:8989/api/v1/socket
-20:21:35.501 takectl listening on http://0.0.0.0:8991  (GET / operator page; /state /take /cut /mirror /panic /resync /pvw/layer-set/<name>)
-20:21:35.621 PVW LAYER SET: "Two Shot" recalled in B
-20:21:36.468 REFUSED PVW layer set "Nope": no Layer Set named "Nope" in B ("PH-B")
-20:21:37.032 TAKE → B (slot 2, dissolve)
-20:21:37.050 REFUSED PVW layer set "Slides PiP": a transition is in progress; wait for it to land
-20:21:38.602 PVW LAYER SET: "Two Shot" recalled in A
-20:21:39.459 TAKE → A (slot 1, dissolve)
+00:37:33.476 takectl listening on http://0.0.0.0:8991  (GET / operator page, /setup, /doctor; /state /take /cut /mirror /panic /resync /pvw/layer-set/<name>)
+00:37:33.520 A="PH-A" B="PH-B" MASTER="PH-MASTER" switcher="AB Switcher" slots A=1 B=2
+00:37:33.520 signals cut={"1":"tvGroup_Control__Cut_1_TypeSignal","2":"tvGroup_Control__Cut_2_TypeSignal","3":"tvGroup_Control__Cut_3_TypeSignal","4":"tvGroup_Control__Cut_4_TypeSignal","5":"tvGroup_Control__Cut_5_TypeSignal","6":"tvGroup_Control__Cut_6_TypeSignal","7":"tvGroup_Control__Cut_7_TypeSignal","8":"tvGroup_Control__Cut_8_TypeSignal"} dis={"1":"tvGroup_Control__Dis_1_TypeSignal","2":"tvGroup_Control__Dis_2_TypeSignal","3":"tvGroup_Control__Dis_3_TypeSignal","4":"tvGroup_Control__Dis_4_TypeSignal","5":"tvGroup_Control__Dis_5_TypeSignal","6":"tvGroup_Control__Dis_6_TypeSignal","7":"tvGroup_Control__Dis_7_TypeSignal","8":"tvGroup_Control__Dis_8_TypeSignal"}
+00:37:33.544 websocket connected ws://localhost:8989/api/v1/socket
+00:37:33.545 running
+00:37:33.660 PVW LAYER SET: "Two Shot" recalled in B
+00:37:34.495 REFUSED PVW layer set "Nope": no Layer Set named "Nope" in B ("PH-B")
+00:37:35.049 TAKE → B (slot 2, dissolve)
+00:37:35.067 REFUSED PVW layer set "Slides PiP": a transition is in progress; wait for it to land
+00:37:36.620 PVW LAYER SET: "Two Shot" recalled in A
+00:37:37.476 TAKE → A (slot 1, dissolve)

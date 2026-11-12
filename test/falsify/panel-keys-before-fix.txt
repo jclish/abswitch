@@ -1,0 +1,90 @@
+panel-chrome's look-key, NEXT-ring and monitor checks (release fixes, 2026-11-12), run against builds that
+should fail them, on the real mimoLive 7.0b3. The fixed build passes the same runs (panel-chrome-next-final-*.txt, after the NEXT ruling).
+
+1. The build before the fix (the polish/round 4 panel) at the four sizes and at 1512x860 (a wide, short window):
+   tall keys crop each 16:9 still; the label band sits over the picture; the band hides the bottom of NEXT's
+   white ring; at 1512x860 the monitors show 12 px bars a side.
+
+== page http://localhost:8994/ at 1440×900 @1x in Chrome/157.0.8103.51
+   PASS  takectl answered (conn ok)
+   PASS  one screen: page 1440×900 in a 1440×900 viewport
+   PASS  nothing is cut off at the edges
+   PASS  every visible control ≥ 44 px (34 buttons)
+   PASS  reasons whole on their keys, subtitle whole or hidden
+   PASS  look-key labels ≥ 4.5:1 over any thumbnail: worst 5.9:1 (Speaker Wide .sub over white)
+   PASS  both monitors show a live picture: pgm 480x270, pvw 480x270
+   FAIL  look keys: 8 keys, all 97x196, picture 97x196 (16:9, 4 with a thumbnail, fitted, never cropped), name band underneath, slot number on the picture, keys not stretched: Speaker Wide: picture 96.8x196.0 is not 16:9; Speaker Wide: the name band covers the picture (52 px); Speaker Wide: thumbnail 320x180 cropped (cover): 28% shown; Two Shot: picture 96.8x196.0 is not 16:9; Two Shot: the name band covers the picture (39 px); Two Shot: thumbnail 320x180 cropped (cover): 28% shown
+   PASS  monitors exactly 16:9, no bars beside the picture: pgm 554x311 bars 0.0, pvw 554x311 bars 0.0
+   FAIL  the NEXT key ("Two Shot") has its white ring all the way round: dark at bottom rgb(48,49,50), left over the band rgb(48,49,50), right over the band rgb(48,49,50)
+   2 FAIL(S)
+
+== page http://localhost:8994/ at 1180×820 @2x in Chrome/157.0.8103.51
+   PASS  takectl answered (conn ok)
+   PASS  one screen: page 1180×820 in a 1180×820 viewport
+   PASS  nothing is cut off at the edges
+   PASS  every visible control ≥ 44 px (34 buttons)
+   PASS  reasons whole on their keys, subtitle whole or hidden
+   PASS  look-key labels ≥ 4.5:1 over any thumbnail: worst 5.9:1 (Speaker Wide .sub over white)
+   PASS  both monitors show a live picture: pgm 800x450, pvw 800x450
+   FAIL  look keys: 8 keys, all 64x189, picture 64x189 (16:9, 4 with a thumbnail, fitted, never cropped), name band underneath, slot number on the picture, keys not stretched: Speaker Wide: picture 64.3x189.1 is not 16:9; Speaker Wide: the name band covers the picture (47 px); Speaker Wide: thumbnail 320x180 cropped (cover): 19% shown; Two Shot: picture 64.3x189.1 is not 16:9; Two Shot: the name band covers the picture (47 px); Two Shot: thumbnail 320x180 cropped (cover): 19% shown
+   PASS  monitors exactly 16:9, no bars beside the picture: pgm 424x238 bars 0.0, pvw 424x238 bars 0.0
+   FAIL  the NEXT key ("Two Shot") has its white ring all the way round: dark at bottom rgb(48,49,50), left over the band rgb(48,49,50), right over the band rgb(48,49,50)
+   2 FAIL(S)
+
+== page http://localhost:8994/ at 1133×744 @2x in Chrome/157.0.8103.51
+   PASS  takectl answered (conn ok)
+   PASS  one screen: page 1133×744 in a 1133×744 viewport
+   PASS  nothing is cut off at the edges
+   PASS  every visible control ≥ 44 px (34 buttons)
+   PASS  reasons whole on their keys, subtitle whole or hidden
+   PASS  look-key labels ≥ 4.5:1 over any thumbnail: worst 5.9:1 (Speaker Wide .sub over white)
+   PASS  both monitors show a live picture: pgm 800x450, pvw 800x450
+   FAIL  look keys: 8 keys, all 58x85, picture 58x85 (16:9, 4 with a thumbnail, fitted, never cropped), name band underneath, slot number on the picture, keys not stretched: Speaker Wide: picture 58.4x85.1 is not 16:9; Speaker Wide: the name band covers the picture (47 px); Speaker Wide: thumbnail 320x180 cropped (cover): 39% shown; Two Shot: picture 58.4x85.1 is not 16:9; Two Shot: the name band covers the picture (47 px); Two Shot: thumbnail 320x180 cropped (cover): 39% shown
+   PASS  monitors exactly 16:9, no bars beside the picture: pgm 400x225 bars 0.0, pvw 400x225 bars 0.0
+   FAIL  the NEXT key ("Two Shot") has its white ring all the way round: dark at bottom rgb(48,49,50), left over the band rgb(48,49,50), right over the band rgb(48,49,50)
+   2 FAIL(S)
+
+== page http://localhost:8994/ at 1024×768 @2x in Chrome/157.0.8103.51
+   PASS  takectl answered (conn ok)
+   PASS  one screen: page 1024×768 in a 1024×768 viewport
+   PASS  nothing is cut off at the edges
+   PASS  every visible control ≥ 44 px (34 buttons)
+   PASS  reasons whole on their keys, subtitle whole or hidden
+   PASS  look-key labels ≥ 4.5:1 over any thumbnail: worst 5.9:1 (Speaker Wide .sub over white)
+   PASS  both monitors show a live picture: pgm 640x360, pvw 640x360
+   FAIL  look keys: 8 keys, all 63x135, picture 63x135 (16:9, 4 with a thumbnail, fitted, never cropped), name band underneath, slot number on the picture, keys not stretched: Speaker Wide: picture 62.8x135.3 is not 16:9; Speaker Wide: the name band covers the picture (47 px); Speaker Wide: thumbnail 320x180 cropped (cover): 26% shown; Two Shot: picture 62.8x135.3 is not 16:9; Two Shot: the name band covers the picture (47 px); Two Shot: thumbnail 320x180 cropped (cover): 26% shown
+   PASS  monitors exactly 16:9, no bars beside the picture: pgm 354x199 bars 0.0, pvw 354x199 bars 0.0
+   FAIL  the NEXT key ("Two Shot") has its white ring all the way round: dark at bottom rgb(48,49,50), left over the band rgb(48,49,50), right over the band rgb(48,49,50)
+   2 FAIL(S)
+
+== page http://localhost:8994/ at 1512×860 @1x in Chrome/157.0.8103.51
+   PASS  takectl answered (conn ok)
+   PASS  one screen: page 1512×860 in a 1512×860 viewport
+   PASS  nothing is cut off at the edges
+   PASS  every visible control ≥ 44 px (34 buttons)
+   PASS  reasons whole on their keys, subtitle whole or hidden
+   PASS  look-key labels ≥ 4.5:1 over any thumbnail: worst 5.9:1 (Speaker Wide .sub over white)
+   PASS  both monitors show a live picture: pgm 640x360, pvw 640x360
+   FAIL  look keys: 8 keys, all 106x149, picture 106x149 (16:9, 4 with a thumbnail, fitted, never cropped), name band underneath, slot number on the picture, keys not stretched: Speaker Wide: picture 105.8x149.2 is not 16:9; Speaker Wide: the name band covers the picture (55 px); Speaker Wide: thumbnail 320x180 cropped (cover): 40% shown; Two Shot: picture 105.8x149.2 is not 16:9; Two Shot: the name band covers the picture (40 px); Two Shot: thumbnail 320x180 cropped (cover): 40% shown
+   FAIL  monitors exactly 16:9, no bars beside the picture: pgm 590x318 bars 12.0, pvw 590x318 bars 12.0
+   FAIL  the NEXT key ("Two Shot") has its white ring all the way round: dark at bottom rgb(48,49,50), left over the band rgb(48,49,50), right over the band rgb(48,49,50)
+   3 FAIL(S)
+
+2. The fixed build with only the ring overlay removed (.pvwkey[data-next="1"]::after): the opaque picture and band
+   hide the key's own inset ring all the way round.
+
+== page http://localhost:8995/ at 1180×820 @2x in Chrome/157.0.8103.51
+   PASS  takectl answered (conn ok)
+   PASS  one screen: page 1180×820 in a 1180×820 viewport
+   PASS  nothing is cut off at the edges
+   PASS  every visible control ≥ 44 px (34 buttons)
+   PASS  reasons whole on their keys, subtitle whole or hidden
+   PASS  look-key labels ≥ 4.5:1 over any thumbnail: worst 8:1 (Speaker Wide .sub over white)
+   PASS  both monitors show a live picture: pgm 800x450, pvw 800x450
+   PASS  look keys: 8 keys, all 64x83, picture 60x34 (16:9, 4 with a thumbnail, fitted, never cropped), name band underneath, slot number on the picture, keys not stretched
+   PASS  monitors exactly 16:9, no bars beside the picture: pgm 424x238 bars 0.0, pvw 424x238 bars 0.0
+   FAIL  the NEXT key ("Two Shot") has its white ring all the way round: dark at top rgb(128,128,128), bottom rgb(13,15,18), left over the picture rgb(128,128,128), right over the picture rgb(128,128,128), left over the band rgb(13,15,18), right over the band rgb(13,15,18)
+   1 FAIL(S)
+
+3. Selftest (in every run with --selftest): with tall keys, background-size: cover and a non-16:9 monitor forced
+   by a style sheet, the checks report "not 16:9", "cropped (cover): 47% shown" and the monitor box (fixed build, 1440x900).

@@ -1,0 +1,30 @@
+FAIL  P1. no active set in Preview → "unknown route"
+FAIL  P2. a name Program lacks → "unknown route"
+FAIL  P3. right after a TAKE → "unknown route"; during an outside dissolve → "unknown route"
+FAIL  P4. PUSH → {"status":404,"error":"unknown route","routes":["/","/state","/health","/take","/cut","/mirror","/panic","/resync","/pvw/layer-set/<name>"]}; mock: ; history undefined
+FAIL  S1. stinger TAKE: in→cut 0 ms (≥ coverMs 500), cut→off 0 ms (≥ offMs 120), off→post-hook 0 ms (≥ its 400 ms reveal); 10:MASTER dissolve 2 | 12:PH-B TALLY setLive | 772:PH-A TALLY setOff
+FAIL  S2. stinger CUT: in→cut 1794447390575 ms; 15:MASTER cut 1 | 18:PH-A TALLY setLive | 280:PH-B TALLY setOff
+FAIL  S3. stinger PUSH: in→recall 0 ms, recall→off 0, off→post 0; 
+FAIL  S4. stinger live → undefined; stuck in shutdown → "busy: transition in progress (734 ms left)"; after PANIC → ok (dissolve)
+FAIL  S5. layer missing → dissolve; warning ""
+FAIL  H1. pre on outgoing A 1794447399147 ms before the signal (waitMs 300); post on B -1794447399147 ms after it (dissolve 500 + delayMs 200); MASTER action ran; 10:MASTER dissolve 2 | 12:PH-B TALLY setLive | 775:PH-A TALLY setOff
+FAIL  H2. pair "Slides PiP -> Speaker Wide" wins over "Speaker Wide"; its failure warns, the take stands: pgm=A, warning null; 11:MASTER dissolve 1 | 13:PH-A TALLY setLive | 774:PH-B TALLY setOff
+FAIL  H3. rehearse → {"status":404,"error":"unknown route","routes":["/","/state","/health","/take","/cut","/mirror","/panic","/resync","/pvw/layer-set/<name>"]}; mock: 
+FAIL  H5. POST /hooks invalid → 404 "unknown route"; from the LAN address → 404; valid → {"status":404,"error":"unknown route","routes":["/","/state","/health","/take","/cut","/mirror","/panic","/resync","/pvw/layer-set/<name>"]}; "Speaker Wide" now from undefined
+PASS  H4. PANIC 200 ms after a TAKE (dissolve in flight): no post-hook; take → "dissolve"; 11:MASTER dissolve 2 | 13:PH-B TALLY setLive | 207:PH-A TALLY setLive | 207:PH-B TALLY setOff | 1005:MASTER cut 1
+FAIL  H6. PANIC 200 ms into a stinger TAKE: signal never sent (undefined), stinger off, no post-hook; 15:MASTER dissolve 2 | 18:PH-B TALLY setLive | 208:PH-A TALLY setLive | 210:PH-B TALLY setOff | 1006:MASTER cut 1
+FAIL  H7. PANIC 700 ms into a stinger TAKE (after the cut, before the reveal): no post-hook; 11:MASTER dissolve 2 | 13:PH-B TALLY setLive | 706:MASTER cut 1 | 710:PH-A TALLY setLive | 710:PH-B TALLY setOff
+FAIL  H8. dissolve in flight past verify: post-hook never after the signal (dissolve 2000 ms); 11:MASTER dissolve 2 | 13:PH-B TALLY setLive | 2021:PH-A TALLY setOff | 2021:PH-B TALLY setLive
+FAIL  T1. recorded undefined
+FAIL  T2. pace original: Program A , gap ? ms (recorded ~1500); TAKE meanwhile → undefined
+FAIL  T3. pace instant: gap ? ms (each step waits for the last to land)
+FAIL  T4. saved "show" in MASTER's datastore and loaded it back: undefined
+FAIL  T5. a 30 s recorded gap pushed ? ms apart (cap 10 s)
+FAIL  T6. PANIC 500 ms into a 2-step push: 0 step pushed, running=undefined
+FAIL  T7. a step Program lacks → "unknown route"
+FAIL  Y1. after 2 leaves of "Speaker Wide": undefined; after 3: undefined
+FAIL  Y2. after a restart undefined events kept; reset without confirm → "unknown route"; with → cleared undefined, datastore {"status":404}
+FAIL  U1. before a TAKE → "unknown route"; after → available; UNDO → pgm B, no hooks (), history marks it, then undefined
+FAIL  U2. after a Preview recall: undefined (/undo → "unknown route"); after a PUSH: undefined
+FAIL  U3. pre-hooks on the outgoing document: undefined
+28 FAIL(S)

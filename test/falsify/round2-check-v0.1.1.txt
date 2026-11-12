@@ -1,0 +1,10 @@
+PASS  setup: takectl running on the real documents (pgm A), stinger on, hook "Speaker Wide" → then: Cam PiP in
+calibration: A on air → A 97%, B 0%; stinger rgb(25, 28, 39)
+FAIL  R1. stinger TAKE → dissolve; 91 frames up to the hook: 3 show A and B at once; first B frame at 413 ms, after a fully covered frame: false; ends on B: true (round2-stinger-frames.txt)
+FAIL  R2. B's Cam PiP (held off in Preview) → "undefined" on Program undefined ms after the press; the stinger started clearing at undefined ms (post-hook waits for its ~400 ms reveal)
+FAIL  R3a. PANIC 200 ms after TAKE (under the stinger): take → "dissolve"; panic ok in 1066 ms; Cam PiP on B stayed off for 3 s: true; slot 1
+PASS  R3b. PANIC 200 ms after TAKE (dissolve in flight): take → "dissolve"; panic ok in 1063 ms; Cam PiP on B stayed off for 3 s: true; slot 1
+FAIL  R4. PUSH → {"status":404,"error":"unknown route","routes":["/","/state","/health","/take","/cut","/mirror","/panic","/resync","/pvw/layer-set/<name>"]}; Program A reads "Full Slides" (landed and logged 3045 ms after the press: null); Preview B "Two Shot"; still slot 1; warning null
+FAIL  R5a. steps "Two Shot" → "Slides PiP" onto Program A: looks seen ["Full Slides"]; history []
+restored: slot 1, looks A "Speaker Wide" B "Speaker Wide", Cam PiP off/off, STINGER off, TALLY off/off; history and steps datastores emptied
+5 FAIL(S)

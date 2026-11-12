@@ -1,0 +1,125 @@
+round4-check (real mimoLive) against the build before round 4, and against three single-mechanism mutants of the round 4 build.
+Against the old build the "no warning" checks pass vacuously (it watches nothing); the mutants show those checks can fail on the real app.
+The mutants are the same copies as in round4-offline-check-mutants.txt, which shows each one's mutation.
+
+== pre-r4
+PASS  setup: takectl running, PGM A ("Speaker Wide"), PVW B ("Two Shot")
+FAIL  R0a. WATCH PGM on, watched (socket open): on undefined, watched undefined
+PASS  R0b. 5 s idle on the real documents (audio levels, running times, the clock's time string): no warning
+FAIL  R1. Slides switched on by hand in Program A: "undefined" in /state never; WARNING line "undefined"
+PASS  R2a. PUSH "Two Shot" onto A (Two Shot in, Cam Wide out): ok; no warning (4 s)
+PASS  R2b. TAKE to B "Speaker Wide": the post-hook brings the Lower Third in (live); no warning (4 s, past the 3 s write window)
+PASS  R2c. the hook's Lower Third switched off (as if it ended itself): no warning (ignored until it reads off)
+FAIL  R2d. having read off, it is watched again: switched on by hand → "undefined"
+FAIL  R3. PUSH "Slides PiP" onto B, and 60 ms later the Lower Third switched on by hand (it read "off" before, "live" after): "undefined"; the PUSH's own layers added nothing (n undefined: undefined)
+PASS  R4. Cam PiP (watchIgnoreLayers) switched off and back by hand in Program B: no warning
+FAIL  R5a. "undefined" → dismiss: accepted undefined, cleared
+PASS  R5b. B as it is now is the new baseline: nothing comes back by itself (3 s)
+FAIL  R5c. the next hand change warns again: "undefined"
+PASS  R6a. TAKE with the warning up: ok (not blocked); cleared (PGM A)
+FAIL  R6b. CUT clears it ("undefined" → PGM B)
+FAIL  R6c. UNDO clears it ("undefined" → PGM A)
+PASS  R7a. after a TAKE, UNDO is offered (Preview A, look "Slides PiP")
+FAIL  R7b. Lower Third switched on by hand in Preview A: UNDO off within — ms ("undefined", key "undefined"); no Program warning
+FAIL  R7c. "Slides PiP"'s thumbnail taken again never; thumbs/index.json agrees
+restored: slot 1, duration 0.5 s, Lower Third off/off, looks A "Speaker Wide" B "Speaker Wide"; datastores emptied
+10 FAIL(S)
+
+== mut/M1-own-writes
+PASS  setup: takectl running, PGM A ("Speaker Wide"), PVW B ("Two Shot")
+PASS  R0a. WATCH PGM on, watched (socket open): on true, watched true
+PASS  R0b. 5 s idle on the real documents (audio levels, running times, the clock's time string): no warning
+PASS  R1. Slides switched on by hand in Program A: "Slides on" in /state within 16 ms; WARNING line "CHANGED IN MIMOLIVE: Slides on"
+FAIL  R2a. PUSH "Two Shot" onto A (Two Shot in, Cam Wide out): ok; no warning (4 s)
+FAIL  R2b. TAKE to B "Speaker Wide": the post-hook brings the Lower Third in (not seen); no warning (4 s, past the 3 s write window)
+PASS  R2c. the hook's Lower Third switched off (as if it ended itself): no warning (ignored until it reads off)
+PASS  R2d. having read off, it is watched again: switched on by hand → "Lower Third on"
+FAIL  R3. PUSH "Slides PiP" onto B, and 60 ms later the Lower Third switched on by hand (it read "shutdown" before, "shutdown" after): "undefined"; the PUSH's own layers added nothing (n 2: ["Two Shot off","Slides on"])
+PASS  R4. Cam PiP (watchIgnoreLayers) switched off and back by hand in Program B: no warning
+PASS  R5a. "Slides off" → dismiss: accepted 1, cleared
+PASS  R5b. B as it is now is the new baseline: nothing comes back by itself (3 s)
+PASS  R5c. the next hand change warns again: "Slides on"
+PASS  R6a. TAKE with the warning up: ok (not blocked); cleared (PGM A)
+PASS  R6b. CUT clears it ("Slides off" → PGM B)
+PASS  R6c. UNDO clears it ("Slides off" → PGM A)
+PASS  R7a. after a TAKE, UNDO is offered (Preview A, look "Slides PiP")
+PASS  R7b. Lower Third switched on by hand in Preview A: UNDO off within 15 ms ("Preview changed since the TAKE: Lower Third on, by hand in mimoLive", key "Preview changed"); no Program warning
+PASS  R7c. "Slides PiP"'s thumbnail taken again 1071 ms after the change (the Lower Third's 0.5 s fade, then ~1 s settled); thumbs/index.json agrees
+restored: slot 1, duration 0.5 s, Lower Third off/off, looks A "Speaker Wide" B "Speaker Wide"; datastores emptied
+3 FAIL(S)
+
+== mut/M2-hook-layers
+PASS  setup: takectl running, PGM A ("Speaker Wide"), PVW B ("Two Shot")
+PASS  R0a. WATCH PGM on, watched (socket open): on true, watched true
+PASS  R0b. 5 s idle on the real documents (audio levels, running times, the clock's time string): no warning
+PASS  R1. Slides switched on by hand in Program A: "Slides on" in /state within 23 ms; WARNING line "CHANGED IN MIMOLIVE: Slides on"
+PASS  R2a. PUSH "Two Shot" onto A (Two Shot in, Cam Wide out): ok; no warning (4 s)
+PASS  R2b. TAKE to B "Speaker Wide": the post-hook brings the Lower Third in (live); no warning (4 s, past the 3 s write window)
+FAIL  R2c. the hook's Lower Third switched off (as if it ended itself): no warning (ignored until it reads off)
+FAIL  R2d. having read off, it is watched again: switched on by hand → "undefined"
+PASS  R3. PUSH "Slides PiP" onto B, and 60 ms later the Lower Third switched on by hand (it read "off" before, "live" after): "Lower Third on"; the PUSH's own layers added nothing (n 1: ["Lower Third on"])
+PASS  R4. Cam PiP (watchIgnoreLayers) switched off and back by hand in Program B: no warning
+PASS  R5a. "Slides off" → dismiss: accepted 1, cleared
+PASS  R5b. B as it is now is the new baseline: nothing comes back by itself (3 s)
+PASS  R5c. the next hand change warns again: "Slides on"
+PASS  R6a. TAKE with the warning up: ok (not blocked); cleared (PGM A)
+PASS  R6b. CUT clears it ("Slides off" → PGM B)
+PASS  R6c. UNDO clears it ("Slides off" → PGM A)
+PASS  R7a. after a TAKE, UNDO is offered (Preview A, look "Slides PiP")
+PASS  R7b. Lower Third switched on by hand in Preview A: UNDO off within 16 ms ("Preview changed since the TAKE: Lower Third on, by hand in mimoLive", key "Preview changed"); no Program warning
+PASS  R7c. "Slides PiP"'s thumbnail taken again 1036 ms after the change (the Lower Third's 0.5 s fade, then ~1 s settled); thumbs/index.json agrees
+restored: slot 1, duration 0.5 s, Lower Third off/off, looks A "Speaker Wide" B "Speaker Wide"; datastores emptied
+2 FAIL(S)
+
+== mut/M4-live-inputs
+PASS  setup: takectl running, PGM A ("Speaker Wide"), PVW B ("Two Shot")
+PASS  R0a. WATCH PGM on, watched (socket open): on true, watched true
+PASS  R0b. 5 s idle on the real documents (audio levels, running times, the clock's time string): no warning
+PASS  R1. Slides switched on by hand in Program A: "Slides on" in /state within 17 ms; WARNING line "CHANGED IN MIMOLIVE: Slides on"
+PASS  R2a. PUSH "Two Shot" onto A (Two Shot in, Cam Wide out): ok; no warning (4 s)
+PASS  R2b. TAKE to B "Speaker Wide": the post-hook brings the Lower Third in (live); no warning (4 s, past the 3 s write window)
+PASS  R2c. the hook's Lower Third switched off (as if it ended itself): no warning (ignored until it reads off)
+PASS  R2d. having read off, it is watched again: switched on by hand → "Lower Third on"
+FAIL  R3. PUSH "Slides PiP" onto B, and 60 ms later the Lower Third switched on by hand (it read "shutdown" before, "shutdown" after): "undefined"; the PUSH's own layers added nothing (n undefined: undefined)
+PASS  R4. Cam PiP (watchIgnoreLayers) switched off and back by hand in Program B: no warning
+PASS  R5a. "Slides off" → dismiss: accepted 1, cleared
+PASS  R5b. B as it is now is the new baseline: nothing comes back by itself (3 s)
+PASS  R5c. the next hand change warns again: "Slides on"
+PASS  R6a. TAKE with the warning up: ok (not blocked); cleared (PGM A)
+PASS  R6b. CUT clears it ("Slides off" → PGM B)
+PASS  R6c. UNDO clears it ("Slides off" → PGM A)
+PASS  R7a. after a TAKE, UNDO is offered (Preview A, look "Slides PiP")
+PASS  R7b. Lower Third switched on by hand in Preview A: UNDO off within 20 ms ("Preview changed since the TAKE: Lower Third on, by hand in mimoLive", key "Preview changed"); no Program warning
+PASS  R7c. "Slides PiP"'s thumbnail taken again 1034 ms after the change (the Lower Third's 0.5 s fade, then ~1 s settled); thumbs/index.json agrees
+restored: slot 1, duration 0.5 s, Lower Third off/off, looks A "Speaker Wide" B "Speaker Wide"; datastores emptied
+1 FAIL(S)
+
+Correction, 2026-11-12: the M4 result above is not M4's. R3 failed because the Lower Third was stuck in
+"shutdown" (it read "shutdown" before and after: 7.0b3's stuck layer), and no warning came at all; audio levels
+leaking through would have added warnings, not removed them. On the real app no check catches M4 (R0b's 5 s
+carried no audio-level input); the offline L1 is what proves the filter. M1's R3 failure is its own: the PUSH's
+own layers were counted ("Two Shot off", "Slides on"), though the Lower Third was stuck there too.
+
+== mut/M7-take-clears (2026-11-12: TAKE, CUT and UNDO do not clear; R6a-c tightened to read the watch as each
+   command returns, shown and kept off air)
+   PASS  setup: takectl running, PGM A ("Speaker Wide"), PVW B ("Two Shot")
+   PASS  R0a. WATCH PGM on, watched (socket open): on true, watched true
+   PASS  R0b. 5 s idle on the real documents (audio levels, running times, the clock's time string): no warning
+   PASS  R1. Slides switched on by hand in Program A: "Slides on" in /state within 23 ms; WARNING line "CHANGED IN MIMOLIVE: Slides on"
+   PASS  R2a. PUSH "Two Shot" onto A (Two Shot in, Cam Wide out): ok; no warning (4 s)
+   PASS  R2b. TAKE to B "Speaker Wide": the post-hook brings the Lower Third in (live); no warning (4 s, past the 3 s write window)
+   PASS  R2c. the hook's Lower Third switched off (as if it ended itself): no warning (ignored until it reads off)
+   PASS  R2d. having read off, it is watched again: switched on by hand → "Lower Third on"
+   PASS  R3. PUSH "Slides PiP" onto B, and 60 ms later the Lower Third switched on by hand (it read "off" before, "live" after): "Lower Third on"; the PUSH's own layers added nothing (n 1: ["Lower Third on"])
+   PASS  R4. Cam PiP (watchIgnoreLayers) switched off and back by hand in Program B: no warning
+   PASS  R5a. "Slides off" → dismiss: accepted 1, cleared
+   PASS  R5b. B as it is now is the new baseline: nothing comes back by itself (3 s)
+   PASS  R5c. the next hand change warns again: "Slides on"
+   FAIL  R6a. TAKE with the warning up: ok (not blocked); gone as the TAKE returned (shown nothing, kept off air "Slides on" for B; PGM A)
+   FAIL  R6b. CUT clears it ("Slides off" → PGM B; as the CUT returned: shown nothing, kept off air "Slides off" for A)
+   FAIL  R6c. UNDO clears it ("Slides off" → PGM A; as the UNDO returned: shown nothing, kept off air "Slides off" for B)
+   PASS  R7a. after a TAKE, UNDO is offered (Preview A, look "Slides PiP")
+   PASS  R7b. Lower Third switched on by hand in Preview A: UNDO off within 19 ms ("Preview changed since the TAKE: Lower Third on, by hand in mimoLive", key "Preview changed"); no Program warning
+   PASS  R7c. "Slides PiP"'s thumbnail taken again 1040 ms after the change (the Lower Third's 0.5 s fade, then ~1 s settled); thumbs/index.json agrees
+   (A first run also failed R3: the Lower Third was stuck in "shutdown" before and after, not the mutant;
+    its R6a-c failed the same way: R6a. TAKE with the warning up: ok (not blocked); R6b. CUT clears it ("Slides off" → PGM B; R6c. UNDO clears it ("Slides off" → PGM A)

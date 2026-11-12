@@ -1,0 +1,11 @@
+amend-check, first run (2026-11-11 16:56, real mimoLive 7.0b3 30982). mimoLive crashed during L2, so
+the test's own report was never written; these are the lines it printed before that.
+
+PASS  N. A's document missing: ready=false, panicArmed=true; /take → 503; slot 2 → /panic {"ok":true,"rounds":1} → slot 1
+PASS  X. running on A; relay down → not ready after 2031 ms (fetch failed); MASTER cut to B directly; relay up → running after 2284 ms, pgm B read from the switcher
+PASS  L1. B's sender stopped: doctor "MASTER receives B's NDI ("NDI PH-B")" red → ""NDI PH-B" in "PH-MASTER" is not receiving B's NDI: check th…"; TAKE to B → "MASTER is not receiving B's NDI (\"NDI PH-B\" not connected)"; restored: connected=true
+
+L2 then re-saved A's NDI output title while A was on air (the 7.0b3 fault that stops a sender), to
+show a TAKE away from a dead A is allowed. mimoLive crashed: macOS report
+mimoLive-2026-11-11-165713.ips, EXC_BAD_ACCESS (SIGSEGV) at 0x88 in
+BXMO -[BXMONDIWriter appendSampleBuffer:]_block_invoke on a dispatch queue. W was not reached.

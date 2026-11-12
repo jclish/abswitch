@@ -1,0 +1,32 @@
+page http://localhost:8991/ at 1180×820 @2x in Chrome/157.0.8103.51
+{"conn":"ok","view":"","scroll":[1180,820,1180,820],"small":[],"buttons":33,"outside":[],"pics":[{"mon":"pgm","picture":"800x450","stale":""},{"mon":"pvw","picture":"800x450","stale":""}],"headers":["PROGRAM · DOCUMENT A","PREVIEW · DOCUMENT B"],"status":"READY · tally witness agrees"}
+PASS  takectl answered (conn ok)
+PASS  one screen: page 1180×820 in a 1180×820 viewport
+PASS  nothing is cut off at the edges
+PASS  every visible control ≥ 44 px (33 buttons)
+PASS  reasons whole on their keys, subtitle whole or hidden
+PASS  look-key labels ≥ 4.5:1 over any thumbnail: worst 8.6:1 (Speaker Wide .sub over white)
+PASS  both monitors show a live picture: pgm 800x450, pvw 800x450
+screenshot: stipad.png
+   /take → ok
+   /steps/record?on=1 → ok
+   /pvw/layer-set/Slides%20PiP → ok
+   /steps/add → ok
+   /transition?mode=stinger → ok
+   /push → ok
+   /take → ok
+   /take → ok
+   /ftb?on=1 → ok
+   /dsk/Bug?on=1 → ok
+   /ftb?on=0 → ok
+   /dsk/Bug?on=0 → ok
+   /transition?mode=mix → ok
+   /steps/push?pace=instant → ok
+   /panic → ok
+   /safe/target?doc=A → ok
+   /take → ok
+   /steps/clear → ok
+   /steps/record?on=0 → ok
+PASS  reasons whole and labels readable in every state
+PASS  no key moved across 19 state changes (TAKE, record, recall, add, STINGER, PUSH, TAKEs, FTB on/off, a DSK on/off, MIX, steps push, PANIC, SAFE target, TAKE out of SAFE)
+ALL PASS

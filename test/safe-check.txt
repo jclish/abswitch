@@ -1,0 +1,15 @@
+PASS  setup: takectl running (pgm A), safe source "SAFE Test Pattern" in slot 3
+PASS  P0. PANIC 0 ms after TAKE → {"ok":true,"pgm":"SAFE","rounds":1,"ms":305}; slots seen 14:1 51:3; TALLY off/off; target B; take → "TAKE not completed: /panic arrived during preflight; signal not sent"
+PASS  P200. PANIC 200 ms after TAKE → {"ok":true,"pgm":"SAFE","rounds":2,"ms":1178}; slots seen 6:1 616:2 1154:3; TALLY off/off; target A; take → "dissolve"
+PASS  P600. PANIC 600 ms after TAKE → {"ok":true,"pgm":"SAFE","rounds":1,"ms":280}; slots seen 7:1 622:2 656:3; TALLY off/off; target A; take → "dissolve"
+PASS  P-stinger. PANIC 200 ms into a stinger TAKE: take → "TAKE not completed: /panic arrived under the stinger; signal not sent"; slots seen 11:1 277:3 (B never live); STINGER off; target B
+PASS  P-outside. PANIC 200 ms into a dissolve to B started outside takectl → {"ok":true,"rounds":2,"ms":787}; slots seen 14:1 553:2 788:3
+PASS  T. TAKE out of SAFE → A: dissolve; slot 1; pgm A; TALLY live/off; UNDO "the TAKE came out of SAFE"
+PASS  T. CUT out of SAFE → B: cut; slot 2; pgm B; TALLY off/live; UNDO "the TAKE came out of SAFE"
+PASS  T. CUT out of SAFE → A: cut; slot 1; pgm A; TALLY live/off; UNDO "the TAKE came out of SAFE"
+PASS  T. TAKE out of SAFE → B: dissolve; slot 2; pgm B; TALLY off/live; UNDO "the TAKE came out of SAFE"
+PASS  O. Cut_3 outside → SAFE, target B, TALLY off/off; Cut_4 (empty) → OTHER slot 9, warning "something else is on air: switcher slot 9 (no source: an empty slot was selected); commands behave as in SAFE"; PUSH → "PUSH is refused while something else is on air (switcher slot 9): TAKE or CUT to B first"; TAKE → B (slot 2)
+PASS  A. PANIC with SAFE on air → {"ok":true,"already":true,"rounds":0,"ms":13}; slots seen 6:3
+PASS  N. no safe source, B on air: PANIC → {"ok":true,"pgm":"A","rounds":1}; slot 1
+restored: slot 1, TALLY off/off, shows {"PH-A":"live","PH-B":"live","PH-MASTER":"live"}
+ALL PASS

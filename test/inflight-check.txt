@@ -1,8 +1,8 @@
 switcher transition duration 0.5 s → 2 s (takectl config still dissolveMs 500)
    +1.3 s, verify() done, dissolve still running: switcher {"slot":1,"codes":{"A":30,"B":30},"inFlight":true}, pgm=B, lastError=null, TALLY A=live B=live
 PASS  V. verify() at its last retry still saw 30/30 and decided nothing (lastError null)
-PASS  V. the next settled read decided: pgm=B, slot 2, TALLY A=off B=live, lastError=null; log: 20:20:59.623 verify: switcher still mid-transition after 3 retries (slot 1); the next settled read decides | 20:21:00.415 transition settled on a later read (socket): PGM=B
+PASS  V. the next settled read decided: pgm=B, slot 2, TALLY A=off B=live, lastError=null; log: 00:36:57.340 verify: switcher still mid-transition after 3 retries (slot 1); the next settled read decides | 00:36:58.139 transition settled on a later read (socket): PGM=B
 switcher transition duration → 4 s
-PASS  D. doctor 200 ms into a 4 s dissolve (ran 1817 ms): pgm null, said mid-transition (doctor-mid-transition.txt)
-restored: transition 0.5 s, live slot 1, COUNTER {"A":"absent","B":"absent"}, TALLY {"A":"live","B":"off"}
+PASS  D. doctor 200 ms into a 4 s dissolve (ran 1800 ms): pgm null, said mid-transition (doctor-mid-transition.txt)
+restored: transition 0.5 s, live slot 1, COUNTER {"A":"absent","B":"absent"}, TALLY {"A":"off","B":"off"}
 ALL PASS

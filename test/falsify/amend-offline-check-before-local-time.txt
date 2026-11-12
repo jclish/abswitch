@@ -1,0 +1,11 @@
+PASS  W1. from the LAN address: Save → 403 "Set up from the Mac running takectl: saving and starting over only work there."; Start Over → 403; from loopback Save → ok
+FAIL  W2. Start Over with MASTER live → 409 "Stop the show in \"PH-MASTER.tvshow\" first: Start Over is refused while MASTER is on air."; stopped → {"status":200,"ok":true,"backup":"w.config.backup-20261112-023408.json"}, backups ["w.config.backup-20261112-023408.json"] (local time: false), mode setup; Save again → running pgm A
+PASS  N1. A missing: ready=false panicArmed=true ([A] no open document matching "PH-A-missing" on http://localhost:18989); /take → 503; mock slot 2 → /panic {"ok":true,"rounds":1} → slot 1
+PASS  N2. MASTER missing: /panic → 503 "cannot panic: MASTER is not reachable ([MASTER] no open document matching \"PH-MASTER-missing\" on http://localhost:18989)"
+PASS  X1. running on B; mock gone → ready=false mode=starting (fetch failed); mock back on slot 1 → running, pgm A (from the switcher, not the commanded B)
+PASS  E1. stuck A: TAKE → after 6957 ms warning "running on source tally: this mimoLive does not expose the switcher's live slot (see /doctor); source tally unreliable: showing last commanded state"; pgm B; TALLY A=off B=live
+PASS  E2. /panic → {"ok":false,"sent":true,"error":"cut to A sent, cannot confirm (3 rounds; source tally unreliable)"} in 792 ms; pgm A, mock slot 1, warning kept
+PASS  P1. password set: running (pgm A); after /take the datastore holds {"pgm":"B","status":200}
+PASS  D1. B disconnected: doctor "MASTER receives B's NDI ("NDI PH-B")" red; TAKE to B → "MASTER is not receiving B's NDI (\"NDI PH-B\" not connected)"
+PASS  D2. A disconnected while A is on air: TAKE away to B → {"ok":true}, pgm B
+1 FAIL(S)

@@ -1,0 +1,12 @@
+FAIL  S1. no config: / → 0 undefined, /state ready=undefined mode=undefined, /take → 0 "" (takectl exited: No config at /var/folders/lr/lxty4jx15d7byh2bkr0bng680000gn/T/abswitch-r1-BFQCYb/takectl.config.json. Copy takectl.confi)
+FAIL  S2. /setup page 0; documents on the mock: undefined
+FAIL  S3. suggestions: undefined
+FAIL  S4. refused: A=B → 0 undefined; unknown source → 0 ""; no config written
+FAIL  S5. saved undefined: a=undefined master=undefined sources=undefined/undefined switcher=undefined; running, pgm=undefined
+FAIL  S6. second Save → 0 ""; /setup shows the saved setup
+FAIL  D1. /doctor.json on the mock: undefined/undefined green
+FAIL  D2. mock stopped: 0 red, first "undefined" → "undefined"; /state.doctor.ok=undefined; CLI exit 2
+FAIL  F1. keys absent: started (pgm=undefined), truth="undefined", warning=undefined, doctor live-slot/codes red=false
+FAIL  F2. on source tally: /take → pgm undefined, lastError undefined; /panic → {}, pgm undefined
+FAIL  L1. no Node → exit 127: ""; Node 20 → exit 127: ""
+11 FAIL(S)

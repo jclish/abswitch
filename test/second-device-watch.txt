@@ -1,0 +1,16 @@
+watching takectl /state for 600 s (started 2026-11-12T03:45:34.354Z)
+0.0 s  takectl unreachable (fetch failed)
+   1.5 s  pgm A · pvw B · switcher slot 1 · TALLY A/B live/off · safe.onAir false · warning null
+   2.6 s  pgm B · pvw A · switcher slot 2 · TALLY A/B off/live · safe.onAir false · warning null
+   4.7 s  pgm A · pvw B · switcher slot 1 · TALLY A/B live/off · safe.onAir false · warning null
+   6.7 s  pgm B · pvw A · switcher slot 2 · TALLY A/B off/live · safe.onAir false · warning null
+   8.4 s  pgm A · pvw B · switcher slot 1 · TALLY A/B live/off · safe.onAir false · warning null
+10.0 s  takectl unreachable (fetch failed)
+  12.3 s  pgm B · pvw A · switcher slot 2 · TALLY A/B off/live · safe.onAir false · warning null
+13.0 s  takectl unreachable (fetch failed)
+  15.0 s  pgm A · pvw B · switcher slot 1 · TALLY A/B live/off · safe.onAir false · warning null
+  45.7 s  pgm SAFE · pvw B · switcher slot 1 · TALLY A/B off/off · safe.onAir true · warning null
+  46.0 s  pgm SAFE · pvw B · switcher slot 3 · TALLY A/B off/off · safe.onAir true · warning null
+  49.1 s  pgm SAFE · pvw A · switcher slot 3 · TALLY A/B off/off · safe.onAir true · warning null
+  51.2 s  pgm A · pvw B · switcher slot 3 · TALLY A/B live/off · safe.onAir false · warning null
+  52.0 s  pgm A · pvw B · switcher slot 1 · TALLY A/B live/off · safe.onAir false · warning null

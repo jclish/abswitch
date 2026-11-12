@@ -1,0 +1,21 @@
+PASS  setup: takectl running, PGM A ("Speaker Wide"), PVW B ("Two Shot")
+PASS  R0a. WATCH PGM on, watched (socket open): on true, watched true
+PASS  R0b. 5 s idle on the real documents (audio levels, running times, the clock's time string): no warning
+PASS  R1. Slides switched on by hand in Program A: "Slides on" in /state within 16 ms; WARNING line "CHANGED IN MIMOLIVE: Slides on"
+PASS  R2a. PUSH "Two Shot" onto A (Two Shot in, Cam Wide out): ok; no warning (4 s)
+PASS  R2b. TAKE to B "Speaker Wide": the post-hook brings the Lower Third in (live); no warning (4 s, past the 3 s write window)
+PASS  R2c. the hook's Lower Third switched off (as if it ended itself): no warning (ignored until it reads off)
+PASS  R2d. having read off, it is watched again: switched on by hand → "Lower Third on"
+PASS  R3. PUSH "Slides PiP" onto B, and 60 ms later the Lower Third switched on by hand (it read "off" before, "live" after): "Lower Third on"; the PUSH's own layers added nothing (n 1: ["Lower Third on"])
+PASS  R4. Cam PiP (watchIgnoreLayers) switched off and back by hand in Program B: no warning
+PASS  R5a. "Slides off" → dismiss: accepted 1, cleared
+PASS  R5b. B as it is now is the new baseline: nothing comes back by itself (3 s)
+PASS  R5c. the next hand change warns again: "Slides on"
+PASS  R6a. TAKE with the warning up: ok (not blocked); gone as the TAKE returned (shown nothing, kept off air nothing; PGM A)
+PASS  R6b. CUT clears it ("Slides off" → PGM B; as the CUT returned: shown nothing, kept off air nothing)
+PASS  R6c. UNDO clears it ("Slides off" → PGM A; as the UNDO returned: shown nothing, kept off air nothing)
+PASS  R7a. after a TAKE, UNDO is offered (Preview A, look "Slides PiP")
+PASS  R7b. Lower Third switched on by hand in Preview A: UNDO off within 19 ms ("Preview changed since the TAKE: Lower Third on, by hand in mimoLive", key "Preview changed"); no Program warning
+PASS  R7c. "Slides PiP"'s thumbnail taken again 1033 ms after the change (the Lower Third's 0.5 s fade, then ~1 s settled); thumbs/index.json agrees
+restored: slot 1, duration 0.5 s, Lower Third off/off, looks A "Speaker Wide" B "Full Slides"; datastores emptied
+ALL PASS

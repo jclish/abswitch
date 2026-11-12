@@ -1,0 +1,5 @@
+watching takectl /state for 420 s (started 2026-11-12T02:26:54.450Z)
+   0.1 s  pgm A · pvw B · switcher slot 1 · TALLY A/B live/off · safe.onAir false · warning null
+  60.4 s  pgm SAFE · pvw B · switcher slot 3 · TALLY A/B off/off · safe.onAir true · warning null
+  62.0 s  pgm OTHER · pvw B · switcher slot 9 · TALLY A/B off/off · safe.onAir true · warning "something else is on air: switcher slot 9 (no source: an empty slot was selected); commands behave as in SAFE"
+  63.5 s  pgm A · pvw B · switcher slot 1 · TALLY A/B live/off · safe.onAir false · warning null

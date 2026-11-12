@@ -25,6 +25,7 @@ and are not covered by this project's MIT license.
 | Layer | Type | Source | Starts |
 |---|---|---|---|
 | `TALLY` | Box, red, 24 px bar across the top | — | off (takectl owns it) |
+| `Lower Third` | Lower Third (Manual), "Lower Third" / "abswitch bench" | — | off; in **no** Layer Set: takectl's hooks bring it in and out |
 | `Cam PiP` | PIP Window | CAM 1 | off |
 | `Two Shot` | Split Screen 2×1 | CAM 1, CAM 2 | off |
 | `Cam Wide` | Placer | CAM 1 | live |
@@ -50,10 +51,16 @@ audio sources, so their NDI carries no programme audio.
 - **Sources:** `NDI PH-A` and `NDI PH-B` are Camera sources whose device is the NDI sender. 7.0b3
   has no separate NDI source type, and it advertises the senders as `<HOST>.LOCAL (PHA)` / `(PHB)`,
   with the hyphen dropped. `Audio In` is the built-in microphone for the bench.
+- **Sources (v0.2):** `SAFE Test Pattern`, a Video Output Test source showing Philips PM5544: the
+  **bench** slate PANIC cuts to. For a show, put a wide camera wired straight into MASTER, or a
+  holding slide, in slot 3 instead, and choose it in setup.
 - **Layers, top first:**
+  - `FTB` — Box, black, full frame, 0.5 s dissolve; off (round 3 wires it).
+  - `STINGER` — Box, slate, full frame, wipes in from the left and out to the right in 0.4 s; off.
+    The default stinger (no media needed); takectl sets it live over a TAKE.
   - `Program Audio` — Audio Only, fed from Audio In.
-  - `AB Switcher` — Video Switcher; slot 1 = NDI PH-A, slot 2 = NDI PH-B, slots 3–8 cleared,
-    Source Count 4 (2 isn't offered), 0.5 s dissolve, no audio path.
+  - `AB Switcher` — Video Switcher; slot 1 = NDI PH-A, slot 2 = NDI PH-B, slot 3 = SAFE Test
+    Pattern, slots 4–8 cleared, Source Count 4 (2 isn't offered), 0.5 s dissolve, no audio path.
 - **Output:** `Recording` (File Recording to ~/Movies), Start with show.
 
 ## Done by hand
@@ -74,7 +81,8 @@ audio sources, so their NDI carries no programme audio.
   - The Video Switcher has no zoom input on this build, and the README's 2.5 % only hides ~13 px.
 
 - Recording the **Layer Sets** in PH-A and PH-B (2026-11-09):
-  - **TALLY and COUNTER: "No Action"** in every set. Never record them as *Off*.
+  - **TALLY, COUNTER and Lower Third: "No Action"** in every set. Never record them as *Off*: a recall
+    would then take the lower third out from under a hook.
   - **The other four layers: explicitly Live or Off** in every set (use Off, not Force Off):
 
   | Set | Live | Off |

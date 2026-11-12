@@ -1,0 +1,20 @@
+FAIL  P0. PANIC 0 ms after TAKE → {"ok":true,"pgm":"A","rounds":1,"ms":260}; slot 1; TALLY A/B live/off; TAKE target B (Preview at the press: B); take → "TAKE not completed: /panic arrived during preflight; signal not sent"
+FAIL  P200. PANIC 200 ms after TAKE → {"ok":true,"pgm":"A","rounds":2,"ms":1066}; slot 1; TALLY A/B live/off; TAKE target B (Preview at the press: A); take → "dissolve"
+FAIL  P600. PANIC 600 ms after TAKE → {"ok":true,"pgm":"A","rounds":1,"ms":264}; slot 1; TALLY A/B live/off; TAKE target B (Preview at the press: A); take → "dissolve"
+FAIL  P-stinger. PANIC 200 ms into a stinger TAKE: B never cut ("TAKE not completed: /panic arrived under the stinger; signal not sent"); slot 1; TALLY live/off; target B; 18:PH-MASTER STINGER setLive | 207:PH-MASTER STINGER setOff | 208:MASTER cut 1 | 210:PH-A TALLY setLive | 211:PH-B TALLY setOff
+FAIL  P-outside. PANIC 200 ms into a dissolve to B started outside takectl → {"ok":true,"rounds":2,"ms":772}; slot 1; target B; 3:MASTER dissolve 2 | 210:PH-MASTER STINGER setOff | 212:PH-A TALLY setLive | 213:PH-B TALLY setOff | 725:MASTER cut 1
+FAIL  T. TAKE→A: slot 2, pgm B, TALLY off/live, dissolve, UNDO "null", history {"from":"Speaker Wide","to":"Slides PiP","kind":"take","ts":1794449589020}
+FAIL  T. CUT→B: slot 2, pgm B, TALLY off/live, cut, UNDO "null", history {"from":"Speaker Wide","to":"Slides PiP","kind":"cut","ts":1794449590346}
+FAIL  T. CUT→A: slot 2, pgm B, TALLY off/live, cut, UNDO "null", history {"from":"Speaker Wide","to":"Slides PiP","kind":"cut","ts":1794449592166}
+FAIL  T. TAKE→B: slot 2, pgm B, TALLY off/live, dissolve, UNDO "null", history {"from":"Speaker Wide","to":"Slides PiP","kind":"take","ts":1794449594481}
+FAIL  R1. in SAFE: push → undefined; undo → "UNDO not available: a PUSH changed Program since the TAKE"; mirror → "busy: a transition is in progress; MIRROR would have to guess which document is PVW"; steps → "busy: transition in progress"
+FAIL  R2. Layer Set button with target A → recalled in undefined (); target → B: /state.pvw B
+FAIL  R3. /safe/target with A on air → "unknown route"
+FAIL  H. Cut_3 outside → pgm undefined, target undefined, TALLY live/off; Cut_4 (empty) → pgm undefined, slot undefined, warning undefined; PUSH → undefined; TAKE → A (slot 9)
+FAIL  A. PANIC with SAFE already on air → {"ok":true,"rounds":1,"ms":266}; switcher got 1 cut or dissolve signal(s)
+FAIL  Y. 3 × (PANIC, TAKE out to A): log ["Speaker Wide→Slides PiP take","Speaker Wide→Slides PiP take","Speaker Wide→Slides PiP take"]; "Slides PiP" counted as left 0 times
+FAIL  K. TAKE out of SAFE to B ("Slides PiP"): document pre-hook skipped, MASTER pre-hook ran, post-hook ran: 19:PH-A Lower Third setOff | 23:PH-MASTER STINGER setOff | 27:MASTER dissolve 2 | 29:PH-B TALLY setLive | 788:PH-A TALLY setOff | 794:PH-B Lower Third setLive
+FAIL  N1. no safe source: PANIC → {"ok":true,"pgm":"A"}, slot 1; doctor warning undefined
+FAIL  N2. not ready (A missing), safe configured: PANIC armed true → {"ok":true,"pgm":"A"}, slot 1
+FAIL  S. setup suggests undefined (slot undefined); A's source as safe → 200 undefined; unknown → 409; saved undefined; doctor 
+19 FAIL(S)

@@ -1,8 +1,9 @@
-20:21:22.046 A="PH-A" B="PH-B" MASTER="PH-MASTER" switcher="AB Switcher" slots A=1 B=2
-20:21:22.047 signals cut={"1":"tvGroup_Control__Cut_1_TypeSignal","2":"tvGroup_Control__Cut_2_TypeSignal","3":"tvGroup_Control__Cut_3_TypeSignal","4":"tvGroup_Control__Cut_4_TypeSignal","5":"tvGroup_Control__Cut_5_TypeSignal","6":"tvGroup_Control__Cut_6_TypeSignal","7":"tvGroup_Control__Cut_7_TypeSignal","8":"tvGroup_Control__Cut_8_TypeSignal"} dis={"1":"tvGroup_Control__Dis_1_TypeSignal","2":"tvGroup_Control__Dis_2_TypeSignal","3":"tvGroup_Control__Dis_3_TypeSignal","4":"tvGroup_Control__Dis_4_TypeSignal","5":"tvGroup_Control__Dis_5_TypeSignal","6":"tvGroup_Control__Dis_6_TypeSignal","7":"tvGroup_Control__Dis_7_TypeSignal","8":"tvGroup_Control__Dis_8_TypeSignal"}
-20:21:22.068 websocket connected ws://localhost:8989/api/v1/socket
-20:21:22.071 takectl listening on http://0.0.0.0:8991  (GET / operator page; /state /take /cut /mirror /panic /resync /pvw/layer-set/<name>)
-20:21:29.515 TAKE → B (slot 2, dissolve)
-20:21:30.330 [B] TALLY reads "shutdown" while live is wanted; repairing
-20:21:31.145 [B] TALLY after repair: "live"
-20:21:32.601 TAKE → A (slot 1, dissolve)
+00:37:40.188 takectl listening on http://0.0.0.0:8991  (GET / operator page, /setup, /doctor; /state /take /cut /mirror /panic /resync /pvw/layer-set/<name>)
+00:37:40.238 A="PH-A" B="PH-B" MASTER="PH-MASTER" switcher="AB Switcher" slots A=1 B=2
+00:37:40.238 signals cut={"1":"tvGroup_Control__Cut_1_TypeSignal","2":"tvGroup_Control__Cut_2_TypeSignal","3":"tvGroup_Control__Cut_3_TypeSignal","4":"tvGroup_Control__Cut_4_TypeSignal","5":"tvGroup_Control__Cut_5_TypeSignal","6":"tvGroup_Control__Cut_6_TypeSignal","7":"tvGroup_Control__Cut_7_TypeSignal","8":"tvGroup_Control__Cut_8_TypeSignal"} dis={"1":"tvGroup_Control__Dis_1_TypeSignal","2":"tvGroup_Control__Dis_2_TypeSignal","3":"tvGroup_Control__Dis_3_TypeSignal","4":"tvGroup_Control__Dis_4_TypeSignal","5":"tvGroup_Control__Dis_5_TypeSignal","6":"tvGroup_Control__Dis_6_TypeSignal","7":"tvGroup_Control__Dis_7_TypeSignal","8":"tvGroup_Control__Dis_8_TypeSignal"}
+00:37:40.259 websocket connected ws://localhost:8989/api/v1/socket
+00:37:40.261 running
+00:37:46.167 TAKE → B (slot 2, dissolve)
+00:37:46.982 [B] TALLY reads "shutdown" while live is wanted; repairing
+00:37:47.795 [B] TALLY after repair: "live"
+00:37:49.271 TAKE → A (slot 1, dissolve)

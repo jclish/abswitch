@@ -1,0 +1,8 @@
+FAIL  R1a. /setup lists undefined; suggests undefined
+FAIL  R1b. Save → config equals the hand-made one ([null,null,null,null,null,null,null,null]); running, pgm=undefined from switcher slot 1, truth="undefined"
+FAIL  R2a. shows stopped: 0 red — ; /state.doctor.ok=undefined
+FAIL  R2b. shows running: 0 checks, all green; `takectl doctor` exit 0 (doctor-round1.txt)
+FAIL  R3a. A-only set: layerSetsAll undefined; doctor "undefined" → "undefined"; recall into PVW undefined → "no Layer Set named \"R1 Only In A\" in B (\"PH-B\")"
+FAIL  R3b. DELETE layer set → HTTP 204, gone=true; doctor all green again: false
+restored: shows {"A":"off","B":"off","M":"off"}, TALLY off
+6 FAIL(S)

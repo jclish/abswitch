@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>abswitch setup</title>
+<!-- Served by takectl at /setup. Self-contained: no build step, no CDN. -->
+<style>
+  :root { --bg: #0d0f12; --panel: #171a1f; --line: #2a2f37; --text: #e9edf2; --muted: #9aa3ad;
+    --ok: #19b34a; --err: #ff5a5f; --acc: #4f8cff; --btn: #262b33; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font: 17px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 28px 18px 60px; }
+  h1 { font-size: 30px; margin: 0 0 6px; }
+  .lede { color: var(--muted); margin: 0 0 22px; }
+  h2 { font-size: 15px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 26px 0 10px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 0 0 12px; }
+  label { display: block; font-weight: 700; margin: 0 0 6px; }
+  label small { font-weight: 400; color: var(--muted); }
+  select, input { font: inherit; width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: #0f1216; color: var(--text); min-height: 46px; }
+  .host { margin-top: 8px; display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: center; font-size: 14px; color: var(--muted); }
+  .host input { min-height: 36px; padding: 6px 10px; font-size: 14px; }
+  .err { color: var(--err); font-size: 15px; margin-top: 6px; }
+  .note { color: var(--muted); font-size: 15px; margin-top: 6px; }
+  button { font: inherit; font-weight: 800; font-size: 20px; color: #fff; background: var(--acc); border: 0; border-radius: 10px; padding: 14px 28px; min-height: 56px; cursor: pointer; }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  #result { margin-top: 14px; font-size: 17px; }
+  #result.bad { color: var(--err); }
+  #result.good { color: var(--ok); }
+  a { color: var(--acc); }
+  dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 0; }
+  dt { color: var(--muted); }
+  dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+<main>
+  <h1>abswitch setup</h1>
+  <p class="lede" id="lede">Loading…</p>
+
+  <div id="done" hidden>
+    <div class="card"><dl id="current"></dl></div>
+    <p class="note" id="overNote">takectl is already set up. Start Over keeps the old setup as a dated backup of <b id="cfgName">takectl.config.json</b> and opens setup again. It works only from the Mac running takectl, and only while the master's show is stopped.</p>
+    <p><button type="button" id="over">Start over</button></p>
+    <div id="overResult"></div>
+    <p><a href="/">Operator page</a> · <a href="/doctor">Doctor</a></p>
+  </div>
+
+  <form id="form" hidden>
+    <h2>1. The three documents</h2>
+    <div class="card" data-role="a">
+      <label for="doc-a">Composition A <small>(one of the two looks that alternate on air)</small></label>
+      <select id="doc-a"></select>
+      <div class="host"><span>mimoLive at</span><input id="host-a" spellcheck="false"></div>
+      <div class="err" id="err-a"></div>
+    </div>
+    <div class="card" data-role="b">
+      <label for="doc-b">Composition B <small>(the other look)</small></label>
+      <select id="doc-b"></select>
+      <div class="host"><span>mimoLive at</span><input id="host-b" spellcheck="false"></div>
+      <div class="err" id="err-b"></div>
+    </div>
+    <div class="card" data-role="master">
+      <label for="doc-master">Master <small>(the document that goes to air and does the TAKE)</small></label>
+      <select id="doc-master"></select>
+      <div class="host"><span>mimoLive at</span><input id="host-master" spellcheck="false"></div>
+      <div class="err" id="err-master"></div>
+    </div>
+    <p class="note">The three can be on one Mac or on three: change "mimoLive at" to the other Mac's address, e.g. http://studio-mac.local:8989.</p>
+
+    <h2>2. Inside the master document</h2>
+    <div class="card">
+      <label for="srcA">The source that shows A <small>(NDI from A)</small></label>
+      <select id="srcA"></select>
+    </div>
+    <div class="card">
+      <label for="srcB">The source that shows B <small>(NDI from B)</small></label>
+      <select id="srcB"></select>
+    </div>
+    <div class="card">
+      <label for="srcSafe">The safe source <small>(where PANIC cuts to; optional)</small></label>
+      <select id="srcSafe"></select>
+      <p class="note">For a show: a wide camera wired straight into the master document, or a holding slide, in a switcher slot of its own. Never a test pattern: colour bars on air look like a fault. With "None", PANIC cuts to A, whatever it shows.</p>
+    </div>
+    <div class="card">
+      <label for="sw">The Video Switcher layer</label>
+      <select id="sw"></select>
+      <div class="err" id="err-m2"></div>
+    </div>
+
+    <p class="note" id="remote" hidden>Set up from the Mac running takectl: saving only works there.</p>
+    <p><button type="submit" id="save">Save and start</button></p>
+    <div id="result"></div>
+  </form>
+</main>
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const roles = ["a", "b", "master"];
+const j = async (u, o) => (await fetch(u, o)).json();
+const docsFor = {}; // host -> promise of /setup/documents
+const opt = (value, text, sel) => { const o = document.createElement("option"); o.value = value; o.textContent = text; if (sel) o.selected = true; return o; };
+// Pre-selection by name: "…MASTER…", "…A" / "…B" (as in PH-A / PH-B). Only a suggestion.
+const guess = { master: (n) => /master/i.test(n), a: (n) => /(^|[^a-z0-9])a$/i.test(n.replace(/\.tvshow$/i, "")), b: (n) => /(^|[^a-z0-9])b$/i.test(n.replace(/\.tvshow$/i, "")) };
+
+async function fillDocs(r) {
+  const host = $("host-" + r).value.trim(), sel = $("doc-" + r), keep = sel.value;
+  $("err-" + r).textContent = "";
+  docsFor[host] = docsFor[host] || j("/setup/documents?host=" + encodeURIComponent(host));
+  const res = await docsFor[host];
+  sel.textContent = "";
+  if (!res.ok) { delete docsFor[host]; sel.append(opt("", "— no documents —")); $("err-" + r).textContent = res.error + " Start mimoLive there, open the documents, then change this field to look again."; return; }
+  sel.append(opt("", "— choose —"));
+  const picked = roles.filter((x) => x !== r).map((x) => $("doc-" + x).value);
+  for (const d of res.documents) {
+    const auto = !keep && guess[r](d.name) && !picked.includes(d.id);
+    sel.append(opt(d.id, d.name + (d.live === "live" ? "" : "  (show not started)"), d.id === keep || auto));
+  }
+}
+const chosen = (r) => { const sel = $("doc-" + r); return { host: $("host-" + r).value.trim(), id: sel.value, name: sel.value ? sel.selectedOptions[0].textContent.replace(/\s+\(show not started\)$/, "") : "" }; };
+
+async function fillMaster() {
+  const m = chosen("master"), a = chosen("a"), b = chosen("b");
+  for (const id of ["srcA", "srcB", "srcSafe", "sw"]) $(id).textContent = "";
+  $("err-m2").textContent = "";
+  if (!m.id) { for (const id of ["srcA", "srcB", "srcSafe", "sw"]) $(id).append(opt("", "— choose the master document first —")); return; }
+  const q = new URLSearchParams({ host: m.host, id: m.id, aHost: a.host, aId: a.id, aName: a.name, bHost: b.host, bId: b.id, bName: b.name });
+  const res = await j("/setup/master?" + q);
+  if (!res.ok) { $("err-m2").textContent = res.error; return; }
+  for (const [id, want] of [["srcA", res.suggest.sourceNameA], ["srcB", res.suggest.sourceNameB]]) {
+    $(id).append(opt("", "— choose —"));
+    for (const s of res.sources) $(id).append(opt(s.name, s.name + (s.device ? "  ·  " + s.device.replace(/ @.*$/, "") : ""), s.name === want));
+  }
+  $("srcSafe").append(opt("", "None: PANIC cuts to A", !res.suggest.sourceNameSafe));
+  for (const s of res.sources) $("srcSafe").append(opt(s.name, s.name + (s.slot ? `  ·  switcher slot ${s.slot}` : ""), s.name === res.suggest.sourceNameSafe));
+  $("sw").append(opt("", "— choose —"));
+  for (const l of [...res.layers].sort((x, y) => y.switcher - x.switcher)) $("sw").append(opt(l.name, l.name + (l.switcher ? "  (Video Switcher)" : ""), l.name === res.suggest.switcherLayerName));
+  if (!res.layers.some((l) => l.switcher)) $("err-m2").textContent = "This document has no Video Switcher layer yet: add one with A's and B's sources in slots 1 and 2.";
+}
+
+$("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const a = chosen("a"), b = chosen("b"), m = chosen("master");
+  const body = { a: { host: a.host, documentName: a.name }, b: { host: b.host, documentName: b.name },
+    master: { host: m.host, documentName: m.name, sourceNameA: $("srcA").value, sourceNameB: $("srcB").value, sourceNameSafe: $("srcSafe").value || null }, switcherLayerName: $("sw").value };
+  $("save").disabled = true;
+  $("result").className = ""; $("result").textContent = "Saving…";
+  const res = await j("/setup/save", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).catch(() => ({ ok: false, error: "takectl did not answer" }));
+  if (!res.ok) { $("result").className = "bad"; $("result").textContent = res.error; $("save").disabled = false; return; }
+  $("result").className = "good"; $("result").textContent = `Saved ${res.saved}. Starting…`;
+  for (let i = 0; i < 40; i++) {
+    await new Promise((r) => setTimeout(r, 500));
+    const st = await j("/state").catch(() => null);
+    if (st && st.ready !== false) { location.href = "/"; return; }
+    if (i === 39) { $("result").className = "bad"; $("result").innerHTML = ""; $("result").append(`Saved, but takectl is not ready yet: ${st?.startError || "starting"}. `, Object.assign(document.createElement("a"), { href: "/doctor", textContent: "Open Doctor" })); }
+  }
+});
+
+(async () => {
+  const info = await j("/setup/info");
+  if (info.configured) {
+    $("lede").textContent = "takectl is set up with these documents.";
+    $("cfgName").textContent = info.configFile;
+    const c = info.config, row = (k, v) => { const dt = document.createElement("dt"), dd = document.createElement("dd"); dt.textContent = k; dd.textContent = v; $("current").append(dt, dd); };
+    row("A", `${c.a.documentName} at ${c.a.host}`); row("B", `${c.b.documentName} at ${c.b.host}`); row("Master", `${c.master.documentName} at ${c.master.host}`);
+    row("Source for A", c.master.sourceNameA); row("Source for B", c.master.sourceNameB); row("Safe source", c.master.sourceNameSafe || "None (PANIC cuts to A)"); row("Switcher layer", c.switcherLayerName);
+    $("done").hidden = false;
+    if (!info.local) { $("over").disabled = true; $("overNote").textContent = "takectl is already set up. To start over, open this page on the Mac running takectl."; }
+    let armed = false;
+    $("over").addEventListener("click", async () => {
+      if (!armed) { armed = true; $("over").textContent = "Press again to start over"; setTimeout(() => { armed = false; $("over").textContent = "Start over"; }, 4000); return; }
+      $("over").disabled = true;
+      const r = await j("/setup/start-over", { method: "POST" }).catch(() => ({ ok: false, error: "takectl did not answer" }));
+      if (r.ok) { location.reload(); return; }
+      $("overResult").className = "err"; $("overResult").textContent = r.error; $("over").disabled = false; armed = false; $("over").textContent = "Start over";
+    });
+    return;
+  }
+  if (!info.local) { $("remote").hidden = false; $("save").disabled = true; }
+  $("lede").textContent = "Choose the three mimoLive documents. When the names match (PH-A, PH-B, PH-MASTER, NDI PH-A …) they are chosen for you; check them and press Save.";
+  for (const r of roles) {
+    $("host-" + r).value = info.defaultHost;
+    $("host-" + r).addEventListener("change", async () => { await fillDocs(r); fillMaster(); });
+    $("doc-" + r).addEventListener("change", () => fillMaster());
+  }
+  $("form").hidden = false;
+  for (const r of ["master", "a", "b"]) await fillDocs(r);
+  await fillMaster();
+})();
+</script>
+</body>
+</html>

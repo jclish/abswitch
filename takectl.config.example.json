@@ -9,11 +9,21 @@
     "sourceNameA": "NDI PH-A",
     "sourceNameB": "NDI PH-B",
     "slotA": null,
-    "slotB": null
+    "slotB": null,
+    "sourceNameSafe": null,
+    "slotSafe": null
   },
 
   "switcherLayerName": "AB Switcher",
   "tallyLayerName": "TALLY",
+
+  "stinger": false,
+  "ftbLayerName": "FTB",
+  "stingerLayerName": "STINGER",
+  "stingerCoverMs": 500,
+  "stingerOffMs": 120,
+  "hooks": {},
+  "watchIgnoreLayers": [],
 
   "dissolveMs": 500,
   "settleMs": 250,

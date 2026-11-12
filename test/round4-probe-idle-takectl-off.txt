@@ -1,0 +1,28 @@
+round4-probe "idle-takectl-off": 10 s of http://<host>:8989/api/v1/socket, started 20:06:39
+documents: PH-MASTER (live), PH-A (live), PH-B (live)
+
+
+107 messages in 10 s. By kind: layers values-changed 53, variants values-changed 12, variants changed 10, documents changed 32
+Live values (counted, not listed):
+     49  PH-MASTER · layers values-changed Program Audio · tvGroup_Source__Audio_TypeAudioAudioLevel1 tvGroup_Source__Audio_TypeAudioAudioLevel0
+     10  PH-MASTER · variants changed DSK Clock › ◸ Dissolve · output-values/tvOut_TimeString
+     10  PH-B · documents changed PH-B · duration formatted-duration
+     10  PH-MASTER · documents changed PH-MASTER · duration formatted-duration
+     10  PH-A · documents changed PH-A · duration formatted-duration
+      2  PH-MASTER · documents changed PH-MASTER · duration
+      1  PH-MASTER · layers values-changed Program Audio · tvGroup_Source__Audio_TypeAudioAudioLevel0 tvGroup_Ducking__Trigger_Source_TypeAudioAudioLevel0Raw tvGroup_Source__Audio_TypeAudioAudioLevel1 tvGroup_Ducking__Trigger_Source_TypeAudioAudioLevel1Raw output-values/tvOut_TimeRemaining
+      1  PH-MASTER · variants values-changed Program Audio › Audio In · tvGroup_Source__Audio_TypeAudioAudioLevel0 tvGroup_Ducking__Trigger_Source_TypeAudioAudioLevel0Raw tvGroup_Source__Audio_TypeAudioAudioLevel1 tvGroup_Ducking__Trigger_Source_TypeAudioAudioLevel1Raw output-values/tvOut_TimeRemaining
+      1  PH-MASTER · layers values-changed AB Switcher · output-values/tvOut_TimeRemaining
+      1  PH-MASTER · variants values-changed AB Switcher › 4 Sources · output-values/tvOut_TimeRemaining
+      1  PH-A · variants values-changed Lower Third › Lower Third – abswitch bench · output-values/tvOut_TimeRemaining
+      1  PH-A · variants values-changed Cam PiP › CAM 1 (Fullscreen) · output-values/tvOut_TimeRemaining
+      1  PH-A · variants values-changed Two Shot › 2 x 1 · tvIn_VideoSourceDAudioLevel0Raw tvIn_VideoSourceIAudioLevel1Raw tvIn_VideoSourceAAudioLevel1Raw tvIn_VideoSourceFAudioLevel0Raw tvIn_VideoSourceBAudioLevel1Raw tvIn_VideoSourceHAudioLevel1Raw tvIn_VideoSourceEAudioLevel0Raw tvIn_VideoSourceGAudioLevel0Raw tvIn_VideoSourceJAudioLevel1Raw tvIn_VideoSourceCAudioLevel1Raw tvIn_VideoSourceDAudioLevel1Raw tvIn_VideoSourceAAudioLevel0Raw tvIn_VideoSourceBAudioLevel0Raw tvIn_VideoSourceEAudioLevel1Raw tvIn_VideoSourceHAudioLevel0Raw tvIn_VideoSourceFAudioLevel1Raw tvIn_VideoSourceIAudioLevel0Raw tvIn_VideoSourceJAudioLevel0Raw tvIn_VideoSourceCAudioLevel0Raw tvIn_VideoSourceGAudioLevel1Raw
+      1  PH-A · layers values-changed Cam Wide · output-values/tvOut_TimeRemaining
+      1  PH-A · variants values-changed Cam Wide › CAM 1 (Fullscreen) · output-values/tvOut_TimeRemaining
+      1  PH-A · variants values-changed Slides › SLIDES (Fullscreen) · output-values/tvOut_TimeRemaining
+      1  PH-B · variants values-changed Lower Third › Lower Third – abswitch bench · output-values/tvOut_TimeRemaining
+      1  PH-B · variants values-changed Cam PiP › CAM 1 (Fullscreen) · output-values/tvOut_TimeRemaining
+      1  PH-B · variants values-changed Two Shot › 2 x 1 · tvIn_VideoSourceDAudioLevel0Raw tvIn_VideoSourceIAudioLevel1Raw tvIn_VideoSourceAAudioLevel1Raw tvIn_VideoSourceFAudioLevel0Raw tvIn_VideoSourceBAudioLevel1Raw tvIn_VideoSourceHAudioLevel1Raw tvIn_VideoSourceEAudioLevel0Raw tvIn_VideoSourceGAudioLevel0Raw tvIn_VideoSourceJAudioLevel1Raw tvIn_VideoSourceCAudioLevel1Raw tvIn_VideoSourceDAudioLevel1Raw tvIn_VideoSourceAAudioLevel0Raw tvIn_VideoSourceBAudioLevel0Raw tvIn_VideoSourceEAudioLevel1Raw tvIn_VideoSourceHAudioLevel0Raw tvIn_VideoSourceFAudioLevel1Raw tvIn_VideoSourceIAudioLevel0Raw tvIn_VideoSourceJAudioLevel0Raw tvIn_VideoSourceCAudioLevel0Raw tvIn_VideoSourceGAudioLevel1Raw
+      1  PH-B · layers values-changed Cam Wide · output-values/tvOut_TimeRemaining
+      1  PH-B · variants values-changed Cam Wide › CAM 1 (Fullscreen) · output-values/tvOut_TimeRemaining
+      1  PH-B · variants values-changed Slides › SLIDES (Fullscreen) · output-values/tvOut_TimeRemaining

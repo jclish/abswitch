@@ -1,4 +1,6 @@
 {
+  "ready": true,
+  "mode": "running",
   "pgm": null,
   "pvw": null,
   "busy": false,
@@ -15,11 +17,14 @@
     "B": "effect"
   },
   "warning": null,
+  "truth": "switcher live slot",
   "lastTake": null,
   "lastError": null,
   "lastErrorAt": null,
   "lastErrorAgeMs": null,
   "layerSets": [],
+  "layerSetsAll": [],
+  "doctor": null,
   "docs": {
     "A": {
       "id": "702635873",
@@ -73,4 +78,28 @@
 
 SWITCHER: mid-transition on every read (both slots at 30); no PGM decided — run doctor again
 
-All preflight checks pass.
+CHECKS:
+  ✓ mimoLive answers at http://localhost:8989
+  ✓ A document "PH-A" is open
+  ✓ A show is running
+  ✓ B document "PH-B" is open
+  ✓ B show is running
+  ✓ MASTER document "PH-MASTER" is open
+  ✓ MASTER show is running
+  ✓ A sends NDI
+  ✓ A has a "TALLY" layer
+  ✓ No live COUNTER layer in A
+  ✓ B sends NDI
+  ✓ B has a "TALLY" layer
+  ✓ No live COUNTER layer in B
+  ✓ Layer Set names match in A and B
+  ✓ MASTER has a Video Switcher layer
+  ✓ MASTER has the source "NDI PH-A"
+  ✓ "NDI PH-A" is in a switcher slot
+  ✓ MASTER has the source "NDI PH-B"
+  ✓ "NDI PH-B" is in a switcher slot
+  ✓ The switcher has cut and dissolve signals for both slots
+  ✓ The switcher reports its live slot
+  ✓ The switcher reports per-slot tally codes
+
+All checks pass.

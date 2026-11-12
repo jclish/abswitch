@@ -1,6 +1,6 @@
-1. B's TALLY after setLive, setOff 10–20 ms later, then 1.5 s: "shutdown" (attempt 4; pgm=A)
+1. B's TALLY after setLive, setOff 10–20 ms later, then 1.5 s: "shutdown" (attempt 3; pgm=A)
 PASS  1. the stuck state was produced ("shutdown")
-PASS  2. /take to B: slot 2, pgm B, B's TALLY +3:shutdown +841:off +955:live → "live", A's TALLY "off" (want slot 2, B live, A off)
-   takectl log: 20:21:30.330 [B] TALLY reads "shutdown" while live is wanted; repairing | 20:21:31.145 [B] TALLY after repair: "live"
-restored: live slot 1, COUNTER {"A":"absent","B":"absent"}, TALLY A=live B=off
+PASS  2. /take to B: slot 2, pgm B, B's TALLY +3:shutdown +831:off +940:live → "live", A's TALLY "off" (want slot 2, B live, A off)
+   takectl log: 00:37:46.982 [B] TALLY reads "shutdown" while live is wanted; repairing | 00:37:47.795 [B] TALLY after repair: "live"
+restored: live slot 1, COUNTER {"A":"absent","B":"absent"}, TALLY A=off B=off
 ALL PASS

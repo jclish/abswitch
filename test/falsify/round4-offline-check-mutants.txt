@@ -1,0 +1,115 @@
+round4-offline-check against mutants: copies of the round 4 takectl.mjs with one mechanism broken each.
+A check that cannot fail proves nothing: each mutant must fail the check that names its mechanism.
+(Against the build before round 4, the checks that say "no warning" pass vacuously: that build watches
+nothing. These mutants are what show those checks can fail.)
+
+== M1-own-writes: 33 pass, 4 fail
+   mutation: +    return false;
+   FAIL  C1. a PUSH with the warning up: ok; the warning stays, nothing added (n 4 → 5)
+   FAIL  O1. a PUSH ("Speaker Wide" onto A: Cam Wide on, Slides off) does not warn (3.5 s): ok
+   FAIL  O5. a hand change to a different layer (Lower Third) 60 ms into a PUSH's settle window still warns: "undefined"; the PUSH's own layers add nothing (n 3)
+   FAIL  O6. a hand change to one of the PUSH's own layers inside its window is not flagged (as ruled: the named layers only)
+
+== M2-hook-layers: 35 pass, 2 fail
+   mutation: -  markHookOn(role, ids) { for (const id of ids) this.hookOn[role].add(id); }
+   mutation: +  markHookOn(role, ids) { }
+   FAIL  O3. the hook's Lower Third ends by itself: no warning (ignored until it reads off)
+   FAIL  O4. having read off, it is watched again: switched on by hand → "undefined"
+
+== M3-tally: 34 pass, 3 fail
+   mutation: -  isTally(role, id, name) { return id === this.doc(role).tallyLayerId || String(name ?? "").toLowerCase() === String(CFG.tallyLayerName || "TALLY").toLowerCase(); }
+   mutation: +  isTally(role, id, name) { return false; return id === this.doc(role).tallyLayerId || String(name ?? "").toLowerCase() === String(CFG.tallyLayerName || "TALLY").toLowerCase(); }
+   FAIL  L4. Program's TALLY switched off and on by hand, outside any write of takectl's: no warning (TALLY is takectl's)
+   FAIL  W1. Cam Wide switched off by hand in Program B: change "undefined" (n undefined); WARNING line starts "CHANGED IN MIMOLIVE: TALLY off, on (+1 more)"
+   FAIL  W2. a setting edited and a variant added by hand add to it: n 4, list ["TALLY off, on","Cam Wide off","Slides: VideoSourceAName","Slides: variant added"]; the header still names the first
+
+== M4-live-inputs: 12 pass, 25 fail
+   mutation: -const LIVE_INPUT_RE = /AudioLevel/; // input values that move by themselves
+   mutation: +const LIVE_INPUT_RE = /^NEVER$/; // input values that move by themselves
+   FAIL  L1. 3 s of live values (running time, audio levels, a variant's output values): no warning
+   FAIL  L2. a Layer Set's "active" flag flipped twice in Program (derived, ignored): no warning
+   FAIL  L4. Program's TALLY switched off and on by hand, outside any write of takectl's: no warning (TALLY is takectl's)
+   FAIL  W1. Cam Wide switched off by hand in Program B: change "undefined" (n undefined); WARNING line starts "CHANGED IN MIMOLIVE: Cam Wide: VideoSourceAAudioLevel0Raw (+4 more)"
+   FAIL  W2. a setting edited and a variant added by hand add to it: n 9, list ["Cam Wide: VideoSourceAAudioLevel0Raw","Cam Wide: VideoSourceAAudioLevel0Raw","Slides: VideoSourceAName","Cam Wide: VideoSourceAAudioLevel0Raw","Slides: 
+   FAIL  W3. two edits of Cam Wide 150 ms apart (typing) are one change: n 9 → 11, last "Cam Wide: VideoSourceAAudioLevel0Raw"
+   FAIL  C1. a PUSH with the warning up: ok; the warning stays, nothing added (n 11 → 12)
+   FAIL  C2. TAKE with the warning up: ok (not blocked); gone as the TAKE returned (shown nothing, kept off air nothing; PGM A)
+   FAIL  O1. a PUSH ("Speaker Wide" onto A: Cam Wide on, Slides off) does not warn (3.5 s): ok
+   FAIL  O2. the post-hook brings the Lower Third in on B: no warning (3.5 s, past the 3 s write window)
+   FAIL  O3. the hook's Lower Third ends by itself: no warning (ignored until it reads off)
+   FAIL  O4. having read off, it is watched again: switched on by hand → "undefined"
+   FAIL  O5. a hand change to a different layer (Lower Third) 60 ms into a PUSH's settle window still warns: "Lower Third on"; the PUSH's own layers add nothing (n 2)
+   FAIL  O6. a hand change to one of the PUSH's own layers inside its window is not flagged (as ruled: the named layers only)
+   FAIL  D2. Program as it is now is the new baseline: nothing comes back by itself (2 s, live values flowing)
+   FAIL  D3. the next hand change warns again: "undefined"
+   FAIL  C4. UNDO clears it: ok; gone as the UNDO returned (shown nothing, kept off air nothing; PGM B)
+   FAIL  C5. PANIC clears it ("undefined"; PANIC ok; gone as PANIC returned: shown nothing, kept off air nothing; PGM SAFE)
+   FAIL  P0. after a TAKE, UNDO is offered (PVW A, look "Speaker Wide")
+   FAIL  P1. Slides switched on by hand in Preview A: UNDO off ("Preview changed since the TAKE: Slides on, by hand in mimoLive", key "Preview changed"); no Program warning
+   FAIL  P4. REHEARSE HOOKS (takectl's own Lower Third in Preview): ok; UNDO says "Preview changed since the TAKE: Cam Wide: VideoSourceAAudioLevel0Raw, by hand in mimoLive", not "by hand"; no Program warning
+   FAIL  G2. WATCH PGM on again: nothing from while it was off is kept
+   FAIL  G3. the next hand change warns: "undefined"
+   FAIL  I1. watchIgnoreLayers ["Slides", "Nope"]: Slides switched off by hand in Program does not warn
+   FAIL  I2. an unlisted layer still warns ("undefined"); "Nope" is named as matching no layer
+
+== M5-set-active: 31 pass, 6 fail
+   mutation: -    if (type === "layer-sets") { const { active, ...rest } = a; return { rest: stable(rest), name: a.name, layerId: null }; }
+   mutation: +    if (type === "layer-sets") { const rest = a; return { rest: stable(rest), name: a.name, layerId: null }; }
+   FAIL  L2. a Layer Set's "active" flag flipped twice in Program (derived, ignored): no warning
+   FAIL  C1. a PUSH with the warning up: ok; the warning stays, nothing added (n 4 → 6)
+   FAIL  O1. a PUSH ("Speaker Wide" onto A: Cam Wide on, Slides off) does not warn (3.5 s): ok
+   FAIL  O5. a hand change to a different layer (Lower Third) 60 ms into a PUSH's settle window still warns: "undefined"; the PUSH's own layers add nothing (n 3)
+   FAIL  O6. a hand change to one of the PUSH's own layers inside its window is not flagged (as ruled: the named layers only)
+   FAIL  D1. dismiss: accepted 0, cleared
+
+== M6-burst: 36 pass, 1 fail
+   mutation: -const BURST_MS = 600; // more messages about the same layer within this are the same change (a fade, typing)
+   mutation: +const BURST_MS = 0; // more messages about the same layer within this are the same change (a fade, typing)
+   FAIL  W3. two edits of Cam Wide 150 ms apart (typing) are one change: n 3 → 5, last "Cam Wide: VideoSourceAName"
+
+== M7-take-clears: 31 pass, 6 fail
+   mutation: -    this.watch.clearPgm(opts.undo ? "UNDO" : kind.toUpperCase()); // round 4: a TAKE, CUT or UNDO clears CHANGED IN MIMOLIVE (a PUSH does not)
+   mutation: +    // (mutant: no clear) // round 4: a TAKE, CUT or UNDO clears CHANGED IN MIMOLIVE (a PUSH does not)
+   FAIL  C2. TAKE with the warning up: ok (not blocked); gone as the TAKE returned (shown nothing, kept off air "Cam Wide off" for B; PGM A)
+   FAIL  O2. the post-hook brings the Lower Third in on B: no warning (3.5 s, past the 3 s write window)
+   FAIL  O3. the hook's Lower Third ends by itself: no warning (ignored until it reads off)
+   FAIL  O4. having read off, it is watched again: switched on by hand → "undefined"
+   FAIL  C3. CUT clears it: gone as the CUT returned (shown nothing, kept off air "Cam Wide on" for B; PGM A)
+   FAIL  C4. UNDO clears it: ok; gone as the UNDO returned (shown nothing, kept off air "Slides on" for A; PGM B)
+
+== M8-push-clears: 36 pass, 1 fail
+   mutation: +    this.watch.clearPgm("PUSH");
+   FAIL  C1. a PUSH with the warning up: ok; the warning stays, nothing added (n 4 → undefined)
+
+== M9-pvw-thumb: 36 pass, 1 fail
+   mutation: -    await sw.takeThumb(role, look);
+   mutation: +    // (mutant: no thumbnail)
+   FAIL  P3. ~1 s after Preview settles, "Speaker Wide"'s thumbnail is taken again (not refreshed)
+
+== M10-dismiss: 30 pass, 7 fail
+   mutation: -    this.change = null;
+   FAIL  O5. a hand change to a different layer (Lower Third) 60 ms into a PUSH's settle window still warns: "undefined"; the PUSH's own layers add nothing (n 2)
+   FAIL  O6. a hand change to one of the PUSH's own layers inside its window is not flagged (as ruled: the named layers only)
+   FAIL  D1. dismiss: accepted 4, cleared
+   FAIL  D2. Program as it is now is the new baseline: nothing comes back by itself (2 s, live values flowing)
+   FAIL  D3. the next hand change warns again: "undefined"
+   FAIL  N2. a hand change while not watched cannot be seen yet
+   FAIL  N3. the socket back: the document is read again and the change found: "Cam Wide on"
+
+== M11-flicker: 34 pass, 3 fail
+   mutation: -      if (switching) { this.switchedAt[role].set(layerId, Date.now()); next = { ...next, iv: prev.iv }; }
+   mutation: +      // (mutant: the flicker taken as it comes)
+   FAIL  C4. UNDO clears it: UNDO not available: Preview changed since the TAKE: Cam Wide: VideoSourceAName, by hand in mimoLive; gone as the UNDO returned (shown "Slides on", kept off air nothing; PGM A)
+   FAIL  C5. PANIC clears it ("undefined"; PANIC ok; gone as PANIC returned: shown nothing, kept off air nothing; PGM SAFE)
+   FAIL  N3. the socket back: the document is read again and the change found: "Cam Wide: VideoSourceAName, while not watched"
+
+== M12-reread-flicker: 36 pass, 1 fail
+   mutation: -      if (switchedNow || now - (this.switchedAt[role].get(v.layerId) ?? 0) < FLICKER_MS) fresh.set(key, { ...v, iv: old.get(key).iv });
+   mutation: +      // (mutant: a re-read takes the flicker)
+   FAIL  N3. the socket back: the document is read again and the change found: "Cam Wide: VideoSourceAName, while not watched"
+
+== M13-panic-clears: 36 pass, 1 fail
+   mutation: -    this.watch.clearPgm("PANIC");
+   mutation: +    // (mutant: PANIC does not clear)
+   FAIL  C5. PANIC clears it ("Cam Wide off"; PANIC ok; gone as PANIC returned: shown nothing, kept off air "Cam Wide off" for B; PGM SAFE)
+

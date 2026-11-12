@@ -1,0 +1,123 @@
+round4-probe "takectl-writes": 44 s of http://<host>:8989/api/v1/socket, started 20:11:02
+documents: PH-MASTER (live), PH-A (live), PH-B (live)
+
+20:11:05.079   PH-B      layers changed         TALLY                      live-state: "off" → "live", output-values/tvOut_Done: false → true
+20:11:05.080   PH-B      variants changed       TALLY › Red (Cut)          live-state: "off" → "live", output-values/tvOut_Done: false → true
+20:11:05.082   PH-MASTER datastores changed     datastores abswitch        datastore abswitch-state
+20:11:05.587 ◆ PH-MASTER variants changed       AB Switcher › 4 Sources    tvGroup_Hidden_Inputs__currentLiveSource: 1 → 2, output-values/tvSet_tvGroup_Hidden_Inputs__currentLiveSource: 1 → 2, output-values/tvSetSignal_tvGroup_Hidden_Inputs__currentLiveSource: false → true
+20:11:05.618   PH-MASTER sources changed        NDI PH-B                   tally-state: "effect" → "program"
+20:11:05.619   PH-MASTER sources changed        NDI PH-A                   tally-state: "effect" → "in-use"
+20:11:05.913   PH-A      layers changed         TALLY                      live-state: "live" → "shutdown"
+20:11:05.913   PH-A      variants changed       TALLY › Red (Cut)          live-state: "live" → "shutdown"
+20:11:05.916   PH-MASTER datastores changed     datastores abswitch        datastore abswitch-history
+20:11:05.927 ◆ PH-B      layers changed         Lower Third                live-state: "off" → "live", output-values/tvOut_Done: false → true
+20:11:05.928 ◆ PH-B      variants changed       Lower Third › Lower Third – abswitch bench live-state: "off" → "live", output-values/tvOut_Done: false → true
+20:11:06.221   PH-A      layers changed         TALLY                      live-state: "shutdown" → "off"
+20:11:06.221   PH-A      variants changed       TALLY › Red (Cut)          live-state: "shutdown" → "off"
+20:11:10.139 ◆ PH-A      layers changed         Cam PiP                    live-state: "off" → "live", output-values/tvOut_Done: false → true, tvIn_VideoSourceAName: "CAM 1" → "None"
+20:11:10.140 ◆ PH-A      layer-sets changed     Slides PiP                 active: false → true
+20:11:10.140 ◆ PH-A      layer-sets changed     Two Shot                   active: true → false
+20:11:10.140 ◆ PH-A      variants changed       Cam PiP › CAM 1 (Fullscreen) live-state: "off" → "live", tvIn_VideoSourceAName: "CAM 1" → "None", output-values/tvOut_Done: false → true
+20:11:10.142 ◆ PH-A      layers changed         Two Shot                   live-state: "live" → "shutdown"
+20:11:10.145 ◆ PH-A      variants changed       Two Shot › 2 x 1           live-state: "live" → "shutdown"
+20:11:10.146 ◆ PH-A      layers changed         Slides                     live-state: "off" → "live", output-values/tvSetAudioVolumeSignal_tvIn_VideoSourceAImage: false → true, output-values/tvSetAudioVolume_tvIn_VideoSourceAImage: 1 → 0, output-values/tvOut_Done: false → true, tvIn_VideoSourceAName: "SLIDES" → "None"
+20:11:10.146 ◆ PH-A      variants changed       Slides › SLIDES (Fullscreen) live-state: "off" → "live", tvIn_VideoSourceAName: "SLIDES" → "None", output-values/tvSetAudioVolumeSignal_tvIn_VideoSourceAImage: false → true, output-values/tvSetAudioVolume_tvIn_VideoSourceAImage: 1 → 0, output-values/tvOut_Done: false → true
+20:11:10.443 ◆ PH-A      layers changed         Cam PiP                    output-values/tvOut_Done: true → false, tvIn_VideoSourceAName: "None" → "CAM 1"
+20:11:10.445 ◆ PH-A      variants changed       Cam PiP › CAM 1 (Fullscreen) tvIn_VideoSourceAName: "None" → "CAM 1", output-values/tvOut_Done: true → false
+20:11:10.447 ◆ PH-A      layers changed         Two Shot                   live-state: "shutdown" → "off"
+20:11:10.448 ◆ PH-A      variants changed       Two Shot › 2 x 1           live-state: "shutdown" → "off"
+20:11:10.450 ◆ PH-A      layers changed         Slides                     output-values/tvSetAudioVolumeSignal_tvIn_VideoSourceAImage: true → false, output-values/tvSetAudioVolume_tvIn_VideoSourceAImage: 0 → 1, output-values/tvOut_Done: true → false, tvIn_VideoSourceAName: "None" → "SLIDES"
+20:11:10.451 ◆ PH-A      variants changed       Slides › SLIDES (Fullscreen) tvIn_VideoSourceAName: "None" → "SLIDES", output-values/tvSetAudioVolumeSignal_tvIn_VideoSourceAImage: true → false, output-values/tvSetAudioVolume_tvIn_VideoSourceAImage: 0 → 1, output-values/tvOut_Done: true → false
+20:11:13.212 ◆ PH-B      layers changed         Cam PiP                    live-state: "off" → "live", output-values/tvOut_Done: false → true, tvIn_VideoSourceAName: "CAM 1" → "None"
+20:11:13.212 ◆ PH-B      layer-sets changed     Slides PiP                 active: false → true
+20:11:13.213 ◆ PH-B      layer-sets changed     Speaker Wide               active: true → false
+20:11:13.213 ◆ PH-B      variants changed       Cam PiP › CAM 1 (Fullscreen) live-state: "off" → "live", tvIn_VideoSourceAName: "CAM 1" → "None", output-values/tvOut_Done: false → true
+20:11:13.214 ◆ PH-B      layers changed         Cam Wide                   live-state: "live" → "shutdown"
+20:11:13.215 ◆ PH-B      variants changed       Cam Wide › CAM 1 (Fullscreen) live-state: "live" → "shutdown"
+20:11:13.215 ◆ PH-B      layers changed         Slides                     live-state: "off" → "live", output-values/tvSetAudioVolumeSignal_tvIn_VideoSourceAImage: false → true, output-values/tvSetAudioVolume_tvIn_VideoSourceAImage: 1 → 0, output-values/tvOut_Done: false → true, tvIn_VideoSourceAName: "SLIDES" → "None"
+20:11:13.216 ◆ PH-B      variants changed       Slides › SLIDES (Fullscreen) live-state: "off" → "live", tvIn_VideoSourceAName: "SLIDES" → "None", output-values/tvSetAudioVolumeSignal_tvIn_VideoSourceAImage: false → true, output-values/tvSetAudioVolume_tvIn_VideoSourceAImage: 1 → 0, output-values/tvOut_Done: false → true
+20:11:13.467   PH-MASTER datastores changed     datastores abswitch        datastore abswitch-history
+20:11:13.513 ◆ PH-B      layers changed         Cam PiP                    output-values/tvOut_Done: true → false, tvIn_VideoSourceAName: "None" → "CAM 1"
+20:11:13.514 ◆ PH-B      variants changed       Cam PiP › CAM 1 (Fullscreen) tvIn_VideoSourceAName: "None" → "CAM 1", output-values/tvOut_Done: true → false
+20:11:13.515 ◆ PH-B      layers changed         Cam Wide                   live-state: "shutdown" → "off"
+20:11:13.516 ◆ PH-B      variants changed       Cam Wide › CAM 1 (Fullscreen) live-state: "shutdown" → "off"
+20:11:13.516 ◆ PH-B      layers changed         Slides                     output-values/tvSetAudioVolumeSignal_tvIn_VideoSourceAImage: true → false, output-values/tvSetAudioVolume_tvIn_VideoSourceAImage: 0 → 1, output-values/tvOut_Done: true → false, tvIn_VideoSourceAName: "None" → "SLIDES"
+20:11:13.516 ◆ PH-B      variants changed       Slides › SLIDES (Fullscreen) tvIn_VideoSourceAName: "None" → "SLIDES", output-values/tvSetAudioVolumeSignal_tvIn_VideoSourceAImage: true → false, output-values/tvSetAudioVolume_tvIn_VideoSourceAImage: 0 → 1, output-values/tvOut_Done: true → false
+20:11:17.320   PH-A      layers changed         TALLY                      live-state: "off" → "live", output-values/tvOut_Done: false → true
+20:11:17.321   PH-A      variants changed       TALLY › Red (Cut)          live-state: "off" → "live", output-values/tvOut_Done: false → true
+20:11:17.323   PH-MASTER datastores changed     datastores abswitch        datastore abswitch-state
+20:11:17.353   PH-MASTER sources changed        NDI PH-B                   tally-state: "program" → "effect"
+20:11:17.354   PH-MASTER sources changed        NDI PH-A                   tally-state: "in-use" → "effect"
+20:11:17.820 ◆ PH-MASTER variants changed       AB Switcher › 4 Sources    tvGroup_Hidden_Inputs__currentLiveSource: 2 → 1, output-values/tvSet_tvGroup_Hidden_Inputs__currentLiveSource: 2 → 1, output-values/tvSetSignal_tvGroup_Hidden_Inputs__currentLiveSource: false → true
+20:11:17.852   PH-MASTER sources changed        NDI PH-B                   tally-state: "effect" → "in-use"
+20:11:17.852   PH-MASTER sources changed        NDI PH-A                   tally-state: "effect" → "program"
+20:11:18.149   PH-B      layers changed         TALLY                      live-state: "live" → "shutdown"
+20:11:18.150   PH-B      variants changed       TALLY › Red (Cut)          live-state: "live" → "shutdown"
+20:11:18.152   PH-MASTER datastores changed     datastores abswitch        datastore abswitch-history
+20:11:18.449   PH-B      layers changed         TALLY                      live-state: "shutdown" → "off"
+20:11:18.450   PH-B      variants changed       TALLY › Red (Cut)          live-state: "shutdown" → "off"
+20:11:21.387 ◆ PH-B      layers changed         Cam PiP                    live-state: "live" → "shutdown"
+20:11:21.389 ◆ PH-B      layer-sets changed     Slides PiP                 active: true → false
+20:11:21.390 ◆ PH-B      layer-sets changed     Speaker Wide               active: false → true
+20:11:21.390 ◆ PH-B      variants changed       Cam PiP › CAM 1 (Fullscreen) live-state: "live" → "shutdown"
+20:11:21.391 ◆ PH-B      layers changed         Cam Wide                   live-state: "off" → "live", output-values/tvSetAudioVolumeSignal_tvIn_VideoSourceAImage: false → true, output-values/tvSetAudioVolume_tvIn_VideoSourceAImage: 1 → 0, output-values/tvOut_Done: false → true, tvIn_VideoSourceAName: "CAM 1" → "None"
+20:11:21.391 ◆ PH-B      variants changed       Cam Wide › CAM 1 (Fullscreen) live-state: "off" → "live", tvIn_VideoSourceAName: "CAM 1" → "None", output-values/tvSetAudioVolumeSignal_tvIn_VideoSourceAImage: false → true, output-values/tvSetAudioVolume_tvIn_VideoSourceAImage: 1 → 0, output-values/tvOut_Done: false → true
+20:11:21.391 ◆ PH-B      layers changed         Slides                     live-state: "live" → "shutdown"
+20:11:21.392 ◆ PH-B      variants changed       Slides › SLIDES (Fullscreen) live-state: "live" → "shutdown"
+20:11:21.441   PH-B      sources changed        SLIDES                     tally-state: "program" → "in-use"
+20:11:21.691 ◆ PH-B      layers changed         Cam PiP                    live-state: "shutdown" → "off"
+20:11:21.692 ◆ PH-B      variants changed       Cam PiP › CAM 1 (Fullscreen) live-state: "shutdown" → "off"
+20:11:21.693 ◆ PH-B      layers changed         Cam Wide                   output-values/tvSetAudioVolumeSignal_tvIn_VideoSourceAImage: true → false, output-values/tvSetAudioVolume_tvIn_VideoSourceAImage: 0 → 1, output-values/tvOut_Done: true → false, tvIn_VideoSourceAName: "None" → "CAM 1"
+20:11:21.693 ◆ PH-B      variants changed       Cam Wide › CAM 1 (Fullscreen) tvIn_VideoSourceAName: "None" → "CAM 1", output-values/tvSetAudioVolumeSignal_tvIn_VideoSourceAImage: true → false, output-values/tvSetAudioVolume_tvIn_VideoSourceAImage: 0 → 1, output-values/tvOut_Done: true → false
+20:11:21.694 ◆ PH-B      layers changed         Slides                     live-state: "shutdown" → "off"
+20:11:21.694 ◆ PH-B      variants changed       Slides › SLIDES (Fullscreen) live-state: "shutdown" → "off"
+20:11:23.487 ◆ PH-MASTER variants changed       AB Switcher › 4 Sources    tvGroup_Hidden_Inputs__currentLiveSource: 1 → 2, output-values/tvOut_tvIn_VideoSourceBImageTallyState: 10 → 40, output-values/tvSet_tvGroup_Hidden_Inputs__currentLiveSource: 1 → 2, output-values/tvOut_tvIn_VideoSourceAImageTallyState: 40 → 10, output-values/tvSetSignal_tvGroup_Hidden_Inputs__currentLiveSource: false → true
+20:11:23.488   PH-MASTER sources changed        NDI PH-B                   tally-state: "in-use" → "program"
+20:11:23.488   PH-MASTER sources changed        NDI PH-A                   tally-state: "program" → "in-use"
+20:11:23.494   PH-B      layers changed         TALLY                      live-state: "off" → "live", output-values/tvOut_Done: false → true
+20:11:23.495   PH-B      variants changed       TALLY › Red (Cut)          live-state: "off" → "live", output-values/tvOut_Done: false → true
+20:11:23.497   PH-MASTER datastores changed     datastores abswitch        datastore abswitch-state
+20:11:23.763   PH-A      layers changed         TALLY                      live-state: "live" → "shutdown"
+20:11:23.764   PH-A      variants changed       TALLY › Red (Cut)          live-state: "live" → "shutdown"
+20:11:23.766   PH-MASTER datastores changed     datastores abswitch        datastore abswitch-history
+20:11:24.071   PH-A      layers changed         TALLY                      live-state: "shutdown" → "off"
+20:11:24.072   PH-A      variants changed       TALLY › Red (Cut)          live-state: "shutdown" → "off"
+20:11:27.603   PH-A      layers changed         TALLY                      live-state: "off" → "live", output-values/tvOut_Done: false → true
+20:11:27.604   PH-A      variants changed       TALLY › Red (Cut)          live-state: "off" → "live", output-values/tvOut_Done: false → true
+20:11:27.606   PH-MASTER datastores changed     datastores abswitch        datastore abswitch-state
+20:11:27.619 ◆ PH-MASTER variants changed       AB Switcher › 4 Sources    tvGroup_Hidden_Inputs__currentLiveSource: 2 → 1, output-values/tvOut_tvIn_VideoSourceBImageTallyState: 40 → 10, output-values/tvSet_tvGroup_Hidden_Inputs__currentLiveSource: 2 → 1, output-values/tvOut_tvIn_VideoSourceAImageTallyState: 10 → 40, output-values/tvSetSignal_tvGroup_Hidden_Inputs__currentLiveSource: false → true
+20:11:27.620   PH-MASTER sources changed        NDI PH-B                   tally-state: "program" → "in-use"
+20:11:27.620   PH-MASTER sources changed        NDI PH-A                   tally-state: "in-use" → "program"
+20:11:27.871   PH-B      layers changed         TALLY                      live-state: "live" → "shutdown"
+20:11:27.872   PH-B      variants changed       TALLY › Red (Cut)          live-state: "live" → "shutdown"
+20:11:27.874   PH-MASTER datastores changed     datastores abswitch        datastore abswitch-history
+20:11:28.172   PH-B      layers changed         TALLY                      live-state: "shutdown" → "off"
+20:11:28.172   PH-B      variants changed       TALLY › Red (Cut)          live-state: "shutdown" → "off"
+
+523 messages in 44 s. By kind: documents changed 141, layers values-changed 225, variants changed 90, layers changed 36, datastores changed 9, sources changed 16, layer-sets changed 6
+Live values (counted, not listed):
+    220  PH-MASTER · layers values-changed Program Audio · tvGroup_Source__Audio_TypeAudioAudioLevel1 tvGroup_Source__Audio_TypeAudioAudioLevel0
+     44  PH-B · documents changed PH-B · duration formatted-duration
+     44  PH-MASTER · documents changed PH-MASTER · duration formatted-duration
+     44  PH-A · documents changed PH-A · duration formatted-duration
+     44  PH-MASTER · variants changed DSK Clock › ◸ Dissolve · output-values/tvOut_TimeString
+      9  PH-MASTER · documents changed PH-MASTER · duration
+      2  PH-MASTER · variants changed AB Switcher › 4 Sources · output-values/tvOut_tvIn_VideoSourceBImageTallyState output-values/tvOut_tvIn_VideoSourceAImageTallyState
+      2  PH-B · layers changed TALLY · output-values/tvOut_Done
+      2  PH-B · variants changed TALLY › Red (Cut) · output-values/tvOut_Done
+      2  PH-MASTER · variants changed AB Switcher › 4 Sources · output-values/tvOut_tvIn_VideoSourceBImageTallyState output-values/tvOut_tvIn_VideoSourceAImageTallyState output-values/tvSetSignal_tvGroup_Hidden_Inputs__currentLiveSource
+      2  PH-A · layers changed TALLY · output-values/tvOut_Done
+      2  PH-A · variants changed TALLY › Red (Cut) · output-values/tvOut_Done
+      2  PH-MASTER · variants changed AB Switcher › 4 Sources · output-values/tvSetSignal_tvGroup_Hidden_Inputs__currentLiveSource
+      1  PH-MASTER · sources changed NDI PH-B · no change
+      1  PH-MASTER · sources changed NDI PH-A · no change
+      1  PH-B · layers values-changed Lower Third · output-values/tvOut_TimeRemaining
+      1  PH-B · layers changed Lower Third · output-values/tvOut_Done
+      1  PH-B · variants changed Lower Third › Lower Third – abswitch bench · output-values/tvOut_Done
+      1  PH-A · sources changed SLIDES · no change
+      1  PH-A · sources changed CAM 2 · no change
+      1  PH-A · layers values-changed Cam PiP · output-values/tvOut_TimeRemaining
+      1  PH-A · layers values-changed Slides · output-values/tvOut_TimeRemaining
+      1  PH-B · sources changed SLIDES · no change
+      1  PH-B · layers values-changed Cam PiP · output-values/tvOut_TimeRemaining
+      1  PH-B · layers values-changed Slides · output-values/tvOut_TimeRemaining

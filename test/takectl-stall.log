@@ -1,8 +1,9 @@
-20:21:14.180 A="PH-A" B="PH-B" MASTER="PH-MASTER" switcher="AB Switcher" slots A=1 B=2
-20:21:14.181 signals cut={"1":"tvGroup_Control__Cut_1_TypeSignal","2":"tvGroup_Control__Cut_2_TypeSignal","3":"tvGroup_Control__Cut_3_TypeSignal","4":"tvGroup_Control__Cut_4_TypeSignal","5":"tvGroup_Control__Cut_5_TypeSignal","6":"tvGroup_Control__Cut_6_TypeSignal","7":"tvGroup_Control__Cut_7_TypeSignal","8":"tvGroup_Control__Cut_8_TypeSignal"} dis={"1":"tvGroup_Control__Dis_1_TypeSignal","2":"tvGroup_Control__Dis_2_TypeSignal","3":"tvGroup_Control__Dis_3_TypeSignal","4":"tvGroup_Control__Dis_4_TypeSignal","5":"tvGroup_Control__Dis_5_TypeSignal","6":"tvGroup_Control__Dis_6_TypeSignal","7":"tvGroup_Control__Dis_7_TypeSignal","8":"tvGroup_Control__Dis_8_TypeSignal"}
-20:21:14.202 websocket connected ws://localhost:8989/api/v1/socket
-20:21:14.205 takectl listening on http://0.0.0.0:8991  (GET / operator page; /state /take /cut /mirror /panic /resync /pvw/layer-set/<name>)
-20:21:16.946 WARNING transition stalled: both slots at 30 for 2060 ms (slot 1); deciding nothing
-20:21:18.881 transition no longer stalled: settled on slot 2 after 3995 ms
-20:21:18.882 PGM changed outside takectl (socket): A → B; re-syncing tally
-20:21:20.917 PGM changed outside takectl (socket): B → A; re-syncing tally
+00:37:52.109 takectl listening on http://0.0.0.0:8991  (GET / operator page, /setup, /doctor; /state /take /cut /mirror /panic /resync /pvw/layer-set/<name>)
+00:37:52.157 A="PH-A" B="PH-B" MASTER="PH-MASTER" switcher="AB Switcher" slots A=1 B=2
+00:37:52.157 signals cut={"1":"tvGroup_Control__Cut_1_TypeSignal","2":"tvGroup_Control__Cut_2_TypeSignal","3":"tvGroup_Control__Cut_3_TypeSignal","4":"tvGroup_Control__Cut_4_TypeSignal","5":"tvGroup_Control__Cut_5_TypeSignal","6":"tvGroup_Control__Cut_6_TypeSignal","7":"tvGroup_Control__Cut_7_TypeSignal","8":"tvGroup_Control__Cut_8_TypeSignal"} dis={"1":"tvGroup_Control__Dis_1_TypeSignal","2":"tvGroup_Control__Dis_2_TypeSignal","3":"tvGroup_Control__Dis_3_TypeSignal","4":"tvGroup_Control__Dis_4_TypeSignal","5":"tvGroup_Control__Dis_5_TypeSignal","6":"tvGroup_Control__Dis_6_TypeSignal","7":"tvGroup_Control__Dis_7_TypeSignal","8":"tvGroup_Control__Dis_8_TypeSignal"}
+00:37:52.185 websocket connected ws://localhost:8989/api/v1/socket
+00:37:52.186 running
+00:37:54.901 WARNING transition stalled: both slots at 30 for 2060 ms (slot 1); deciding nothing
+00:37:56.838 transition no longer stalled: settled on slot 2 after 3997 ms
+00:37:56.843 PGM changed outside takectl (socket): A → B; re-syncing tally
+00:37:58.843 PGM changed outside takectl (socket): B → A; re-syncing tally

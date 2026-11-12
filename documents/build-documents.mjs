@@ -111,13 +111,14 @@ async function setSource(doc, id, body, check, what) {
 
 // ------------------------------------------------------------------ layers
 
-async function ensureLayer(doc, name, layerType) {
+async function ensureLayer(doc, name, layerType, index = 0) {
   const list = (await get(`/documents/${doc}/layers`)).data;
   const hit = list.find((l) => attrs(l).name === name);
   if (hit) return hit.id;
   // index 0 = TOP of the stack. Without it a new layer lands at the bottom, and the API
-  // cannot reorder afterwards (index writes are silent no-ops). Callers create bottom-to-top.
-  const r = await req("POST", `/documents/${doc}/layers`, { "layer-identifier": `com.boinx.boinxtv.layer.${layerType}`, name, index: 0 });
+  // cannot reorder afterwards (index writes are silent no-ops). Callers create bottom-to-top;
+  // index 1 inserts directly under the top layer (probed 2026-11-11).
+  const r = await req("POST", `/documents/${doc}/layers`, { "layer-identifier": `com.boinx.boinxtv.layer.${layerType}`, name, index });
   log(`  + layer ${name} (${layerType})`);
   return r.data.id;
 }
@@ -222,8 +223,16 @@ async function buildComposition(role) {
     tvGroup_Geometry__Right_Margin_TypeBoinxX: 0, tvGroup_Geometry__Bottom_Margin_TypeBoinxY: 2 * (1 - TALLY_PX / H),
   }, `${label} layer TALLY`);
 
+  // v0.2: a real Lower Third (mimoLive's basic "Lower Third" layer), directly under TALLY and in no Layer
+  // Set: takectl's hooks bring it in and out, so a Layer Set recall never fights them. Manual, not the
+  // layer's default Automatic (which takes itself off after 6 s); no logo (that would keep a placeholder
+  // source alive).
+  L.lower = await ensureLayer(doc, "Lower Third", "lowerthirds", 1);
+  await setInputs(doc, L.lower, { tvGroup_Control__Type: 0, tvGroup_Content__Title: "Lower Third", tvGroup_Content__Subtitle: "abswitch bench", tvGroup_Logo__Image: "" },
+    `${label} layer Lower Third`);
+
   // Starting look: Cam Wide live (+ COUNTER on a bench build), everything else off, TALLY off (takectl owns it).
-  for (const [k, on] of [["slides", false], ["wide", true], ["two", false], ["pip", false], ["counter", true], ["tally", false]])
+  for (const [k, on] of [["slides", false], ["wide", true], ["two", false], ["pip", false], ["counter", true], ["tally", false], ["lower", false]])
     if (L[k]) await setLayerLive(doc, L[k], on);
 
   await removeAutoPlaceholders(doc, label);
@@ -261,6 +270,13 @@ async function buildMaster(a, b) {
   const srcA = await ensureSource(doc, "NDI PH-A", "com.boinx.mimoLive.sources.deviceVideoSource");
   const srcB = await ensureSource(doc, "NDI PH-B", "com.boinx.mimoLive.sources.deviceVideoSource");
   const audio = await ensureSource(doc, "Audio In", "com.boinx.mimoLive.sources.deviceAudioSource");
+  // The safe source PANIC cuts to (v0.2): on the bench, mimoLive's "Video Output Test" source showing the
+  // Philips PM5544 pattern (Test Image 0), in switcher slot 3. A BENCH slate only: for a show, put a wide
+  // camera wired straight into MASTER, or a holding slide, in that slot and choose it in setup.
+  const safe = await ensureSource(doc, "SAFE Test Pattern", "com.boinx.boinxtv.layer.videooutputtest");
+  await req("PUT", `/documents/${doc}/sources/${safe}`, { "input-values": { tvGroup_Content__Test_Image: 0 } });
+  if (attrs((await get(`/documents/${doc}/sources/${safe}`)).data)["input-values"]?.tvGroup_Content__Test_Image !== 0)
+    manual.push(`In ${label}, open source "SAFE Test Pattern" and choose Test Image "Philips PM5544".`);
   // A new Audio source has NO device. audio-device-id is the CoreAudio device UID; the
   // built-in mic is "BuiltInMicrophoneDevice". For the show, set AUDIO_DEVICE_ID to the
   // interface's UID or pick the interface on "Audio In" in the UI.
@@ -279,12 +295,12 @@ async function buildMaster(a, b) {
 
   const sw = await ensureLayer(doc, "AB Switcher", "videoswitcher");
   // Source Count enum on 7.0b3 is ["9 Sources","4 Sources"]; 2 is not offered, so 4.
-  // Slots 3..8 are cleared: a new switcher auto-fills them, and a stray copy of an
-  // NDI source id there would confuse takectl's slot detection.
-  const clear = Object.fromEntries("CDEFGH".split("").map((c) => [`tvIn_VideoSource${c}Image`, ""]));
+  // Slot 3 holds the safe source; slots 4..8 are cleared: a new switcher auto-fills them, and a
+  // stray copy of an NDI source id there would confuse takectl's slot detection.
+  const clear = Object.fromEntries("DEFGH".split("").map((c) => [`tvIn_VideoSource${c}Image`, ""]));
   await setInputs(doc, sw, {
     tvGroup_Control__Source_Count: 1, tvIn_TransitionDuration: 0.5,
-    tvIn_VideoSourceAImage: srcA, tvIn_VideoSourceBImage: srcB, ...clear,
+    tvIn_VideoSourceAImage: srcA, tvIn_VideoSourceBImage: srcB, tvIn_VideoSourceCImage: safe, ...clear,
   }, `${label} layer AB Switcher`);
   // No audio on the switcher. On 7.0b3 the Video Switcher has no audio-follow-video input and
   // reports volume=null (no audio path), unlike Placer/PIP layers which report volume=1.
@@ -301,6 +317,33 @@ async function buildMaster(a, b) {
   await setInputs(doc, ao, { tvGroup_Source__Audio_TypeAudio: audio }, `${label} layer Program Audio`);
   await setLayerLive(doc, sw, true);
   await setLayerLive(doc, ao, true);
+
+  // v0.2: STINGER (the default stinger: a slate wipe, no media needed) and FTB, both full-frame Boxes
+  // above everything else and saved OFF. Created in this order so FTB ends up at the very top.
+  const full = { tvGroup_Geometry__Top_Margin_TypeBoinxY: 0, tvGroup_Geometry__Bottom_Margin_TypeBoinxY: 0,
+    tvGroup_Geometry__Left_Margin_TypeBoinxX: 0, tvGroup_Geometry__Right_Margin_TypeBoinxX: 0,
+    tvGroup_Appearance__Type: 0, tvGroup_Appearance__Drop_Shadow: false };
+  // Animation enums on 7.0b3 (no "-" separator): Incoming ["Cut","Dissolve","Push from Top","Push from
+  // Bottom","Push from Left","Push from Right"]; Outgoing ["Same as Incoming","Cut","Dissolve","Push to
+  // Top","Push to Bottom","Push to Left","Push to Right"].
+  const stinger = await ensureLayer(doc, "STINGER", "simplebox");
+  await setInputs(doc, stinger, { ...full, tvGroup_Appearance__Color: { red: 0.13, green: 0.15, blue: 0.2, alpha: 1 },
+    tvGroup_Animation__Incoming: 4, tvGroup_Animation__Outgoing: 6, tvGroup_Animation__Duration_TypeDuration: 0.4 }, `${label} layer STINGER`);
+  const ftb = await ensureLayer(doc, "FTB", "simplebox");
+  await setInputs(doc, ftb, { ...full, tvGroup_Appearance__Color: { red: 0, green: 0, blue: 0, alpha: 1 },
+    tvGroup_Animation__Incoming: 1, tvGroup_Animation__Outgoing: 0, tvGroup_Animation__Duration_TypeDuration: 0.5 }, `${label} layer FTB`);
+  await setLayerLive(doc, stinger, false);
+  await setLayerLive(doc, ftb, false);
+  // v0.2 round 3: downstream keys. takectl turns every MASTER layer named "DSK <label>" above the switcher
+  // into a toggle labelled <label>. Two on the bench, both off: a bug (mimoLive's Station Logo, top
+  // right) and a clock (Date and Time, top left, time only). Inserted at index 1: under FTB, above the
+  // stinger (as an ATEM's downstream keys sit above its transitions), so a bug stays up through a wipe.
+  const bug = await ensureLayer(doc, "DSK Bug", "logo", 1);
+  await setInputs(doc, bug, { tvGroup_Geometry__Anchor: 1 }, `${label} layer DSK Bug`);
+  const clock = await ensureLayer(doc, "DSK Clock", "datentime", 1);
+  await setInputs(doc, clock, { tvGroup_Geometry__Anchor: 0, tvGroup_Content__Date_Format_TypeMultiline: "%H:%M:%S" }, `${label} layer DSK Clock`);
+  await setLayerLive(doc, bug, false);
+  await setLayerLive(doc, clock, false);
 
   await ensureOutput(doc, "com.boinx.mimoLive.outputDestination.fileRecording", "Recording", label);
   for (const [src, name] of [[srcA, "NDI PH-A"], [srcB, "NDI PH-B"]]) await ensureCrop(doc, src, name, label);
@@ -344,7 +387,11 @@ const a = await buildComposition("A");
 const b = await buildComposition("B");
 const m = await buildMaster(a, b);
 await get(`/documents/${m.doc}/setLive`);
-log(`\nShows started: ${NAMES.A}, ${NAMES.B}, ${NAMES.M}.`);
+// MASTER's Recording output starts with the show; a build is not a show, so stop it at once (otherwise
+// every build leaves a recording in ~/Movies).
+const recOut = (await get(`/documents/${m.doc}/output-destinations`)).data.find((o) => attrs(o).title === "Recording");
+if (recOut) await get(`/documents/${m.doc}/output-destinations/${recOut.id}/setOff`);
+log(`\nShows started: ${NAMES.A}, ${NAMES.B}, ${NAMES.M} (MASTER's Recording stopped).`);
 // The API cannot record Layer Set contents. Ask for them only where a set is still empty (an
 // empty set's `layers` list is []); recorded sets are left alone.
 const emptySets = [];

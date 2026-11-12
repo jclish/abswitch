@@ -1,0 +1,39 @@
+page http://localhost:8991/ at 1180×820 @2x in Chrome/157.0.8103.51
+{"conn":"ok","view":"","scroll":[1180,820,1180,820],"small":[],"buttons":34,"outside":[],"pics":[{"mon":"pgm","picture":"800x450","stale":""},{"mon":"pvw","picture":"800x450","stale":""}],"headers":["PROGRAM · DOCUMENT B","PREVIEW · DOCUMENT A"],"status":"READY · tally witness agrees"}
+PASS  takectl answered (conn ok)
+PASS  one screen: page 1180×820 in a 1180×820 viewport
+PASS  nothing is cut off at the edges
+PASS  every visible control ≥ 44 px (34 buttons)
+PASS  reasons whole on their keys, subtitle whole or hidden
+PASS  look-key labels ≥ 4.5:1 over any thumbnail: worst 8.6:1 (Speaker Wide .sub over white)
+PASS  both monitors show a live picture: pgm 800x450, pvw 800x450
+screenshot: fipad.png
+   /take → ok
+   /steps/record?on=1 → ok
+   /pvw/layer-set/Slides%20PiP → ok
+   /steps/add → ok
+   /transition?mode=stinger → ok
+   /push → ok
+   /take → ok
+   /take → ok
+   /ftb?on=1 → ok
+   /dsk/Bug?on=1 → ok
+   /ftb?on=0 → ok
+   /dsk/Bug?on=0 → ok
+   /transition?mode=mix → ok
+   /steps/push?pace=instant → ok
+   /panic → ok
+   /safe/target?doc=A → ok
+   /take → ok
+   /steps/clear → ok
+   /steps/record?on=0 → ok
+   hand (Slides off) → ok   [pgmAck: Program · AChanged in mimoLiveSlides off]
+   tap:pgmAck → ok
+   hand (Slides on) → ok   [pgmAck: Program · AChanged in mimoLiveSlides on]
+   /take → ok
+   tap:watchPgm → ok
+   tap:watchPgm → ok
+PASS  reasons whole, header strip whole and labels readable in every state; worst label contrast across them 8.6:1 (Speaker Wide .sub over white, after /take)
+PASS  round 4 on the panel: a hand change in Program shows CHANGED IN MIMOLIVE on the header strip, a click on it clears it, the next hand change shows it again, TAKE clears it, WATCH PGM clicks off and on
+PASS  no key moved across 25 state changes (TAKE, record, recall, add, STINGER, PUSH, TAKEs, FTB on/off, a DSK on/off, MIX, steps push, PANIC, SAFE target, TAKE out of SAFE, a hand change in Program, a click on the strip, another hand change, TAKE, WATCH PGM off/on)
+ALL PASS

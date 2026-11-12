@@ -1,0 +1,11 @@
+PASS  setup: takectl running on the real documents (pgm A), stinger on, hook "Speaker Wide" → then: Lower Third in
+calibration: A on air → A 97%, B 0%; stinger rgb(25, 28, 39)
+PASS  R1. stinger TAKE → stinger; 36 frames up to the hook: 0 show A and B at once; first B frame at 851 ms, after a fully covered frame: true; ends on B: true (round2-stinger-frames.txt)
+PASS  R2. B's Lower Third (held off in Preview) → "live" on Program 1111 ms after the press; the stinger started clearing at 700 ms (post-hook waits for its ~400 ms reveal)
+PASS  R3a. PANIC 200 ms after TAKE (under the stinger): take → "TAKE not completed: /panic arrived under the stinger; signal not sent"; panic ok in 272 ms; Lower Third on B stayed off for 3 s: true; slot 1
+PASS  R3b. PANIC 200 ms after TAKE (dissolve in flight): take → "dissolve"; panic ok in 1191 ms; Lower Third on B stayed off for 3 s: true; slot 1
+PASS  R4. PUSH → {"status":200,"ok":true,"pgm":"A","look":"Two Shot","transition":"stinger","ms":500}; Program A reads "Two Shot" (landed and logged 817 ms after the press: {"from":"Full Slides","to":"Two Shot","kind":"push","ts":1794455003151}); Preview B "Two Shot"; still slot 1; warning null
+PASS  R5a. steps "Two Shot" → "Slides PiP" onto Program A: looks seen ["Full Slides","Two Shot","Slides PiP"]; history ["Speaker Wide→Speaker Wide (take)","Full Slides→Full Slides (panic)","Speaker Wide→Full Slides (panic)","Full Slides→Two Shot (push)","Full Slides→Two Shot (steps)","Two Shot→Slides PiP (steps)"]
+PASS  R5b. TAKE then UNDO → "dissolve"; switcher slot 1 (A back on air); then UNDO "already undone"
+restored: slot 1, looks A "Speaker Wide" B "Speaker Wide", Lower Third off/off, Cam PiP off/off, STINGER off, TALLY off/off; history and steps datastores emptied
+ALL PASS

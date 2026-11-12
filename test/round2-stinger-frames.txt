@@ -1,0 +1,90 @@
+# ms after the press (frame arrival; the picture path adds ~87 ms)	hook (Lower Third live) at 1111 ms by the API
+-258	A 97%	B 0%	cover 0%
+-220	A 97%	B 0%	cover 0%
+-182	A 97%	B 0%	cover 0%
+-142	A 97%	B 0%	cover 0%
+-101	A 97%	B 0%	cover 0%
+-54	A 97%	B 0%	cover 0%
+-23	A 97%	B 0%	cover 0%
+17	A 97%	B 0%	cover 0%
+56	A 97%	B 0%	cover 0%
+97	A 97%	B 0%	cover 0%
+154	A 97%	B 0%	cover 0%
+177	A 82%	B 0%	cover 13%
+215	A 69%	B 0%	cover 28%
+256	A 46%	B 0%	cover 51%
+294	A 37%	B 0%	cover 63%
+333	A 28%	B 0%	cover 72%
+372	A 22%	B 0%	cover 78%
+411	A 16%	B 0%	cover 84%
+454	A 9%	B 0%	cover 91%
+489	A 3%	B 0%	cover 97%
+527	A 0%	B 0%	cover 100%
+567	A 0%	B 0%	cover 100%
+605	A 0%	B 0%	cover 100%
+655	A 0%	B 0%	cover 100%
+684	A 0%	B 0%	cover 100%
+724	A 0%	B 0%	cover 100%
+767	A 0%	B 0%	cover 100%
+812	A 0%	B 2%	cover 98%
+851	A 0%	B 3%	cover 97%
+894	A 0%	B 13%	cover 88%
+933	A 0%	B 20%	cover 80%
+971	A 0%	B 28%	cover 72%
+1009	A 0%	B 38%	cover 63%
+1062	A 0%	B 44%	cover 53%
+1087	A 0%	B 65%	cover 28%
+1126	A 0%	B 78%	cover 16%
+1170	A 0%	B 93%	cover 0%	(after the hook)
+1210	A 0%	B 93%	cover 0%	(after the hook)
+1251	A 0%	B 93%	cover 0%	(after the hook)
+1284	A 0%	B 93%	cover 0%	(after the hook)
+1324	A 0%	B 91%	cover 0%	(after the hook)
+1365	A 0%	B 88%	cover 0%	(after the hook)
+1407	A 0%	B 85%	cover 0%	(after the hook)
+1446	A 0%	B 85%	cover 0%	(after the hook)
+1487	A 0%	B 79%	cover 0%	(after the hook)
+1525	A 0%	B 77%	cover 0%	(after the hook)
+1572	A 0%	B 77%	cover 0%	(after the hook)
+1605	A 0%	B 75%	cover 0%	(after the hook)
+1645	A 0%	B 75%	cover 0%	(after the hook)
+1685	A 0%	B 72%	cover 0%	(after the hook)
+1724	A 0%	B 72%	cover 0%	(after the hook)
+1770	A 0%	B 72%	cover 0%	(after the hook)
+1807	A 0%	B 72%	cover 0%	(after the hook)
+1851	A 0%	B 72%	cover 0%	(after the hook)
+1884	A 0%	B 72%	cover 0%	(after the hook)
+1924	A 0%	B 72%	cover 0%	(after the hook)
+1972	A 0%	B 72%	cover 0%	(after the hook)
+2002	A 0%	B 72%	cover 0%	(after the hook)
+2041	A 0%	B 72%	cover 0%	(after the hook)
+2081	A 0%	B 72%	cover 0%	(after the hook)
+2120	A 0%	B 72%	cover 0%	(after the hook)
+2160	A 0%	B 72%	cover 0%	(after the hook)
+2196	A 0%	B 72%	cover 0%	(after the hook)
+2235	A 0%	B 72%	cover 0%	(after the hook)
+2273	A 0%	B 72%	cover 0%	(after the hook)
+2313	A 0%	B 72%	cover 0%	(after the hook)
+2353	A 0%	B 72%	cover 0%	(after the hook)
+2392	A 0%	B 72%	cover 0%	(after the hook)
+2432	A 0%	B 73%	cover 0%	(after the hook)
+2477	A 0%	B 73%	cover 0%	(after the hook)
+2514	A 0%	B 73%	cover 0%	(after the hook)
+2556	A 0%	B 73%	cover 0%	(after the hook)
+2589	A 0%	B 73%	cover 0%	(after the hook)
+2630	A 0%	B 73%	cover 0%	(after the hook)
+2678	A 0%	B 73%	cover 0%	(after the hook)
+2709	A 0%	B 73%	cover 0%	(after the hook)
+2748	A 0%	B 73%	cover 0%	(after the hook)
+2788	A 0%	B 74%	cover 0%	(after the hook)
+2828	A 0%	B 74%	cover 0%	(after the hook)
+2873	A 0%	B 74%	cover 0%	(after the hook)
+2906	A 0%	B 74%	cover 0%	(after the hook)
+2947	A 0%	B 74%	cover 0%	(after the hook)
+2986	A 0%	B 74%	cover 0%	(after the hook)
+3025	A 0%	B 74%	cover 0%	(after the hook)
+3065	A 0%	B 74%	cover 0%	(after the hook)
+3106	A 0%	B 74%	cover 0%	(after the hook)
+3147	A 0%	B 74%	cover 0%	(after the hook)
+3185	A 0%	B 74%	cover 0%	(after the hook)
+3225	A 0%	B 74%	cover 0%	(after the hook)

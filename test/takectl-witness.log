@@ -1,6 +1,7 @@
-20:21:42.157 A="PH-A" B="PH-B" MASTER="PH-MASTER" switcher="AB Switcher" slots A=1 B=2
-20:21:42.158 signals cut={"1":"tvGroup_Control__Cut_1_TypeSignal","2":"tvGroup_Control__Cut_2_TypeSignal","3":"tvGroup_Control__Cut_3_TypeSignal","4":"tvGroup_Control__Cut_4_TypeSignal","5":"tvGroup_Control__Cut_5_TypeSignal","6":"tvGroup_Control__Cut_6_TypeSignal","7":"tvGroup_Control__Cut_7_TypeSignal","8":"tvGroup_Control__Cut_8_TypeSignal"} dis={"1":"tvGroup_Control__Dis_1_TypeSignal","2":"tvGroup_Control__Dis_2_TypeSignal","3":"tvGroup_Control__Dis_3_TypeSignal","4":"tvGroup_Control__Dis_4_TypeSignal","5":"tvGroup_Control__Dis_5_TypeSignal","6":"tvGroup_Control__Dis_6_TypeSignal","7":"tvGroup_Control__Dis_7_TypeSignal","8":"tvGroup_Control__Dis_8_TypeSignal"}
-20:21:42.183 websocket connected ws://localhost:8989/api/v1/socket
-20:21:42.188 takectl listening on http://0.0.0.0:8991  (GET / operator page; /state /take /cut /mirror /panic /resync /pvw/layer-set/<name>)
-20:21:44.125 WARNING source tally disagrees with switcher (A=off, B=program, slot=1); switcher per-slot codes in the same read A=40 B=10 (40 program, 30 effect, 10 in-use); disagreeing since 2026-11-09T20:21:43.814Z
-20:21:50.353 source tally agrees with switcher again (A=program, B=in-use, slot=1)
+00:37:11.844 takectl listening on http://0.0.0.0:8991  (GET / operator page, /setup, /doctor; /state /take /cut /mirror /panic /resync /pvw/layer-set/<name>)
+00:37:11.888 A="PH-A" B="PH-B" MASTER="PH-MASTER" switcher="AB Switcher" slots A=1 B=2
+00:37:11.889 signals cut={"1":"tvGroup_Control__Cut_1_TypeSignal","2":"tvGroup_Control__Cut_2_TypeSignal","3":"tvGroup_Control__Cut_3_TypeSignal","4":"tvGroup_Control__Cut_4_TypeSignal","5":"tvGroup_Control__Cut_5_TypeSignal","6":"tvGroup_Control__Cut_6_TypeSignal","7":"tvGroup_Control__Cut_7_TypeSignal","8":"tvGroup_Control__Cut_8_TypeSignal"} dis={"1":"tvGroup_Control__Dis_1_TypeSignal","2":"tvGroup_Control__Dis_2_TypeSignal","3":"tvGroup_Control__Dis_3_TypeSignal","4":"tvGroup_Control__Dis_4_TypeSignal","5":"tvGroup_Control__Dis_5_TypeSignal","6":"tvGroup_Control__Dis_6_TypeSignal","7":"tvGroup_Control__Dis_7_TypeSignal","8":"tvGroup_Control__Dis_8_TypeSignal"}
+00:37:11.911 websocket connected ws://localhost:8989/api/v1/socket
+00:37:11.912 running
+00:37:13.847 WARNING source tally disagrees with switcher (A=off, B=program, slot=1); switcher per-slot codes in the same read A=40 B=10 (40 program, 30 effect, 10 in-use); disagreeing since 2026-11-12T00:37:13.539Z
+00:37:20.079 source tally agrees with switcher again (A=program, B=in-use, slot=1)

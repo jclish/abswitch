@@ -1,0 +1,8 @@
+PH-A: 4 layer sets checked; Two Shot Layout = 1; COUNTER absent; TALLY saved off; Lower Third saved off
+PH-B: 4 layer sets checked; Two Shot Layout = 1; COUNTER absent; TALLY saved off; Lower Third saved off
+PH-MASTER NDI PH-A: {'Mode': 0, 'Width': 1920, 'Height': 1080, 'Zoom': 105.0}
+PH-MASTER NDI PH-B: {'Mode': 0, 'Width': 1920, 'Height': 1080, 'Zoom': 105.0}
+PH-MASTER stack (top first): ['FTB', 'DSK Clock', 'DSK Bug', 'STINGER', 'Program Audio', 'AB Switcher']; STINGER saved off, FTB saved off
+PH-MASTER downstream keys: DSK Bug saved off, DSK Clock saved off
+PH-MASTER safe source: SAFE Test Pattern in slot 3
+ALL PASS

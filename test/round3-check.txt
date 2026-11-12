@@ -1,0 +1,10 @@
+PASS  setup: takectl running, transition stinger (from the config), rate 0.5 s
+PASS  C. CUT with STINGER selected → cut; STINGER/slot/Lower Third: 51:off/1/off 97:off/2/off 414:off/2/live
+PASS  R. /rate 1 s → switcher 1; TAKE timed 1060 ms, slot flipped at 1084 ms; changed to 2 s outside takectl → next TAKE timed 2060 ms, flipped at 2119 ms; verify never left in flight
+PASS  F. FTB on → "live", program out 944 → 247 bytes (black); TAKE underneath → slot 2; PANIC → SAFE, FTB still "live"; off → 4845 bytes
+PASS  D. Bug on mid-transition → "live", Clock on in SAFE → "live"; history gained 2 entries: ["take","panic"]
+PASS  T. "Two Shot" recalled in Preview → thumbs/357f6b0f341a7a56f2ff83f7ea2d5913018e6ad9.jpg; /thumb serves a 320×180 JPEG
+PASS  O. REC lamp false (Recording off), STREAM null (no streaming output: hidden)
+PASS  P. panel at rest ["PREVIEW · DOCUMENT B","","",""]; B's show stopped → Preview STALE after 940 ms ["PREVIEW · DOCUMENT B","1","PH-B: show not running",""]; started again → ["PREVIEW · DOCUMENT B","","",""]
+restored: slot 1, duration 0.5 s, FTB off, STINGER off, DSK off/off, Lower Third off/off, looks A "Speaker Wide" B "Speaker Wide"; datastores emptied
+ALL PASS

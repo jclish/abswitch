@@ -1,0 +1,8 @@
+PASS  C1. pre-hook on outgoing A: Lower Third left "live" at 128 ms, the switcher left slot 1 at 1210 ms (waitMs 600): 34:live/1 128:shutdown/1 1210:shutdown/2 1660:off/2; take → "dissolve"
+PASS  C2. steps "Two Shot" → "Slides PiP" → "Speaker Wide" (1.5 s apart), PANIC 700 ms in: Program A looks 5:Full Slides 33:Two Shot; panic {"ok":true,"pgm":"A"}; running null
+PASS  C3. CUT with the stinger on (bare since round 3) → cut; 61 frames: 0 covered, 0 show A and B at once; B from 140 ms (round2-coverage-cut-frames.txt)
+PASS  C4. STINGER live → TAKE "the stinger (\"STINGER\") is already live in \"PH-MASTER\": switch it off there or press PANIC, then try again"; stuck in shutdown after 4 tries → TAKE "the stinger (\"STINGER\") is stuck in shutdown in \"PH-MASTER\": press PANIC (it switches the stinger off), then try again"; PANIC → STINGER off; TAKE → stinger
+PASS  C5. a hook for a layer that does not exist: TAKE → dissolve; pgm B, slot 2; warning "hook failed (then: No Such Layer in): no layer named \"No Such Layer\" in \"PH-B\""
+PASS  C6. rehearse → B's Lower Third in Preview 10:off 47:live 2111:shutdown 3674:off (TAKE meanwhile → "busy: rehearsing hooks in Preview B; it is put back 2 s from now"); put back: off; TAKE → on Program 15:off 859:live (came in at 859 ms)
+restored: slot 1, looks A "Speaker Wide" B "Speaker Wide", Lower Third off/shutdown, STINGER off, TALLY off/off; history and steps datastores emptied
+ALL PASS

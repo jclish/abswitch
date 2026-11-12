@@ -4,324 +4,723 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>abswitch operator</title>
-<!-- Served by takectl at GET /. Self-contained: no build step, no CDN, no fonts to fetch, so it
-     works on an iPad on a show network with no internet. Polls /state every 250 ms. -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>abswitch</title>
+<!-- The operator page: a switcher panel (round 3). Served by takectl at GET /; /?view=monitor is the same
+     panel with no buttons and no keyboard, for a producer's screen. Self-contained: no build step, no CDN,
+     no fonts to fetch. Polls /state every 250 ms. One screen, no scrolling, at 1440×900 and on an iPad in
+     landscape. Rules: keys never move; red and green always come with the words PROGRAM and PREVIEW;
+     every control is a real button of at least 44 px.
+     The monitors are stills fetched one after another (~10 a second), not an MJPEG stream, so the page
+     knows when each frame arrived: a monitor with no new frame for 1 s, or whose document's show is not
+     running, is dimmed and marked STALE. (mimoLive keeps serving the last frame of a stopped show.) -->
 <style>
   :root {
-    --bg: #0d0f12; --panel: #171a1f; --line: #2a2f37; --text: #e9edf2; --muted: #9aa3ad;
-    --pgm: #e8202a; --pvw: #19b34a; --idle: #3a4049; --warn: #f2a516; --err: #ff5a5f;
-    --take: #d0151f; --take-hi: #f02a35; --btn: #262b33; --btn-hi: #323843;
+    --bg: #0a0b0d; --panel: #121418; --line: #262a31; --text: #e8ecf1; --muted: #8b94a0;
+    --red: #d0262a; --red-hi: #f0383d; --green: #1f9d4a; --green-hi: #2bc25e; --amber: #e0a020; --amber-hi: #f4b938;
+    --key: #1d2026; --key-hi: #262a31; --warn: #f2a516; --err: #ff5a5f;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --hit: 44px; /* the smallest target, whatever the scale */
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
-    font: 16px/1.3 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
-  body { display: flex; flex-direction: column; gap: 14px; padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }
-
-  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .tile { position: relative; aspect-ratio: 16 / 9; border: 12px solid var(--idle); border-radius: 6px; background: #000; overflow: hidden; transition: border-color 80ms linear; }
-  .tile[data-border="red"] { border-color: var(--pgm); }
-  .tile[data-border="green"] { border-color: var(--pvw); }
-  .tile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
-  .tile .label { position: absolute; left: 10px; top: 8px; display: flex; align-items: baseline; gap: 10px; text-shadow: 0 1px 4px #000; }
-  .tile .letter { font-size: 44px; font-weight: 800; line-height: 1; }
-  .tile .role { font-size: 18px; font-weight: 800; letter-spacing: .08em; padding: 3px 9px; border-radius: 4px; background: rgba(0,0,0,.55); }
-  .tile[data-border="red"] .role { background: var(--pgm); }
-  .tile[data-border="green"] .role { background: var(--pvw); }
-  .tile .name { position: absolute; left: 12px; bottom: 8px; font-size: 13px; color: #fff; opacity: .85; text-shadow: 0 1px 3px #000; }
-  .tile .nofeed { position: absolute; inset: 0; display: none; place-items: center; color: var(--muted); font-size: 15px; }
-  .tile[data-feed="lost"] .nofeed { display: grid; }
-  .tile[data-feed="lost"] img { visibility: hidden; }
-  body[data-conn="offline"] .tile img { filter: grayscale(1) brightness(.45); }
-  body[data-conn="offline"] .tile { border-color: var(--idle); }
-  .offline { display: none; position: fixed; inset: 0; z-index: 5; place-items: center; pointer-events: none; }
-  .offline span { background: rgba(20,22,26,.92); border: 2px solid var(--muted); color: var(--text); font-size: 34px; font-weight: 800; padding: 18px 30px; border-radius: 10px; }
-  body[data-conn="offline"] .offline { display: grid; }
-
-  .sets { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .sets .caption { color: var(--pvw); font-weight: 700; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; margin-right: 4px; }
-  .sets button { min-height: 52px; padding: 0 18px; font-size: 18px; }
-
-  .transport { display: grid; grid-template-columns: 3fr 1fr 1fr 0.5fr 1.4fr; gap: 14px; }
-  button { font: inherit; font-weight: 700; color: var(--text); background: var(--btn); border: 2px solid var(--line); border-radius: 10px; cursor: pointer; touch-action: manipulation; }
-  button:active:not(:disabled) { background: var(--btn-hi); }
+  /* Sized in rem: 1rem is 16 px at 1440×900 and shrinks with the screen, but no control drops under 44 px. */
+  html { font-size: clamp(10px, min(1.111vw, 1.778vh), 18px); }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 1rem/1.25 var(--sans);
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; overflow: hidden; }
+  body { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr); gap: 0.75rem;
+    padding: max(0.75rem, env(safe-area-inset-top)) max(0.9rem, env(safe-area-inset-right)) max(0.75rem, env(safe-area-inset-bottom)) max(0.9rem, env(safe-area-inset-left)); }
+  button { font: inherit; font-weight: 800; letter-spacing: .04em; color: var(--text); background: var(--key); border: 2px solid var(--line);
+    border-radius: 0.55rem; cursor: pointer; touch-action: manipulation; min-height: var(--hit); min-width: var(--hit); text-transform: uppercase; }
+  button:active:not(:disabled) { background: var(--key-hi); }
   button:focus-visible { outline: 3px solid #7fb2ff; outline-offset: 2px; }
-  button:disabled { opacity: .35; cursor: not-allowed; }
-  .transport button { min-height: 96px; font-size: 26px; letter-spacing: .04em; }
-  #take { background: var(--take); border-color: var(--take-hi); font-size: 40px; }
-  #take:active:not(:disabled) { background: var(--take-hi); }
-  .key { display: block; font-size: 12px; font-weight: 600; opacity: .7; letter-spacing: .1em; margin-top: 4px; }
-  #panic { grid-column: 5; position: relative; overflow: hidden; background: #1d0f10; border-color: var(--pgm); color: #ffb3b6; }
-  #panic .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--pgm); opacity: .55; pointer-events: none; }
-  #panic .txt { position: relative; }
-  #panic[data-armed="1"] { background: #5a1014; color: #fff; }
+  button:disabled { opacity: .38; cursor: not-allowed; }
+  .k { font: 700 0.72rem/1 var(--sans); letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+  .why { display: block; font: 600 0.62rem/1.15 var(--sans); letter-spacing: 0; text-transform: none; opacity: .85; margin-top: 0.15rem; max-height: 2.4em; overflow: hidden; }
 
-  .status { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; align-items: baseline; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; font-size: 18px; }
-  .status .k { color: var(--muted); font-size: 14px; text-transform: uppercase; letter-spacing: .08em; }
-  #roles { font-size: 24px; font-weight: 800; }
-  #roles .pgm { color: var(--pgm); } #roles .pvw { color: var(--pvw); }
-  #warning { color: var(--warn); font-weight: 700; }
-  #lastError { color: var(--err); font-weight: 700; }
-  #lastError .age { color: var(--muted); font-weight: 600; }
-  .none { color: var(--muted); font-weight: 400; }
+  /* ---- header */
+  header { display: flex; align-items: center; gap: 0.6rem; min-height: var(--hit); min-width: 0; }
+  header .brand { font-size: 1.9rem; font-weight: 900; letter-spacing: -0.01em; }
+  /* never truncated: hidden (its space kept, so nothing moves) when the whole line does not fit */
+  header .sub { flex: 1 1 0; font: 600 0.8rem/1 var(--sans); letter-spacing: .14em; color: var(--muted); text-transform: uppercase; white-space: nowrap; overflow: hidden; min-width: 0; }
+  header .sub[data-fits="0"] { visibility: hidden; }
+  .lamp { flex: none; display: inline-flex; align-items: center; gap: 0.4rem; min-height: var(--hit); padding: 0 0.6rem; border: 2px solid var(--line); border-radius: 0.5rem;
+    background: var(--panel); color: var(--text); text-decoration: none; font: 800 0.82rem/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+  .lamp i { width: 0.65rem; height: 0.65rem; border-radius: 50%; background: #555c66; }
+  .lamp[data-ok="1"] i { background: var(--green-hi); box-shadow: 0 0 6px var(--green-hi); }
+  .lamp[data-ok="0"] i { background: var(--red-hi); box-shadow: 0 0 6px var(--red-hi); }
+  .lamp.out { color: var(--muted); } .lamp.out[data-live="1"] { color: #fff; background: var(--red); border-color: var(--red-hi); }
+  .lamp.out[data-live="1"] i { background: #fff; box-shadow: 0 0 6px #fff; }
+  #status { flex: 0 1 24rem; min-width: 7rem; font: 700 0.85rem/1.2 var(--mono); padding: 0 0.8rem; min-height: var(--hit); display: block; line-height: calc(var(--hit) - 4px); border: 2px solid var(--line); border-radius: 0.5rem;
+    background: var(--panel); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--green-hi); }
+  #status[data-kind="warn"] { color: var(--warn); } #status[data-kind="red"] { color: #fff; background: var(--red); border-color: var(--red-hi); }
+  #status[data-kind="safe"] { color: #04140a; background: var(--green-hi); border-color: var(--green-hi); }
+  #fs { flex: none; font-size: 0.75rem; padding: 0 0.7rem; }
 
-  .toast { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); z-index: 10; max-width: min(92vw, 1100px); padding: 18px 26px; border-radius: 12px; font-size: 28px; font-weight: 800; line-height: 1.25; box-shadow: 0 8px 30px rgba(0,0,0,.6); display: none; }
-  .toast[data-kind="error"] { background: #b3121b; color: #fff; display: block; }
-  .toast[data-kind="info"] { background: #1f2a38; color: #fff; border: 2px solid #4b6a8f; display: block; }
+  /* ---- monitors + readout */
+  /* Each monitor's picture is exactly 16:9 (no bars beside it): where its height is capped (--monh), the monitor
+     is no wider than that picture, and the readout takes the width left over. */
+  .top { --monh: 37vh; --monw: calc(var(--monh) * 16 / 9 + 0.8rem); display: grid; grid-template-columns: minmax(0, var(--monw)) minmax(0, var(--monw)) minmax(16rem, 1fr); gap: 0.75rem; }
+  .mon { border: 0.4rem solid var(--line); border-radius: 0.7rem; background: #000; overflow: hidden; container-type: inline-size; display: flex; flex-direction: column; }
+  /* one line, fixed height: a longer header (SAFE, IN TRANSITION) must not make the monitors taller */
+  .mon .hdr { position: relative; flex: none; height: max(2.2rem, var(--hit)); display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0 0.75rem; font: 900 1.05rem/1.2 var(--sans); letter-spacing: .1em; text-transform: uppercase; overflow: hidden; }
+  .mon .hdr > span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .mon .hdr > span:first-child { flex: 0 1 auto; } .mon .hdr .look { flex: 0 10 auto; }
+  .mon .hdr .look { font: 700 0.95rem/1.2 var(--mono); letter-spacing: 0; text-transform: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mon .pic { position: relative; flex: none; width: 100%; aspect-ratio: 16 / 9; background: #000; }
+  .mon .pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+  .mon .stale { position: absolute; inset: 0; display: none; place-items: center; }
+  .mon .stale span { background: rgba(10,11,13,.85); border: 2px solid var(--warn); color: var(--warn); font: 900 1.4rem/1 var(--sans); letter-spacing: .14em; padding: 0.6rem 1rem; border-radius: 0.5rem; text-align: center; }
+  .mon .stale small { display: block; font: 600 0.75rem/1.2 var(--sans); letter-spacing: 0; margin-top: 0.3rem; color: #d8dde3; }
+  .mon[data-stale="1"] .pic img { filter: grayscale(1) brightness(.35); } .mon[data-stale="1"] .stale { display: grid; }
+  #pgmMon { border-color: var(--red); } #pgmMon .hdr { background: var(--red); color: #fff; }
+  /* Round 4: CHANGED IN MIMOLIVE (a tap accepts it) and NOT WATCHED sit over Program's header strip, never
+     over the picture; the strip keeps "PROGRAM" on red at its left. Same height as the strip: nothing moves. */
+  .mon .hdr .wstrip { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; display: flex; align-items: stretch;
+    background: var(--amber); color: #1b1300; font: inherit; letter-spacing: inherit; text-transform: uppercase; text-align: left; overflow: hidden; }
+  .mon .hdr .wstrip[hidden] { display: none; }
+  .wstrip .pg { flex: none; display: flex; align-items: center; padding: 0 0.6rem 0 0.75rem; background: var(--red); color: #fff; white-space: nowrap; }
+  /* the words on top, what changed under them: the whole rest of the strip is for it */
+  .wstrip .msg { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 0 0.6rem; line-height: 1.12; }
+  .wstrip .msg b { font-size: 0.8em; font-weight: 900; letter-spacing: .06em; white-space: nowrap; overflow: hidden; }
+  .wstrip .what { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 0.92rem/1.15 var(--mono); letter-spacing: 0; text-transform: none; }
+  button.wstrip:active { background: var(--amber-hi); }
+  .wstrip.unw { background: #2b2108; color: var(--amber-hi); }
+  button.lamp { cursor: pointer; } #watchPgm[data-on="0"] { color: var(--muted); }
+  #pvwMon { border-color: var(--green); } #pvwMon .hdr { background: var(--green); color: #fff; }
+  #pvwMon[data-flight="1"] { border-color: var(--red); } #pvwMon[data-flight="1"] .hdr { background: var(--red); }
+  body[data-conn="offline"] .mon img, body[data-conn="notready"] .mon img { filter: grayscale(1) brightness(.4); }
+  /* contain: size — the monitors set the row's height, never the readout's text */
+  .readout { contain: size; position: relative; background: var(--panel); border: 2px solid var(--line); border-radius: 0.7rem; padding: 0.8rem 0.9rem calc(var(--hit) + 1.4rem); display: flex; flex-direction: column; overflow: hidden; font: 0.82rem/1.28 var(--mono); }
+  .readout .rtext { flex: 1 1 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 0.2rem; } /* clipped above the buttons */
+  .readout .k { margin-top: 0.4rem; } .readout .k:first-child { margin-top: 0; }
+  .readout .v { word-break: break-word; }
+  #rOnAir { font: 800 1.2rem/1.1 var(--mono); }
+  /* one line: the label beside the time (round 4: the line it saves keeps a WARNING whole on a 1024 iPad) */
+  .readout .onair { display: flex; align-items: baseline; gap: 0.5rem; } .readout .onair .k { margin-top: 0; }
+  #rWarn { color: var(--warn); } #rErr { color: var(--err); }
+  /* pinned to the readout's bottom edge: the text above can grow without moving it (keys never move) */
+  .rbtns { position: absolute; left: 0.9rem; right: 0.9rem; bottom: 0.8rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+  .rbtns button { font-size: 0.66rem; min-height: var(--hit); padding: 0 0.3rem; overflow: hidden; }
+  #histReset[data-armed="1"] { background: #5a1014; border-color: var(--red-hi); color: #fff; }
 
-  @media (max-width: 760px) {
-    .tiles { grid-template-columns: 1fr; }
-    .transport { grid-template-columns: 1fr 1fr; }
-    #take { grid-column: 1 / -1; }
-    #panic { grid-column: 1 / -1; }
-    .gap { display: none; }
+  /* ---- bottom: buses + utility | transition block */
+  .bottom { display: grid; grid-template-columns: minmax(0, 1fr) 30rem; gap: 0.75rem; min-height: 0; }
+  .block { background: var(--panel); border: 2px solid var(--line); border-radius: 0.8rem; padding: 0.8rem 0.9rem; min-height: 0; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.6rem; }
+  .looks { grid-template-rows: auto auto minmax(0, 1fr) auto auto; }
+  .bus { display: grid; grid-template-columns: 3.4rem repeat(8, minmax(0, 1fr)); gap: 0.45rem; align-items: stretch; }
+  .bus .lbl { font: 900 1rem/1 var(--sans); letter-spacing: .08em; display: flex; align-items: center; }
+  #pgmBus .lbl { color: var(--red-hi); } #pvwBus .lbl { color: var(--green-hi); }
+  .lampkey { min-height: var(--hit); border: 2px solid var(--line); border-radius: 0.5rem; background: #101215; color: var(--muted); display: flex; align-items: center; justify-content: center;
+    font: 800 0.85rem/1.1 var(--sans); text-align: center; padding: 0 0.3rem; overflow: hidden; }
+  .lampkey[data-on="1"] { background: var(--red); border-color: var(--red-hi); color: #fff; box-shadow: 0 0 10px rgba(240,56,61,.45); }
+  .lampkey[data-empty="1"] { color: #3a3f47; }
+  /* A look key is the shape of the picture: the whole 16:9 thumbnail on top (fit, never cropped), the name in a
+     band of its own underneath. Its height follows from its width; the freed height is left to the rows below. */
+  #pvwBus { align-self: start; }
+  .pvwkey { position: relative; padding: 0; text-transform: none; display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch;
+    background-color: var(--key); overflow: hidden; text-align: left; border: 2px solid var(--line); border-radius: 0.55rem; font-weight: 800; }
+  .pvwkey .pic { position: relative; display: block; flex: none; width: 100%; aspect-ratio: 16 / 9; background: transparent center / contain no-repeat; }
+  /* Labels sit on a dark band of their own, never over the picture (contrast ≥ 4.5:1). One height for every key:
+     two lines of name and the hooks line, whatever they hold. */
+  .pvwkey .band { --nmfs: clamp(0.62rem, 15cqw, 0.98rem); position: relative; flex: none; height: calc(0.62rem + 2.2 * var(--nmfs) + 0.85rem); padding: 0.3rem 0.4rem 0.32rem;
+    background: #0d0f12; display: flex; flex-direction: column; justify-content: center; gap: 0.1rem; overflow: hidden; }
+  .pvwkey[data-sel="1"] .band { background: #0a3e1e; }
+  .pvwkey .num { position: absolute; left: 0.3rem; top: 0.3rem; font: 800 0.72rem/1 var(--mono); color: #f2f4f7; background: rgba(8,9,11,.84); border-radius: 0.25rem; padding: 0.15rem 0.3rem; }
+  /* the name is sized to the key's own width and breaks only between words */
+  .pvwkey { container-type: inline-size; }
+  .pvwkey .nm { flex: none; font: 900 var(--nmfs)/1.1 var(--sans); color: #fff; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: normal; word-break: normal; }
+  /* the band's bottom line: the hooks on the left (cut with an ellipsis), the count (×3) right-aligned, whole */
+  .pvwkey .foot { flex: none; display: flex; align-items: baseline; min-width: 0; min-height: 0.75rem; }
+  .pvwkey .sub { flex: 1 1 auto; min-width: 0; font: 600 0.62rem/1.15 var(--sans); color: #e6cf94; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pvwkey .cnt { flex: none; margin-left: auto; padding-left: 0.3rem; font: 800 0.62rem/1.15 var(--mono); color: #f2f4f7; white-space: nowrap; }
+  .pvwkey .cnt:empty { display: none; }
+  /* Ruling 2026-11-12: nothing but the slot number on the picture. The white ring marks the likely-next look; the
+     word NEXT sits in the band beside the name only where it fits whole (placed by fitNext), never truncated. */
+  .pvwkey .next { position: absolute; right: 0.4rem; top: 0; font: 900 0.58rem/1 var(--sans); letter-spacing: .1em; background: #fff; color: #000; border-radius: 0.2rem; padding: 0.12rem 0.3rem; white-space: nowrap; }
+  .pvwkey .next[hidden] { display: none; }
+  .pvwkey[data-next="1"] { box-shadow: 0 0 0 3px #fff inset; }
+  /* the white ring is drawn over the picture too */
+  .pvwkey[data-next="1"]::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: 0 0 0 3px #fff inset; pointer-events: none; }
+  .pvwkey[data-sel="1"] { border-color: var(--green-hi); background-color: var(--green); box-shadow: 0 0 12px rgba(43,194,94,.5); }
+  .pvwkey[data-sel="1"][data-next="1"] { box-shadow: 0 0 0 3px #fff inset, 0 0 12px rgba(43,194,94,.5); }
+  /* an empty slot: the same size, unlit */
+  .pvwkey[data-empty="1"] { background-color: #101215; } .pvwkey[data-empty="1"] .band { background: #101215; }
+  button.pvwkey:disabled { opacity: .5; } button.pvwkey[data-empty="1"]:disabled { opacity: 1; }
+  .steps { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto auto; gap: 0.45rem; align-items: center; background: #0e1013; border: 2px solid var(--line); border-radius: 0.55rem; padding: 0.3rem 0.5rem; min-height: calc(var(--hit) + 0.6rem); }
+  .chips { display: flex; gap: 0.35rem; overflow: hidden; white-space: nowrap; font: 0.85rem/1 var(--mono); color: var(--muted); }
+  .chip { border: 2px solid var(--line); border-radius: 0.4rem; padding: 0.3rem 0.5rem; color: var(--text); background: var(--key); font: 700 0.8rem/1 var(--sans); }
+  .chip b { color: var(--muted); margin-right: 0.3rem; } .chip[data-now="1"] { border-color: var(--amber); } .chip[data-done="1"] { opacity: .45; }
+  .steps button { font-size: 0.7rem; padding: 0 0.6rem; }
+  #capture[data-on="1"] { background: #3b2a06; border-color: var(--amber-hi); color: #ffd28a; box-shadow: 0 0 8px rgba(244,185,56,.4); }
+  .pace { display: flex; align-items: center; gap: 0.3rem; } .pace .k { margin-right: 0.1rem; }
+  .pace button[data-on="1"] { background: #e9edf2; color: #0a0b0d; border-color: #fff; }
+  .steps select { font: 700 0.75rem/1 var(--sans); color: var(--text); background: var(--key); border: 2px solid var(--line); border-radius: 0.5rem; min-height: var(--hit); padding: 0 0.4rem; max-width: 9rem; }
+  .util { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) 0.3rem repeat(3, minmax(0, 1fr)) 0.3rem auto; gap: 0.45rem; align-items: end; }
+  .util > button { height: max(var(--hit), 3.6rem); font-size: 0.95rem; padding: 0 0.4rem; overflow: hidden; }
+  #pushSteps { border-color: #6b5016; color: var(--amber-hi); background: #2b2108; }
+  .dsk { display: grid; gap: 0.25rem; } .dsk .row { display: flex; gap: 0.45rem; }
+  .dsk button { min-height: max(var(--hit), 3rem); font-size: 0.85rem; padding: 0 0.9rem; }
+  .dsk button[data-on="1"] { background: #e9edf2; color: #0a0b0d; border-color: #fff; }
+  .trans { grid-template-rows: auto auto auto minmax(0, 1fr) auto auto; }
+  .trow { display: grid; gap: 0.5rem; }
+  #selRow { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.25fr); }
+  #selRow > button { min-height: max(var(--hit), 3.4rem); font-size: 1.05rem; }
+  #selRow > button[data-on="1"] { background: #e9edf2; color: #0a0b0d; border-color: #fff; }
+  .rate { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.3rem; background: #0e1013; border: 2px solid var(--line); border-radius: 0.55rem; padding: 0.2rem; }
+  .rate button { min-height: var(--hit); font-size: 1.2rem; padding: 0 0.6rem; }
+  .rate .val { text-align: center; } .rate .val b { display: block; font: 800 1.15rem/1.1 var(--mono); } .rate[data-off="1"] .val b { color: var(--muted); }
+  #tgtRow { position: relative; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); align-items: center; min-height: var(--hit); }
+  #tgtRow > .k, #tgtRow > button { visibility: hidden; } body[data-safe="1"] #tgtRow > .k, body[data-safe="1"] #tgtRow > button { visibility: visible; }
+  #nextTake { position: absolute; inset: 0; display: flex; align-items: center; font: 700 0.85rem/1.2 var(--mono); color: var(--muted); white-space: nowrap; overflow: hidden; }
+  #nextTake b { color: var(--green-hi); margin: 0 0.35rem; } body[data-safe="1"] #nextTake { visibility: hidden; }
+  #tgtRow button { min-height: var(--hit); font-size: 1.1rem; } #tgtRow button[data-on="1"] { background: var(--green); border-color: var(--green-hi); }
+  /* CUT and TAKE fill the block's spare height: sized by the screen, never by state */
+  #takeRow { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); align-items: stretch; min-height: max(var(--hit), 6.2rem); }
+  #cut { height: 100%; font-size: 1.9rem; overflow: hidden; }
+  #take { height: 100%; font-size: 3rem; letter-spacing: .12em; background: var(--red); border-color: var(--red-hi); color: #fff; box-shadow: 0 0 22px rgba(240,56,61,.35); }
+  #take:active:not(:disabled) { background: var(--red-hi); }
+  .bar { height: 0.55rem; background: #0e1013; border: 1px solid var(--line); border-radius: 0.3rem; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--red-hi); }
+  #lastRow { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #lastRow button { height: max(var(--hit), 4.2rem); font-size: 1.45rem; overflow: hidden; }
+  #push { background: var(--amber); border-color: var(--amber-hi); color: #1b1300; } #push:active:not(:disabled) { background: var(--amber-hi); }
+  #ftb[data-on="1"] { background: var(--red); border-color: var(--red-hi); color: #fff; box-shadow: 0 0 14px rgba(240,56,61,.5); }
+  #panic { position: relative; overflow: hidden; background: #1d0f10; border: 2px dashed var(--red-hi); color: #ffb3b6; font-size: 1.25rem; }
+  #panic .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--red); opacity: .6; pointer-events: none; }
+  #panic .txt { position: relative; } #panic small { display: block; font: 800 0.6rem/1.2 var(--sans); letter-spacing: .1em; margin-top: 0.2rem; }
+
+  /* ---- view-only (/?view=monitor): monitors, header, readout and look lamps; nothing to press */
+  body[data-view="monitor"] .trans, body[data-view="monitor"] .steps, body[data-view="monitor"] .util, body[data-view="monitor"] .rbtns, body[data-view="monitor"] #fs, body[data-view="monitor"] #watchPgm { display: none; }
+  body[data-view="monitor"] .bottom { grid-template-columns: 1fr; }
+  body[data-view="monitor"] .looks { grid-template-rows: auto auto minmax(0, 1fr); }
+  body[data-view="monitor"] .top { --monh: 46vh; }
+
+  /* ---- overlays */
+  .ov { display: none; position: fixed; inset: 0; z-index: 6; place-items: center; pointer-events: none; }
+  .ov > div { pointer-events: auto; max-width: min(90vw, 760px); background: rgba(18,20,24,.95); border: 2px solid var(--warn); font-size: 1.8rem; font-weight: 900; padding: 1rem 1.6rem; border-radius: 0.8rem; text-align: center; }
+  .ov small { display: block; font-size: 1rem; font-weight: 600; color: #c9d0d8; margin-top: 0.4rem; } .ov a { color: var(--warn); }
+  body[data-conn="offline"] #offline { display: grid; } body[data-conn="notready"] #notready { display: grid; }
+  .toast { position: fixed; left: 50%; top: 1rem; transform: translateX(-50%); z-index: 10; max-width: min(92vw, 1100px); padding: 1rem 1.5rem; border-radius: 0.8rem; font-size: 1.5rem; font-weight: 800; line-height: 1.25; box-shadow: 0 8px 30px rgba(0,0,0,.6); display: none; }
+  .toast[data-kind="error"] { background: #b3121b; color: #fff; display: block; } .toast[data-kind="info"] { background: #1f2a38; color: #fff; border: 2px solid #4b6a8f; display: block; }
+  /* ---- screen-size rules last, so they override the rules above */
+  /* Round 4: WATCH PGM joined the header; under 1300 px the full-screen key keeps only its symbol. */
+  @media (max-width: 1300px) { #fs .lbl { display: none; } }
+  /* Up to 1150 px (an iPad mini in landscape is 1133): the downstream keys get a row of their own, so the five
+     utility keys are wide enough for their reasons (round 4: at 1133 "no Program look" was cut in SAFE). */
+  @media (max-width: 1150px) {
+    .util { grid-template-columns: repeat(5, minmax(0, 1fr)); } .util > span { display: none; } .util > .dsk { grid-column: 1 / -1; order: -1; } .util > button { font-size: 0.75rem; }
+    .dsk { grid-template-columns: auto 1fr; align-items: center; } .dsk .row { flex-wrap: nowrap; }
+  }
+  /* Narrow screens (an iPad mini or a 1024-wide iPad in landscape): the same keys in the same places, laid
+     out by the screen width only, never by state. */
+  @media (max-width: 1120px) {
+    header .sub { display: none; } #fs .lbl { display: none; } .lamp { padding: 0 0.45rem; letter-spacing: .03em; } #status { min-width: 5rem; }
+    .top { grid-template-columns: minmax(0, var(--monw)) minmax(0, var(--monw)) minmax(15rem, 1fr); }
+    .bottom { grid-template-columns: minmax(0, 1fr) 23rem; }
+    .mon .hdr { font-size: 0.82rem; letter-spacing: .06em; } .mon .hdr .look, .wstrip .what { font-size: 0.78rem; }
+    .bus { grid-template-columns: 2.6rem repeat(8, minmax(0, 1fr)); gap: 0.3rem; }
+    .lampkey { font-size: 0.66rem; } .pvwkey .sub { font-size: 0.54rem; } .pvwkey .band { padding: 0.25rem 0.3rem 0.27rem; }
+    .util { grid-template-columns: repeat(5, minmax(0, 1fr)); } .util > span { display: none; } .util > .dsk { grid-column: 1 / -1; order: -1; } .util > button { font-size: 0.75rem; }
+    .dsk { grid-template-columns: auto 1fr; align-items: center; } .dsk .row { flex-wrap: nowrap; }
+    #selRow { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } #selRow .rate { grid-column: 1 / -1; }
+    #take { font-size: 2.4rem; } #lastRow button { font-size: 1.15rem; }
+  }
+  @media (max-height: 840px) {
+    .top { --monh: 33vh; } body[data-view="monitor"] .top { --monh: 46vh; }
+    /* a tighter readout, so LAST, UNDO, a WARNING and an ERROR fit whole on an iPad */
+    .readout { padding: 0.6rem 0.75rem calc(var(--hit) + 0.95rem); line-height: 1.18; } .readout .rtext { gap: 0.1rem; } .readout .k { margin-top: 0.22rem; }
+    #rOnAir { font-size: 1.05rem; } .rbtns { left: 0.75rem; right: 0.75rem; bottom: 0.6rem; }
+    #takeRow { min-height: max(var(--hit), 5rem); } #lastRow button { height: max(var(--hit), 3.6rem); }
+    .util > button { height: max(var(--hit), 3.1rem); }
   }
 </style>
 </head>
 <body data-conn="connecting">
-  <div class="tiles">
-    <div class="tile" id="tileA" data-border="grey" data-feed="ok">
-      <img id="imgA" alt="Program output of document A">
-      <div class="nofeed">no picture from document A</div>
-      <div class="label"><span class="letter">A</span><span class="role" id="roleA">—</span></div>
-      <div class="name" id="nameA"></div>
+  <header>
+    <span class="brand">abswitch</span><span class="sub">A/B composition switcher for mimoLive</span>
+    <a class="lamp" id="lampA" href="/doctor"><i></i>A LIVE</a>
+    <a class="lamp" id="lampB" href="/doctor"><i></i>B LIVE</a>
+    <a class="lamp" id="lampM" href="/doctor"><i></i>MASTER</a>
+    <a class="lamp" id="lampD" href="/doctor"><i></i>DOCTOR</a>
+    <button class="lamp" id="watchPgm" title="WATCH PGM: flag changes made to Program in mimoLive's own window (off for shows that work live in Program)"><i></i>Watch PGM</button>
+    <span class="lamp out" id="lampRec" hidden title="MASTER's File Recording output (display only)"><i></i>REC</span>
+    <span class="lamp out" id="lampStream" hidden title="MASTER's Live Streaming output (display only)"><i></i>STREAM</span>
+    <span id="status">connecting…</span>
+    <button id="fs" title="Full screen">⛶<span class="lbl"> Full screen</span></button>
+  </header>
+
+  <section class="top">
+    <div class="mon" id="pgmMon">
+      <div class="hdr"><span id="pgmHdr">PROGRAM</span><span class="look" id="pgmLook"></span>
+        <button class="wstrip" id="pgmAck" hidden><span class="pg">Program</span><span class="msg"><b>Changed in mimoLive</b><span class="what"></span></span></button>
+        <div class="wstrip" id="pgmAckView" hidden><span class="pg">Program</span><span class="msg"><b>Changed in mimoLive</b><span class="what"></span></span></div>
+        <div class="wstrip unw" id="pgmUnw" hidden><span class="pg">Program</span><span class="msg"><b>Not watched</b><span class="what">no events from mimoLive</span></span></div></div>
+      <div class="pic"><img id="pgm0" alt="MASTER's program output"><img id="pgm1" alt="" hidden>
+        <div class="stale"><span>STALE<small id="pgmStaleWhy"></small></span></div></div>
     </div>
-    <div class="tile" id="tileB" data-border="grey" data-feed="ok">
-      <img id="imgB" alt="Program output of document B">
-      <div class="nofeed">no picture from document B</div>
-      <div class="label"><span class="letter">B</span><span class="role" id="roleB">—</span></div>
-      <div class="name" id="nameB"></div>
+    <div class="mon" id="pvwMon">
+      <div class="hdr"><span id="pvwHdr">PREVIEW</span><span class="look" id="pvwLook"></span></div>
+      <div class="pic"><img id="pvw0" alt="The Preview document's program output"><img id="pvw1" alt="" hidden>
+        <div class="stale"><span>STALE<small id="pvwStaleWhy"></small></span></div></div>
     </div>
-  </div>
+    <aside class="readout"><div class="rtext">
+      <div class="onair"><span class="k">On air for</span><span class="v" id="rOnAir">—</span></div>
+      <span class="k">Last</span><span class="v" id="rLast">—</span>
+      <span class="k" id="rUndoK" hidden>Undo · not offered</span><span class="v" id="rUndo" hidden></span>
+      <span class="k" id="rWarnK" hidden>Warning</span><span class="v" id="rWarn" hidden></span>
+      <span class="k" id="rErrK" hidden>Error</span><span class="v" id="rErr" hidden></span>
+      <span class="k">On take · hooks</span><span class="v" id="rHooks">—</span>
 
-  <div class="sets" id="sets"><span class="caption">Look in PVW (green)</span></div>
+      <span class="k">Likely next</span><span class="v" id="rNext">—</span>
+      <span class="k">Rule</span><span class="v">Compose only in the green document.</span>
+      </div><div class="rbtns"><button id="rehearse" title="Run those post-hooks in Preview, then put Preview back">Rehearse hooks</button><button id="histReset" title="Forget which looks followed which (asks first)">Reset history</button></div>
+    </aside>
+  </section>
 
-  <div class="transport">
-    <button id="take" disabled>TAKE<span class="key">SPACE</span></button>
-    <button id="cut" disabled>CUT<span class="key">C</span></button>
-    <button id="mirror" disabled>MIRROR<span class="key">M</span></button>
-    <span class="gap"></span>
-    <button id="panic"><span class="fill"></span><span class="txt" id="panicTxt">PANIC<span class="key">HOLD · OR TAP TWICE</span></span></button>
-  </div>
+  <section class="bottom">
+    <div class="block looks">
+      <span class="k">Looks · keys never move · 1–8 select</span>
+      <div class="bus" id="pgmBus"><span class="lbl">PGM</span></div>
+      <div class="bus" id="pvwBus"><span class="lbl">PVW</span></div>
+      <div class="steps">
+        <span class="k">Steps</span>
+        <div class="chips" id="chips"></div>
+        <button id="capture" title="While lit, every look recalled into Preview is added as a step">Capture</button>
+        <div class="pace" role="group" aria-label="Pace of a steps push"><span class="k">Pace</span><button id="paceInstant" title="Each step as soon as the last has landed">Instant</button><button id="paceOrig" title="At the pace the steps were captured (gaps up to 10 s)">As recorded</button></div>
+        <select id="listLoad" title="Load a saved list"><option value="">Lists…</option></select>
+        <button id="listSave" title="Save these steps as a named list">Save…</button>
+      </div>
+      <div class="util">
+        <button id="mirror">Mirror<span class="why" id="mirrorWhy"></span></button>
+        <button id="undo">Undo<span class="why" id="undoWhy"></span></button>
+        <span></span>
+        <button id="stepAdd">+ Step</button>
+        <button id="stepClear">Clear</button>
+        <button id="pushSteps">Push steps</button>
+        <span></span>
+        <div class="dsk"><span class="k">Downstream · MASTER</span><div class="row" id="dskRow"></div></div>
+      </div>
+    </div>
 
-  <div class="status">
-    <span class="k">On air</span><span id="roles" class="none">waiting for takectl…</span>
-    <span class="k">Last</span><span id="last" class="none">—</span>
-    <span class="k">Warning</span><span id="warning" class="none">none</span>
-    <span class="k">Error</span><span id="lastError" class="none">none</span>
-  </div>
+    <div class="block trans">
+      <span class="k">Transition</span>
+      <div class="trow" id="selRow">
+        <button id="mix">Mix</button>
+        <button id="sting">Stinger</button>
+        <div class="rate" id="rate"><button id="rateDn" title="Shorter dissolve">−</button><div class="val"><span class="k">Rate</span><b id="rateVal">—</b></div><button id="rateUp" title="Longer dissolve">+</button></div>
+      </div>
+      <div class="trow" id="tgtRow"><span class="k">Take goes to</span><button id="tgtA">Doc A</button><button id="tgtB">Doc B</button><span id="nextTake"></span></div>
+      <div class="trow" id="takeRow"><button id="cut">Cut<span class="why">C · always bare</span></button><button id="take">Take</button></div>
+      <div class="bar"><i id="progress"></i></div>
+      <div class="trow" id="lastRow">
+        <button id="push">Push<span class="why" id="pushWhy"></span></button>
+        <button id="ftb">FTB<span class="why" id="ftbWhy">video only</span></button>
+        <button id="panic"><span class="fill"></span><span class="txt">PANIC<small id="panicTo">HOLD · CUT TO A</small></span></button>
+      </div>
+    </div>
+  </section>
 
-  <div class="offline"><span>takectl unreachable</span></div>
+  <div class="ov" id="offline"><div>takectl unreachable<small>Check the Mac running takectl.</small></div></div>
+  <div class="ov" id="notready"><div>takectl is not ready<small id="notreadyWhy"></small><small><a href="/doctor">Open Doctor</a> to see what to fix.</small></div></div>
   <div class="toast" id="toast" role="status" aria-live="assertive"></div>
 
 <script>
 "use strict";
 const $ = (id) => document.getElementById(id);
-const POLL_MS = 250, OFFLINE_AFTER_MS = 2000, PANIC_HOLD_MS = 700, PANIC_TAP_WINDOW_MS = 1000;
-let state = null, lastOk = Date.now(), pending = false, setsKey = "";
+const POLL_MS = 250, OFFLINE_AFTER_MS = 2000, PANIC_HOLD_MS = 700, SLOTS = 8, STALE_MS = 1000, FRAME_GAP_MS = 100;
+const VIEW = new URLSearchParams(location.search).get("view") === "monitor"; // view-only: no buttons, no keys
+if (VIEW) document.body.dataset.view = "monitor";
+let state = null, lastOk = Date.now(), pending = false, keysBuilt = "";
+let prog = null; // { startedAt (local clock), totalMs } for the TAKE bar
+let clockSkew = 0; // takectl's clock minus ours, from /state
+let paceOriginal = false; // the steps push pace on this device: INSTANT or AS RECORDED
 
-// ---- toast: one line, big enough to read from arm's length
 let toastTimer = null;
 function toast(msg, kind = "error") {
-  const t = $("toast");
-  t.textContent = msg;
-  t.dataset.kind = kind;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.dataset.kind = ""; }, kind === "error" ? 6000 : 2500);
+  const t = $("toast"); t.textContent = msg; t.dataset.kind = kind;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.dataset.kind = ""; }, kind === "error" ? 6000 : 2500);
 }
 $("toast").addEventListener("click", () => { $("toast").dataset.kind = ""; });
+const age = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return s < 60 ? s + " s ago" : s < 3600 ? Math.round(s / 60) + " min ago" : Math.round(s / 3600) + " h ago"; };
+const clock = (ms) => { const s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return (h ? h + ":" + String(m).padStart(2, "0") : String(m).padStart(2, "0")) + ":" + String(x).padStart(2, "0"); };
 
-// ---- program-out pictures. A document host of localhost means "the Mac takectl runs on": from
-// another device that is the host this page came from, so substitute it (CORS is not involved,
-// these are plain <img> requests).
-function feedUrl(doc) {
+// ---- monitors: one still after another into two <img>s (shown in turn), so each frame's arrival is known.
+// A host of localhost means "the Mac takectl runs on": from another device, the host this page came from.
+function stillUrl(doc, width) {
   if (!doc || !doc.host || !doc.id) return null;
-  const u = new URL(doc.host);
-  const loopback = ["localhost", "127.0.0.1", "[::1]", "::1"];
-  if (loopback.includes(u.hostname) && !loopback.includes(location.hostname)) u.hostname = location.hostname;
-  return `${u.origin}/api/v1/documents/${encodeURIComponent(doc.id)}/programOut?format=mjpeg&fps=10&width=960`;
+  const u = new URL(doc.host), loop = ["localhost", "127.0.0.1", "[::1]", "::1"];
+  if (loop.includes(u.hostname) && !loop.includes(location.hostname)) u.hostname = location.hostname;
+  return `${u.origin}/api/v1/documents/${encodeURIComponent(doc.id)}/programOut?format=jpeg&width=${width}`;
 }
-function setFeed(role, doc) {
-  const img = $("img" + role), tile = $("tile" + role), url = feedUrl(doc);
-  if (!url || img.dataset.base === url) return;
-  img.dataset.base = url;
-  img.src = url;
+class Monitor {
+  constructor(prefix) { this.imgs = [$(prefix + "0"), $(prefix + "1")]; this.front = 0; this.base = null; this.lastFrame = 0; this.since = Date.now(); this.busy = false; }
+  set(doc) {
+    const w = Math.min(960, Math.round(((this.imgs[0].parentElement.clientWidth || 640) * (window.devicePixelRatio || 1)) / 160) * 160 || 640);
+    const url = stillUrl(doc, w);
+    if (url === this.base) return;
+    this.base = url; this.since = Date.now(); this.lastFrame = 0;
+    if (!this.busy) this.next();
+  }
+  next() {
+    if (!this.base) { this.busy = false; return; }
+    this.busy = true;
+    const back = this.imgs[1 - this.front], base = this.base, t0 = Date.now();
+    // A still that has not arrived after 1.5 s is abandoned and asked for again: a hung request must not
+    // stop the monitor for good (it stays STALE meanwhile).
+    clearTimeout(this.watchdog);
+    this.watchdog = setTimeout(() => { back.onload = back.onerror = null; back.removeAttribute("src"); this.next(); }, 1500);
+    back.onload = () => {
+      clearTimeout(this.watchdog);
+      if (base !== this.base) return this.next(); // the document changed meanwhile
+      back.hidden = false; this.imgs[this.front].hidden = true; this.front = 1 - this.front;
+      this.lastFrame = Date.now();
+      setTimeout(() => this.next(), Math.max(0, FRAME_GAP_MS - (Date.now() - t0)));
+    };
+    back.onerror = () => { clearTimeout(this.watchdog); setTimeout(() => this.next(), 500); };
+    back.src = base + "&t=" + Date.now();
+  }
+  // STALE: no new frame for 1 s (after a short grace when the document changes)
+  staleFor() { const ref = this.lastFrame || this.since; return Date.now() - ref; }
 }
-for (const role of ["A", "B"]) {
-  const img = $("img" + role), tile = $("tile" + role);
-  img.addEventListener("load", () => { tile.dataset.feed = "ok"; });
-  img.addEventListener("error", () => {
-    tile.dataset.feed = "lost";
-    setTimeout(() => { if (img.dataset.base) img.src = img.dataset.base + "&t=" + Date.now(); }, 2000);
-  });
+const pgmMon = new Monitor("pgm"), pvwMon = new Monitor("pvw");
+
+// ---- look keys: 8 fixed slots per bus, in the discovered order; a name only one document has stays in
+// its place, greyed. In view-only mode the Preview row is lamps too.
+function buildKeys(all) {
+  const k = JSON.stringify(all.map((x) => [x.name, x.inA, x.inB]));
+  if (k === keysBuilt) return;
+  keysBuilt = k;
+  for (const bus of ["pgmBus", "pvwBus"]) $(bus).querySelectorAll(".lampkey, .pvwkey").forEach((e) => e.remove());
+  for (let i = 0; i < SLOTS; i++) {
+    const it = all[i];
+    const lamp = document.createElement("div");
+    lamp.className = "lampkey"; lamp.setAttribute("role", "img");
+    lamp.dataset.name = it ? it.name : ""; lamp.dataset.empty = it ? "" : "1";
+    lamp.textContent = it ? it.name : "·";
+    lamp.setAttribute("aria-label", it ? `Program look ${it.name}` : "empty");
+    $("pgmBus").append(lamp);
+    const b = document.createElement(VIEW ? "div" : "button");
+    b.className = "pvwkey"; b.dataset.name = it ? it.name : ""; b.dataset.empty = it ? "" : "1";
+    b.innerHTML = '<span class="pic"><span class="num"></span></span><span class="band"><span class="nm"></span><span class="foot"><span class="sub"></span><span class="cnt"></span></span><span class="next" hidden>NEXT</span></span>';
+    b.querySelector(".num").textContent = String(i + 1);
+    b.querySelector(".nm").textContent = it ? it.name : "";
+    if (it && !(it.inA && it.inB)) { b.dataset.one = "1"; b.querySelector(".sub").textContent = it.inA ? "only in A" : "only in B"; b.title = `"${it.name}" exists only in ${it.inA ? "A" : "B"}: add a Layer Set with the same name to ${it.inA ? "B" : "A"}`; }
+    if (it && !VIEW) b.addEventListener("click", () => act("/pvw/layer-set?name=" + encodeURIComponent(it.name), it.name));
+    $("pvwBus").append(b);
+  }
 }
 
-function age(ms) {
-  const sec = Math.max(0, Math.round(ms / 1000));
-  if (sec < 60) return sec + " s ago";
-  const min = Math.round(sec / 60);
-  return min < 60 ? min + " min ago" : Math.round(min / 60) + " h ago";
+// The word NEXT beside the name, only where it fits whole: right of the name's widest line, without touching it,
+// and with the name itself whole (not cut to two lines). Otherwise it is dropped; the white ring still marks the key.
+function fitNext(b) {
+  const tag = b.querySelector(".next");
+  if (!tag) return;
+  if (b.dataset.next !== "1") { tag.hidden = true; return; }
+  tag.hidden = false;
+  const band = b.querySelector(".band"), nm = b.querySelector(".nm"), cs = getComputedStyle(band);
+  const br = band.getBoundingClientRect(), nr = nm.getBoundingClientRect();
+  const rg = document.createRange(); rg.selectNodeContents(nm);
+  const lines = [...rg.getClientRects()].filter((r) => r.width > 0);
+  const gap = 0.3 * parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const right = br.right - parseFloat(cs.paddingRight);
+  const fits = lines.length > 0 && nm.scrollHeight <= nm.clientHeight + 1 && Math.max(...lines.map((r) => r.right)) + gap + tag.offsetWidth <= right + 0.5;
+  if (!fits) { tag.hidden = true; return; }
+  tag.style.right = cs.paddingRight;
+  tag.style.top = `${nr.top - br.top + (nr.height - tag.offsetHeight) / 2}px`;
 }
 
-// ---- render /state
 function render() {
-  const s = state;
-  const offline = document.body.dataset.conn === "offline";
+  const s = state, conn = document.body.dataset.conn;
+  const offline = conn === "offline" || conn === "notready";
+  if (conn === "notready" && s) $("notreadyWhy").textContent = (s.mode === "setup" ? "It has not been set up yet." : (s.startError || "starting…")) + (s.panicArmed ? " PANIC still works." : "");
+  const ready = !!(s && s.pgm) && !offline;
   const inFlight = !!(s && s.switcher && s.switcher.inFlight);
   const busy = !!(s && (s.busy || inFlight));
-  for (const role of ["A", "B"]) {
-    const tile = $("tile" + role), roleEl = $("role" + role);
-    let border = "grey", label = "—";
-    if (s && s.pgm && !offline) {
-      if (busy) { border = "red"; label = "TRANSITION"; }
-      else if (s.pgm === role) { border = "red"; label = "PGM"; }
-      else { border = "green"; label = "PVW"; }
-    }
-    tile.dataset.border = border;
-    roleEl.textContent = label;
-    $("name" + role).textContent = s && s.docs && s.docs[role] ? s.docs[role].name || "" : "";
-    if (s && s.docs) setFeed(role, s.docs[role]);
-  }
-  const ready = !!(s && s.pgm) && !offline;
-  $("take").disabled = !ready || busy || pending;
-  $("cut").disabled = !ready || busy || pending;
-  $("mirror").disabled = !ready || busy || pending;
-  for (const b of document.querySelectorAll("#sets button")) b.disabled = !ready || busy || pending;
-  $("panic").disabled = offline;
+  const flight = busy && !(s.busyKind === "push" && !inFlight); // a PUSH keeps the roles
+  const safe = !!(s && s.safe && s.safe.onAir) && ready;
+  const rehearsing = !!(s && s.rehearsal);
+  const running = !!(s && s.steps && s.steps.running);
+  document.body.dataset.safe = safe ? "1" : "";
 
-  if (s && s.pgm) {
-    $("roles").className = "";
-    $("roles").innerHTML = "";
-    const pg = document.createElement("span"); pg.className = "pgm"; pg.textContent = "PGM " + s.pgm;
-    const pv = document.createElement("span"); pv.className = "pvw"; pv.textContent = "PVW " + s.pvw;
-    $("roles").append(pg, document.createTextNode("  ·  "), pv, document.createTextNode(busy ? "  ·  in transition" : ""));
-  } else if (s) {
-    $("roles").className = "none"; $("roles").textContent = "PGM unknown";
+  // header lamps, REC / STREAM (display only), status line
+  const d = s && s.docs;
+  const lamp = (id, ok) => { $(id).dataset.ok = ok == null ? "" : ok ? "1" : "0"; };
+  lamp("lampA", d && ready ? d.A.live === "live" && d.A.ndi === "live" : null);
+  lamp("lampB", d && ready ? d.B.live === "live" && d.B.ndi === "live" : null);
+  lamp("lampM", d && ready ? d.MASTER.live === "live" : s && s.panicArmed ? true : null);
+  lamp("lampD", s && s.doctor ? s.doctor.ok : null);
+  $("lampD").lastChild.textContent = s && s.doctor ? (s.doctor.ok ? "DOCTOR OK" : `DOCTOR ${s.doctor.failing.length} RED`) : "DOCTOR";
+  const outs = (s && s.outputs) || {};
+  for (const [id, v] of [["lampRec", outs.rec], ["lampStream", outs.stream]]) { $(id).hidden = v == null; $(id).dataset.live = v ? "1" : ""; }
+  const st = $("status");
+  let text = "connecting…", kind = "";
+  if (conn === "offline") { text = "takectl unreachable"; kind = "red"; }
+  else if (conn === "notready") { text = "NOT READY"; kind = "warn"; }
+  else if (s) {
+    if (safe) { text = s.pgm === "OTHER" ? `SLOT ${s.safe.otherSlot} ON AIR` : "SAFE ON AIR"; kind = "safe"; }
+    else if (flight) { text = "IN TRANSITION"; kind = "red"; }
+    else if (s.ftb && s.ftb.on) { text = "FADE TO BLACK"; kind = "red"; }
+    else if (s.warning) { text = "READY · " + s.warning; kind = "warn"; }
+    else text = "READY · tally witness agrees";
   }
+  st.textContent = text; st.dataset.kind = kind; st.title = s && s.warning ? s.warning : text;
+
+  // monitors: Program on the left (MASTER's output: DSKs, stinger and FTB show on it), Preview on the right
+  if (s && s.docs) { pgmMon.set(s.docs.MASTER); pvwMon.set(s.pvw ? s.docs[s.pvw] : null); }
+  const showOk = (doc) => !doc || doc.live == null || doc.live === "live";
+  for (const [mon, el, whyEl, doc] of [[pgmMon, $("pgmMon"), $("pgmStaleWhy"), d && d.MASTER], [pvwMon, $("pvwMon"), $("pvwStaleWhy"), d && s.pvw && d[s.pvw]]]) {
+    const late = mon.base && mon.staleFor() > STALE_MS, stopped = !!(doc && ready && !showOk(doc));
+    el.dataset.stale = (late || stopped) && !offline ? "1" : "";
+    whyEl.textContent = stopped ? `${doc.name || "the document"}: show not running` : late ? `no new picture for ${Math.round(mon.staleFor() / 1000)} s` : "";
+  }
+  const looks = (s && s.looks) || {};
+  $("pgmHdr").textContent = !s || !s.pgm ? "PROGRAM" : s.pgm === "SAFE" ? "PROGRAM · SAFE ON AIR" : s.pgm === "OTHER" ? `PROGRAM · SLOT ${s.safe.otherSlot} ON AIR` : `PROGRAM · DOCUMENT ${s.pgm}`;
+  $("pgmLook").textContent = s && (s.pgm === "A" || s.pgm === "B") ? looks[s.pgm] || "" : s && s.pgm === "SAFE" ? s.safe.source || "" : "";
+  $("pvwMon").dataset.flight = flight ? "1" : "";
+  $("pvwHdr").textContent = !s || !s.pvw ? "PREVIEW" : flight ? "IN TRANSITION" : safe ? `PREVIEW · DOCUMENT ${s.pvw} · NEXT TAKE` : `PREVIEW · DOCUMENT ${s.pvw}`;
+  $("pvwLook").textContent = s && s.pvw ? looks[s.pvw] || "" : "";
+  // Round 4: CHANGED IN MIMOLIVE (tap to accept) / NOT WATCHED over Program's header strip; WATCH PGM lamp
+  const wt = s && s.watch, ch = ready && wt && wt.change;
+  const pg = s && (s.pgm === "A" || s.pgm === "B") ? `Program · ${s.pgm}` : "Program";
+  for (const id of ["pgmAck", "pgmAckView", "pgmUnw"]) $(id).querySelector(".pg").textContent = pg;
+  const chText = ch ? ch.what + (ch.n > 1 ? `  +${ch.n - 1} more` : "") : "";
+  $("pgmAck").hidden = !ch || VIEW; $("pgmAckView").hidden = !ch || !VIEW;
+  $("pgmAck").querySelector(".what").textContent = $("pgmAckView").querySelector(".what").textContent = chText;
+  $("pgmAck").title = ch ? `Changed in mimoLive's window since ${new Date(ch.since - clockSkew).toTimeString().slice(0, 8)}: ${ch.list.join("; ")}. Tap to accept: Program as it is now becomes what takectl expects.` : "";
+  $("pgmUnw").hidden = !(ready && wt && !wt.watched) || !!ch;
+  const wb = $("watchPgm");
+  wb.dataset.on = wt && !wt.on ? "0" : "1";
+  wb.dataset.ok = !ready || !wt || !wt.on ? "" : wt.watched ? "1" : "0";
+  wb.disabled = !ready;
+
+  // readout
+  const oa = s && s.onAir;
+  $("rOnAir").textContent = oa && oa.since ? clock(Date.now() + clockSkew - oa.since) : "—";
+  $("rOnAir").title = oa && oa.look ? `on "${oa.look}"` : "";
   const lt = s && s.lastTake;
-  $("last").className = lt ? "" : "none";
-  $("last").textContent = lt
-    ? `${lt.kind.toUpperCase()} → ${lt.target}${lt.transition ? " · " + lt.transition : ""}${lt.transition === "dissolve" ? " " + lt.ms + " ms" : ""} · ${new Date(lt.ts).toLocaleTimeString()}`
-    : "—";
-  $("warning").className = s && s.warning ? "" : "none";
-  $("warning").textContent = s && s.warning ? s.warning : "none";
-  // The error stays until the next successful TAKE/CUT/PANIC; its age (from takectl's clock) lets a
-  // stale one read as stale.
-  const le = $("lastError");
-  le.className = s && s.lastError ? "" : "none";
-  le.textContent = s && s.lastError ? s.lastError : "none";
-  if (s && s.lastError && s.lastErrorAgeMs != null) {
-    const a = document.createElement("span");
-    a.className = "age";
-    a.textContent = "  ·  " + age(s.lastErrorAgeMs);
-    le.append(a);
-  }
+  $("rLast").textContent = s && s.lastLine ? s.lastLine + (lt && !safe ? `  · ${age(Date.now() + clockSkew - lt.ts)}` : "") : "—";
+  const nh = s && s.nextHooks;
+  $("rHooks").textContent = nh && nh.chips.length ? nh.chips.join(" · ") : nh && nh.look ? `none for "${nh.look}"` : "—";
+  const h = s && s.history;
+  $("rNext").textContent = h && h.top && h.top.length ? h.top.join(", ") : h && h.from ? `learning ("${h.from}" left ${h.left} of 3 times)` : "—";
+  const uw = s && s.undo && !s.undo.available && s.undo.why ? s.undo.why : "";
+  $("rUndoK").hidden = $("rUndo").hidden = !uw || !ready; $("rUndo").textContent = uw;
+  const w = s && s.warning, e = s && s.lastError;
+  $("rWarnK").hidden = $("rWarn").hidden = !w; $("rWarn").textContent = w || "";
+  $("rErrK").hidden = $("rErr").hidden = !e; $("rErr").textContent = e ? `${e} · ${age(s.lastErrorAgeMs || 0)}` : "";
 
-  const key = JSON.stringify(s && s.layerSets || []);
-  if (key !== setsKey) {
-    setsKey = key;
-    const box = $("sets");
-    box.querySelectorAll("button").forEach((b) => b.remove());
-    for (const name of (s && s.layerSets) || []) {
-      const b = document.createElement("button");
-      b.textContent = name;
-      b.addEventListener("click", () => act("/pvw/layer-set/" + encodeURIComponent(name), name));
-      box.append(b);
-    }
+  // buses: PGM lamps (the on-air look red), PVW keys (the selected look green; NEXT on every tied likely-next)
+  const all = (s && s.layerSetsAll) || [];
+  buildKeys(all);
+  const pgmLookNow = s && (s.pgm === "A" || s.pgm === "B") ? looks[s.pgm] : null;
+  const pvwLookNow = s && s.pvw ? looks[s.pvw] : null;
+  const top = (h && h.top) || [], follow = (h && h.follow) || {}, chips = (s && s.hooks && s.hooks.chips) || {}, thumbs = (s && s.thumbs) || {};
+  $("pgmBus").querySelectorAll(".lampkey").forEach((l) => { l.dataset.on = l.dataset.name && l.dataset.name === pgmLookNow ? "1" : ""; });
+  $("pvwBus").querySelectorAll(".pvwkey").forEach((b) => {
+    const n = b.dataset.name;
+    if (!VIEW) b.disabled = !n || !ready || busy || pending || rehearsing || b.dataset.one === "1";
+    b.dataset.sel = n && n === pvwLookNow ? "1" : "";
+    b.dataset.next = n && top.includes(n) ? "1" : "";
+    b.querySelector(".cnt").textContent = n && follow[n] ? `×${follow[n]}` : "";
+    if (b.dataset.one !== "1") b.querySelector(".sub").textContent = n && chips[n] ? chips[n].chips.join(" · ") : "";
+    const ts = n && thumbs[n];
+    const bg = ts ? `url("/thumb?name=${encodeURIComponent(n)}&t=${ts}")` : "";
+    if (b.dataset.bg !== bg) { b.dataset.bg = bg; b.querySelector(".pic").style.backgroundImage = bg; }
+    fitNext(b);
+  });
+  if (VIEW) return;
+
+  // steps strip
+  const sp = s && s.steps, list = (sp && sp.list) || [];
+  const box = $("chips"); box.textContent = "";
+  if (!list.length) box.textContent = "Compose in Preview, press + STEP to queue each look for a live push.";
+  list.forEach((name, i) => {
+    const c = document.createElement("span"); c.className = "chip";
+    const b = document.createElement("b"); b.textContent = String(i + 1); c.append(b, document.createTextNode(name));
+    if (running) { c.dataset.done = i < sp.running.i ? "1" : ""; c.dataset.now = i === sp.running.i ? "1" : ""; }
+    box.append(c);
+  });
+  $("capture").dataset.on = sp && sp.recording ? "1" : ""; // a constant label: lit, not reworded, so it never changes size
+  $("capture").disabled = $("paceInstant").disabled = $("paceOrig").disabled = !ready || pending;
+  $("paceInstant").dataset.on = paceOriginal ? "" : "1"; $("paceOrig").dataset.on = paceOriginal ? "1" : "";
+  const lists = (sp && sp.lists) || [], lk = JSON.stringify(lists);
+  if ($("listLoad").dataset.k !== lk) { $("listLoad").dataset.k = lk; $("listLoad").innerHTML = '<option value="">Lists…</option>'; for (const n of lists) { const o = document.createElement("option"); o.value = o.textContent = n; $("listLoad").append(o); } }
+  $("listLoad").disabled = !ready || pending || !lists.length || running;
+  $("listSave").disabled = !ready || pending || !list.length;
+
+  // utility row (MIRROR, UNDO and PUSH STEPS show disabled in SAFE)
+  $("mirror").disabled = !ready || busy || pending || safe || rehearsing;
+  $("mirrorWhy").textContent = safe ? "no Program look" : "";
+  const un = s && s.undo;
+  $("undo").disabled = !ready || busy || pending || rehearsing || !(un && un.available);
+  $("undoWhy").textContent = ready && un ? (un.available ? `back to ${s.pvw}` : un.short || un.why || "") : "";
+  $("undo").title = un && un.why ? un.why : "Take back to the previous look";
+  $("stepAdd").disabled = !ready || pending;
+  $("stepClear").disabled = !ready || pending || !list.length || running;
+  $("pushSteps").disabled = !ready || busy || pending || !list.length || running || rehearsing || safe;
+
+  // downstream keys: one toggle per "DSK <label>" layer above the switcher; not commits
+  const dsk = (s && s.dsk) || [], dk = JSON.stringify(dsk.map((x) => x.label));
+  if ($("dskRow").dataset.k !== dk) {
+    $("dskRow").dataset.k = dk; $("dskRow").textContent = "";
+    for (const x of dsk) { const b = document.createElement("button"); b.textContent = x.label; b.dataset.label = x.label; b.addEventListener("click", () => act("/dsk?label=" + encodeURIComponent(x.label), x.label)); $("dskRow").append(b); }
+    if (!dsk.length) { const n = document.createElement("span"); n.className = "k"; n.textContent = 'none (name a MASTER layer "DSK …")'; $("dskRow").append(n); }
   }
+  $("dskRow").querySelectorAll("button").forEach((b) => { const x = dsk.find((y) => y.label === b.dataset.label); b.dataset.on = x && x.on ? "1" : ""; b.disabled = !ready || pending; });
+
+  // transition block
+  const tr = s && s.transition;
+  $("mix").dataset.on = tr && tr.mode === "mix" ? "1" : ""; $("sting").dataset.on = tr && tr.mode === "stinger" ? "1" : "";
+  $("mix").disabled = $("sting").disabled = !ready || pending;
+  const stingerMode = tr && tr.mode === "stinger";
+  $("rate").dataset.off = stingerMode ? "1" : "";
+  $("rateVal").textContent = !tr ? "—" : stingerMode ? `${(tr.stingerMs / 1000).toFixed(1)} s` : tr.rateS != null ? `${tr.rateS.toFixed(1)} s` : "?";
+  $("rateDn").disabled = $("rateUp").disabled = !ready || busy || pending || stingerMode || !tr || tr.rateS == null;
+  $("rate").title = stingerMode ? "With the stinger, its own animation sets the length (measured)" : "The switcher's dissolve length (0.1–5 s)";
+  const nt = $("nextTake"); nt.textContent = "";
+  if (ready && !safe && s.pvw) { nt.append("NEXT TAKE →"); const b = document.createElement("b"); b.textContent = `DOCUMENT ${s.pvw}`; nt.append(b, `${looks[s.pvw] ? `"${looks[s.pvw]}"` : ""} · ${stingerMode ? "STINGER" : `MIX ${tr && tr.rateS != null ? tr.rateS.toFixed(1) + " s" : ""}`}`); }
+  for (const r of ["A", "B"]) { $("tgt" + r).dataset.on = safe && s.pvw === r ? "1" : ""; $("tgt" + r).disabled = !safe || busy || pending || rehearsing; }
+  $("take").disabled = $("cut").disabled = !ready || busy || pending || running || rehearsing;
+  const pu = s && s.push;
+  $("push").disabled = !ready || busy || pending || rehearsing || !(pu && pu.available);
+  $("pushWhy").textContent = ready && pu ? (pu.available ? `"${pu.look}" → PGM` : pu.short || pu.why || "") : "";
+  $("push").title = pu && pu.why ? pu.why : "Put Preview's look on air in the Program document";
+  $("ftb").dataset.on = s && s.ftb && s.ftb.on ? "1" : "";
+  $("ftb").disabled = !ready || pending || !(s && s.ftb);
+  $("ftbWhy").textContent = s && s.ftb ? (s.ftb.on ? "black · video only" : "video only") : "no FTB layer";
+  $("panic").disabled = conn === "offline" || (conn === "notready" && !(s && s.panicArmed));
+  $("panicTo").textContent = s && s.safe && s.safe.panicTo === "SAFE" ? "HOLD · CUT TO SAFE" : "HOLD · CUT TO A";
+  $("rehearse").disabled = !ready || busy || pending || rehearsing || !(s && s.hooks && s.hooks.rehearse);
+  $("rehearse").textContent = rehearsing ? `Put back in ${Math.ceil(s.rehearsal.restoresInMs / 1000)} s` : "Rehearse hooks";
+  if ($("histReset").dataset.armed !== "1") $("histReset").disabled = !ready || pending || !(h && h.events);
+
+  // the TAKE bar: the transition's length, from takectl's clock
+  if (s && s.progress) {
+    const startedAt = Date.now() - s.progress.elapsedMs;
+    if (!prog || Math.abs(prog.startedAt - startedAt) > 150 || prog.totalMs !== s.progress.totalMs) prog = { startedAt, totalMs: Math.max(1, s.progress.totalMs) };
+  } else if (prog && !busy) prog = null;
 }
+(function animateBar() {
+  const p = prog ? Math.min(1, (Date.now() - prog.startedAt) / prog.totalMs) : 0;
+  $("progress").style.width = (p * 100).toFixed(1) + "%";
+  requestAnimationFrame(animateBar);
+})();
+setInterval(render, 500); // STALE and the counters move even between polls
+// The subtitle shows only when it fits whole; its space stays either way, so nothing moves.
+const fitSub = () => { const el = document.querySelector("header .sub"); el.dataset.fits = ""; el.dataset.fits = el.scrollWidth > el.clientWidth + 1 ? "0" : "1"; };
+addEventListener("resize", fitSub); fitSub();
 
 // ---- poll
 async function poll() {
-  const ctl = new AbortController(); // manual timeout: AbortSignal.timeout is missing on older iPad Safari
-  const timer = setTimeout(() => ctl.abort(), 1500);
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 1500);
   try {
     const r = await fetch("/state", { cache: "no-store", signal: ctl.signal });
     if (!r.ok) throw new Error("HTTP " + r.status);
-    state = await r.json();
-    lastOk = Date.now();
-    document.body.dataset.conn = "ok";
-  } catch {
-    if (Date.now() - lastOk > OFFLINE_AFTER_MS) document.body.dataset.conn = "offline";
-  } finally {
-    clearTimeout(timer);
-  }
+    state = await r.json(); lastOk = Date.now();
+    if (state.now) clockSkew = state.now - Date.now();
+    document.body.dataset.conn = state.ready === false ? "notready" : "ok";
+  } catch { if (Date.now() - lastOk > OFFLINE_AFTER_MS) document.body.dataset.conn = "offline"; }
+  finally { clearTimeout(timer); }
   render();
   setTimeout(poll, POLL_MS);
 }
 
-// ---- actions
+// ---- actions (none in view-only mode)
 async function act(route, label) {
+  if (VIEW) return;
   if (pending && route !== "/panic") return;
-  if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); // Space must mean TAKE, not "press the focused button"
-  pending = route !== "/panic";
-  render();
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); // Space must mean TAKE
+  pending = route !== "/panic"; render();
   try {
     const r = await fetch(route, { cache: "no-store" });
     const body = await r.json().catch(() => ({}));
     if (!r.ok || body.ok === false) toast(body.error || `${label || route} failed (HTTP ${r.status})`, "error");
-    else if (route === "/panic") toast(body.superseded ? "PANIC: taken over by a later press" : `PANIC: A on air (${body.rounds} round${body.rounds === 1 ? "" : "s"})`, "info");
-    else if (route.startsWith("/pvw/layer-set/")) toast(`${body.layerSet} → ${body.pvw}`, "info");
-  } catch (e) {
-    toast(`${label || route}: takectl did not answer`, "error");
-  } finally {
-    if (route !== "/panic") pending = false;
-    render();
-  }
+    else if (route === "/panic") toast(body.superseded ? "PANIC: taken over by a later press" : body.already ? "PANIC: the safe source is already on air" : `PANIC: ${body.pgm === "SAFE" ? "the safe source" : "A"} on air`, "info");
+    else if (route === "/push") toast(`PUSH "${body.look}" → Program ${body.pgm}`, "info");
+    else if (route.startsWith("/steps/push")) toast(`Pushing ${body.steps} step${body.steps === 1 ? "" : "s"}`, "info");
+    else if (route === "/hooks/rehearse") toast(`Rehearsing in ${body.pvw}: ${body.ran.join(", ")}`, "info");
+    else if (route.startsWith("/steps/save")) toast(`Saved "${body.saved}"`, "info");
+    else if (route.startsWith("/steps/load")) toast(`Loaded "${body.loaded}"`, "info");
+  } catch { toast(`${label || route}: takectl did not answer`, "error"); }
+  finally { if (route !== "/panic") pending = false; render(); }
 }
-$("take").addEventListener("click", () => act("/take", "TAKE"));
-$("cut").addEventListener("click", () => act("/cut", "CUT"));
-$("mirror").addEventListener("click", () => act("/mirror", "MIRROR"));
-
-// Space = TAKE, C = CUT, M = MIRROR. Nothing for PANIC by design.
-document.addEventListener("keydown", (e) => {
-  if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
-  const map = { " ": "take", c: "cut", C: "cut", m: "mirror", M: "mirror" };
-  const id = map[e.key];
-  if (!id) return;
-  e.preventDefault();
-  if (!$(id).disabled) $(id).click();
-});
-
-// ---- PANIC: hold 700 ms, or two taps within 1 s
-(() => {
-  const btn = $("panic"), fill = btn.querySelector(".fill"), txt = $("panicTxt");
-  let holdTimer = null, fired = false, armedUntil = 0, armTimer = null;
-  const idleText = () => { txt.innerHTML = 'PANIC<span class="key">HOLD · OR TAP TWICE</span>'; btn.dataset.armed = ""; };
-  const fire = () => {
-    fired = true;
-    armedUntil = 0; clearTimeout(armTimer); idleText();
-    fill.style.transition = "none"; fill.style.width = "0";
-    act("/panic", "PANIC");
+if (!VIEW) {
+  $("take").addEventListener("click", () => act("/take", "TAKE"));
+  $("cut").addEventListener("click", () => act("/cut", "CUT"));
+  $("push").addEventListener("click", () => act("/push", "PUSH"));
+  $("mirror").addEventListener("click", () => act("/mirror", "MIRROR"));
+  $("undo").addEventListener("click", () => act("/undo", "UNDO"));
+  $("ftb").addEventListener("click", () => act("/ftb", "FTB"));
+  $("mix").addEventListener("click", () => act("/transition?mode=mix", "MIX"));
+  $("sting").addEventListener("click", () => act("/transition?mode=stinger", "STINGER"));
+  const rateStep = (dl) => { const v = state && state.transition && state.transition.rateS; if (v != null) act(`/rate?s=${Math.round((v + dl) * 10) / 10}`, "RATE"); };
+  $("rateDn").addEventListener("click", () => rateStep(-0.1));
+  $("rateUp").addEventListener("click", () => rateStep(0.1));
+  $("tgtA").addEventListener("click", () => act("/safe/target?doc=A", "TAKE target"));
+  $("tgtB").addEventListener("click", () => act("/safe/target?doc=B", "TAKE target"));
+  $("rehearse").addEventListener("click", () => act("/hooks/rehearse", "REHEARSE HOOKS"));
+  // Round 4: neither is a command on air, so neither waits for, or holds up, TAKE and the rest.
+  const side = async (route, label) => {
+    try { const r = await fetch(route, { cache: "no-store" }); const b = await r.json().catch(() => ({})); if (!r.ok || b.ok === false) toast(b.error || `${label} failed (HTTP ${r.status})`, "error"); }
+    catch { toast(`${label}: takectl did not answer`, "error"); }
+    poll();
   };
-  const start = (e) => {
-    if (btn.disabled) return;
+  $("pgmAck").addEventListener("click", () => side("/watch/dismiss", "ACCEPT"));
+  $("watchPgm").addEventListener("click", () => side(`/watch?on=${state && state.watch && !state.watch.on ? 1 : 0}`, "WATCH PGM"));
+  // RESET HISTORY asks first: tap, then tap again within 3 s (as round 2).
+  (() => { const b = $("histReset"); let until = 0, t = null;
+    b.addEventListener("click", () => {
+      if (Date.now() < until) { until = 0; clearTimeout(t); b.dataset.armed = ""; b.textContent = "Reset history"; return act("/history/reset?confirm=1", "RESET HISTORY"); }
+      until = Date.now() + 3000; b.dataset.armed = "1"; b.textContent = "Tap again";
+      clearTimeout(t); t = setTimeout(() => { until = 0; b.dataset.armed = ""; b.textContent = "Reset history"; }, 3000);
+    }); })();
+  $("stepAdd").addEventListener("click", () => act("/steps/add", "+ STEP"));
+  $("stepClear").addEventListener("click", () => act("/steps/clear", "CLEAR"));
+  $("paceInstant").addEventListener("click", () => { paceOriginal = false; render(); });
+  $("paceOrig").addEventListener("click", () => { paceOriginal = true; render(); });
+  $("pushSteps").addEventListener("click", () => act(`/steps/push?pace=${paceOriginal ? "original" : "instant"}`, "PUSH STEPS"));
+  $("capture").addEventListener("click", () => act("/steps/record?on=" + (state && state.steps && state.steps.recording ? "0" : "1"), "CAPTURE"));
+  $("listSave").addEventListener("click", () => { const n = (prompt("Save these steps as:") || "").trim(); if (n) act("/steps/save?name=" + encodeURIComponent(n), "SAVE"); });
+  $("listLoad").addEventListener("change", (e) => { const v = e.target.value; e.target.value = ""; if (v) act("/steps/load?name=" + encodeURIComponent(v), "LOAD"); });
+  $("fs").addEventListener("click", () => {
+    const el = document.documentElement;
+    if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    else (el.requestFullscreen || el.webkitRequestFullscreen || (() => toast("Full screen is not available in this browser: on an iPad, add the page to the Home Screen", "info"))).call(el);
+  });
+
+  // Space = TAKE, C = CUT, M = MIRROR, P = PUSH, U = UNDO, 1–8 = that look in Preview. Nothing for PANIC.
+  document.addEventListener("keydown", (e) => {
+    if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "SELECT" || e.target.tagName === "TEXTAREA" || e.target.isContentEditable)) return;
+    if (/^[1-8]$/.test(e.key)) {
+      e.preventDefault();
+      const b = $("pvwBus").querySelectorAll(".pvwkey")[Number(e.key) - 1];
+      if (b && !b.disabled && b.dataset.name) b.click();
+      return;
+    }
+    const id = { " ": "take", c: "cut", C: "cut", m: "mirror", M: "mirror", p: "push", P: "push", u: "undo", U: "undo" }[e.key];
+    if (!id) return;
     e.preventDefault();
-    fired = false;
-    fill.style.transition = `width ${PANIC_HOLD_MS}ms linear`;
-    fill.style.width = "100%";
-    holdTimer = setTimeout(fire, PANIC_HOLD_MS);
-  };
-  const end = (e) => {
-    if (holdTimer == null) return;
-    clearTimeout(holdTimer); holdTimer = null;
-    fill.style.transition = "none"; fill.style.width = "0";
-    if (fired || e.type === "pointercancel" || e.type === "pointerleave") return;
-    if (Date.now() < armedUntil) return fire();
-    armedUntil = Date.now() + PANIC_TAP_WINDOW_MS;
-    btn.dataset.armed = "1";
-    txt.innerHTML = 'TAP AGAIN<span class="key">TO PANIC</span>';
-    clearTimeout(armTimer);
-    armTimer = setTimeout(() => { armedUntil = 0; idleText(); }, PANIC_TAP_WINDOW_MS);
-  };
-  btn.addEventListener("pointerdown", start);
-  btn.addEventListener("pointerup", end);
-  btn.addEventListener("pointercancel", end);
-  btn.addEventListener("pointerleave", end);
-  btn.addEventListener("contextmenu", (e) => e.preventDefault());
-  btn.addEventListener("keydown", (e) => { if (e.key === " " || e.key === "Enter") e.preventDefault(); }); // keyboard cannot panic
-})();
+    if (!$(id).disabled) $(id).click();
+  });
+
+  // ---- PANIC: hold 0.7 s (the guard border means "hold"); no key
+  (() => {
+    const btn = $("panic"), fill = btn.querySelector(".fill");
+    let holdTimer = null;
+    const start = (e) => {
+      if (btn.disabled) return;
+      e.preventDefault();
+      fill.style.transition = `width ${PANIC_HOLD_MS}ms linear`; fill.style.width = "100%";
+      holdTimer = setTimeout(() => { holdTimer = null; fill.style.transition = "none"; fill.style.width = "0"; act("/panic", "PANIC"); }, PANIC_HOLD_MS);
+    };
+    const end = () => { if (holdTimer == null) return; clearTimeout(holdTimer); holdTimer = null; fill.style.transition = "none"; fill.style.width = "0"; };
+    btn.addEventListener("pointerdown", start);
+    for (const ev of ["pointerup", "pointercancel", "pointerleave"]) btn.addEventListener(ev, end);
+    btn.addEventListener("contextmenu", (e) => e.preventDefault());
+    btn.addEventListener("keydown", (e) => { if (e.key === " " || e.key === "Enter") e.preventDefault(); });
+  })();
+}
 
 poll();
 </script>

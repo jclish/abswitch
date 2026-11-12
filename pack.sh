@@ -33,5 +33,5 @@ python3 -I "$here/test/privacy-scan.py" --scrub-docs "$here/documents"
 python3 -I "$here/test/saved-docs-check.py" "$here/documents" >/dev/null || { echo "REFUSED: the scrubbed document copies fail the saved-files check"; exit 1; }
 python3 -I "$here/test/privacy-scan.py" "$here" || { echo "REFUSED: the package names this machine (see HIT lines); redact before packing"; exit 1; }
 rm -f "$out"
-( cd "$(dirname "$here")" && zip -qr -X "$out" "$(basename "$here")" -x '*.DS_Store' "$(basename "$here")/takectl.config.json" "$(basename "$here")/.git/*" )
+( cd "$(dirname "$here")" && zip -qr -X "$out" "$(basename "$here")" -x '*.DS_Store' "$(basename "$here")/takectl.config.json" "$(basename "$here")/takectl.config.backup-*.json" "$(basename "$here")/thumbs/*" "$(basename "$here")/.git/*" )
 echo "packed $out"; unzip -l "$out" | tail -1

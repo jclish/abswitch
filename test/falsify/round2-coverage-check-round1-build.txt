@@ -1,0 +1,8 @@
+FAIL  C1. pre-hook on outgoing A: Lower Third left "live" at undefined ms, the switcher left slot 1 at 577 ms (waitMs 600): 19:live/1 577:live/2; take → "dissolve"
+FAIL  C2. steps "Two Shot" → "Slides PiP" → "Speaker Wide" (1.5 s apart), PANIC 700 ms in: Program A looks 2:Full Slides; panic {"ok":true,"pgm":"A"}; running undefined
+FAIL  C3. CUT under the stinger → cut; 60 frames: 0 show A and B at once; first B at 171 ms, after a fully covered frame: false (round2-coverage-cut-frames.txt)
+FAIL  C4. STINGER live → TAKE undefined; stuck in shutdown after 2 tries → TAKE undefined; PANIC → STINGER shutdown; TAKE → dissolve
+FAIL  C5. a hook for a layer that does not exist: TAKE → dissolve; pgm B, slot 2; warning null
+FAIL  C6. rehearse → B's Lower Third in Preview 9:off (TAKE meanwhile → undefined); put back: off; TAKE → on Program 9:off (came in at undefined ms)
+restored: slot 1, looks A "Speaker Wide" B "Speaker Wide", Lower Third off/off, STINGER off, TALLY off/off; history and steps datastores emptied
+6 FAIL(S)

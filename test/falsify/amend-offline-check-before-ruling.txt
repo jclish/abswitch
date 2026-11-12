@@ -1,0 +1,11 @@
+FAIL  W1. from the LAN address: Save → 200 undefined; Start Over → 404; from loopback Save → {"status":409,"ok":false,"error":"takectl is already set up (w.config.json). To start over, stop takectl, delete that file and start it again."}
+FAIL  W2. Start Over with MASTER live → 404 "unknown setup route"; stopped → {"status":404,"ok":false,"error":"unknown setup route"}, backups [], mode running; Save again → running pgm A
+FAIL  N1. A missing: ready=undefined panicArmed=undefined (undefined); /take → 503; mock slot 2 → /panic {"ok":false} → slot 2
+FAIL  N2. MASTER missing: /panic → 503 "not ready: [MASTER] no open document matching \"PH-MASTER-missing\" on http://localhost:18989 (open /doctor)"
+FAIL  X1. running on B; mock gone → ready=undefined mode=undefined (undefined); mock back on slot 1 → running, pgm A (from the switcher, not the commanded B)
+FAIL  E1. stuck A: TAKE → after 9185 ms warning undefined; pgm undefined; TALLY A=live B=live
+FAIL  E2. /panic → {"ok":true} in 260 ms; pgm A, mock slot 1, warning kept
+FAIL  P1. password set: running (pgm A); after /take the datastore holds {"status":404}
+FAIL  D1. B disconnected: doctor "undefined" red; TAKE to B → undefined
+PASS  D2. A disconnected while A is on air: TAKE away to B → {"ok":true}, pgm B
+9 FAIL(S)

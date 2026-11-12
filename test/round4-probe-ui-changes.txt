@@ -1,0 +1,116 @@
+round4-probe "ui-changes" (title text typed during the test is masked as ‹typed›): 900 s of http://<host>:8989/api/v1/socket, started 20:12:26
+documents: PH-MASTER (live), PH-A (live), PH-B (live)
+
+20:13:24.773 ◆ PH-A      layers changed         Lower Third                live-state: "off" → "live", output-values/tvOut_Done: false → true
+20:13:24.776 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench live-state: "off" → "live", output-values/tvOut_Done: false → true
+20:13:30.586 ◆ PH-A      layers changed         Lower Third                live-state: "live" → "shutdown"
+20:13:30.588 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench live-state: "live" → "shutdown"
+20:13:32.125 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench live-state: "shutdown" → "off", output-values/tvOut_Cursor: "" → "openHand", output-values/tvOut_TimeRemaining: 0 → -1
+20:13:32.127 ◆ PH-A      layers changed         Lower Third                live-state: "shutdown" → "off", output-values/tvOut_Cursor: "" → "openHand"
+20:13:34.395 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench tvGroup_Content__Title: "Lower Third" → "‹typed›", output-values/tvOut_SettingName: "Lower Third – abswitch bench" → "‹typed› – abswitch bench"
+20:13:34.398 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "Lower Third – abswitch bench" → "‹typed› – abswitch bench"
+20:13:34.871 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench tvGroup_Content__Title: "‹typed›" → "‹typed›"
+20:13:35.172 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "‹typed› – abswitch bench" → "‹typed› – abswitch bench", output-values/tvOut_SettingName: "‹typed› – abswitch bench" → "‹typed› – abswitch bench"
+20:13:35.272 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench tvGroup_Content__Title: "‹typed›" → "‹typed›"
+20:13:35.572 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "‹typed› – abswitch bench" → "‹typed› – abswitch bench", tvGroup_Content__Title: "‹typed›" → "‹typed›", output-values/tvOut_SettingName: "‹typed› – abswitch bench" → "‹typed› – abswitch bench"
+20:13:35.607 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench tvGroup_Content__Title: "‹typed›" → "‹typed›"
+20:13:35.908 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "‹typed› – abswitch bench" → "‹typed› – abswitch bench", tvGroup_Content__Title: "‹typed›" → "‹typed›", output-values/tvOut_SettingName: "‹typed› – abswitch bench" → "‹typed› – abswitch bench"
+20:13:36.546 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench tvGroup_Content__Title: "‹typed›" → "‹typed›"
+20:13:37.088 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench tvGroup_Content__Title: "‹typed›" → "‹typed›"
+20:13:37.389 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "‹typed› – abswitch bench" → "‹typed› – abswitch bench", output-values/tvOut_SettingName: "‹typed› – abswitch bench" → "‹typed› – abswitch bench"
+20:13:37.479 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench tvGroup_Content__Title: "‹typed›" → "‹typed›"
+20:13:37.851 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench tvGroup_Content__Title: "‹typed›" → "‹typed›"
+20:13:38.151 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "‹typed› – abswitch bench" → "‹typed› – abswitch bench", tvGroup_Content__Title: "‹typed›" → "‹typed›", output-values/tvOut_SettingName: "‹typed› – abswitch bench" → "‹typed› – abswitch bench"
+20:13:38.465 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "‹typed› – abswitch bench" → "‹typed› – abswitch bench", tvGroup_Content__Title: "‹typed›" → "‹typed›", output-values/tvOut_SettingName: "‹typed› – abswitch bench" → "‹typed› – abswitch bench"
+20:13:38.766 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "‹typed› – abswitch bench" → "‹typed› – abswitch bench", tvGroup_Content__Title: "‹typed›" → "‹typed›"
+20:13:39.094 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "‹typed› – abswitch bench" → "‹typed› – abswitch bench", tvGroup_Content__Title: "‹typed›" → "‹typed›", output-values/tvOut_SettingName: "‹typed› – abswitch bench" → "‹typed› – abswitch bench"
+20:13:39.195 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench tvGroup_Content__Title: "‹typed›" → "‹typed›"
+20:13:39.496 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "‹typed› – abswitch bench" → "‹typed› – abswitch bench", output-values/tvOut_SettingName: "‹typed› – abswitch bench" → "‹typed› – abswitch bench"
+20:13:39.498 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench tvGroup_Content__Title: "‹typed›" → "‹typed›"
+20:13:39.800 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "‹typed› – abswitch bench" → "‹typed› – abswitch bench", output-values/tvOut_SettingName: "‹typed› – abswitch bench" → "‹typed› – abswitch bench"
+20:13:39.810 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench tvGroup_Content__Title: "‹typed›" → "‹typed›"
+20:13:40.111 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "‹typed› – abswitch bench" → "‹typed› – abswitch bench", tvGroup_Content__Title: "‹typed›" → "‹typed›", output-values/tvOut_SettingName: "‹typed› – abswitch bench" → "‹typed› – abswitch bench"
+20:13:40.197 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench tvGroup_Content__Title: "‹typed›" → "‹typed›"
+20:13:40.498 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "‹typed› – abswitch bench" → "‹typed› – abswitch bench", tvGroup_Content__Title: "‹typed›" → "‹typed›", output-values/tvOut_SettingName: "‹typed› – abswitch bench" → "‹typed› – abswitch bench"
+20:13:40.801 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "‹typed› – abswitch bench" → "‹typed›", tvGroup_Content__Title: "‹typed›" → "‹typed›", output-values/tvOut_SettingName: "‹typed› – abswitch bench" → "‹typed›"
+20:13:56.361 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "‹typed›" → "L – abswitch bench", tvGroup_Content__Title: "‹typed›" → "L", output-values/tvOut_SettingName: "‹typed›" → "L – abswitch bench"
+20:13:56.760 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "L – abswitch bench" → "Lo – abswitch bench", tvGroup_Content__Title: "L" → "Lo", output-values/tvOut_SettingName: "L – abswitch bench" → "Lo – abswitch bench"
+20:13:57.121 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench tvGroup_Content__Title: "Lo" → "Low"
+20:13:57.423 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "Lo – abswitch bench" → "Lowe – abswitch bench", tvGroup_Content__Title: "Low" → "Lowe", output-values/tvOut_SettingName: "Lo – abswitch bench" → "Lowe – abswitch bench"
+20:13:57.594 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench tvGroup_Content__Title: "Lowe" → "Lower"
+20:13:57.894 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "Lowe – abswitch bench" → "Lower – abswitch bench", output-values/tvOut_SettingName: "Lowe – abswitch bench" → "Lower – abswitch bench"
+20:13:57.963 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench tvGroup_Content__Title: "Lower" → "Lower "
+20:13:58.371 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench tvGroup_Content__Title: "Lower " → "Lower T"
+20:13:58.672 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "Lower – abswitch bench" → "Lower Th – abswitch bench", tvGroup_Content__Title: "Lower T" → "Lower Th", output-values/tvOut_SettingName: "Lower – abswitch bench" → "Lower Th – abswitch bench"
+20:13:58.755 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench tvGroup_Content__Title: "Lower Th" → "Lower Thi"
+20:13:59.060 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "Lower Th – abswitch bench" → "Lower Thi – abswitch bench", output-values/tvOut_SettingName: "Lower Th – abswitch bench" → "Lower Thi – abswitch bench"
+20:13:59.078 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench tvGroup_Content__Title: "Lower Thi" → "Lower Thir"
+20:13:59.379 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "Lower Thi – abswitch bench" → "Lower Thir – abswitch bench", output-values/tvOut_SettingName: "Lower Thi – abswitch bench" → "Lower Thir – abswitch bench"
+20:13:59.455 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench tvGroup_Content__Title: "Lower Thir" → "Lower Third"
+20:13:59.760 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench name: "Lower Thir – abswitch bench" → "Lower Third – abswitch bench", output-values/tvOut_SettingName: "Lower Thir – abswitch bench" → "Lower Third – abswitch bench"
+20:14:33.179 ◆ PH-A      variants added         Lower Third › Variant 2    (first sight, no baseline)
+20:14:33.680 ◆ PH-A      variants changed       Lower Third › Variant 2    name: "Variant 2" → "Lower Third – abswitch bench"
+20:14:43.087 ◆ PH-A      variants changed       Lower Third › Variant 2    tvGroup_Content__Title: "Lower Third" → "Lower ThirdY"
+20:14:43.388 ◆ PH-A      variants changed       Lower Third › Variant 2    name: "Lower Third – abswitch bench" → "Lower ThirdY – abswitch bench", output-values/tvOut_SettingName: "Lower Third – abswitch bench" → "Lower ThirdY – abswitch bench"
+20:14:43.872 ◆ PH-A      variants changed       Lower Third › Variant 2    tvGroup_Content__Title: "Lower ThirdY" → "Lower Third"
+20:14:44.173 ◆ PH-A      variants changed       Lower Third › Variant 2    name: "Lower ThirdY – abswitch bench" → "Lower Third – abswitch bench", output-values/tvOut_SettingName: "Lower ThirdY – abswitch bench" → "Lower Third – abswitch bench"
+20:14:44.632 ◆ PH-A      variants changed       Lower Third › Variant 2    tvGroup_Content__Title: "Lower Third" → "Lower Thir"
+20:14:44.934 ◆ PH-A      variants changed       Lower Third › Variant 2    name: "Lower Third – abswitch bench" → "Lower Thir – abswitch bench", output-values/tvOut_SettingName: "Lower Third – abswitch bench" → "Lower Thir – abswitch bench"
+20:14:45.132 ◆ PH-A      variants changed       Lower Third › Variant 2    tvGroup_Content__Title: "Lower Thir" → "Lower Thi"
+20:14:45.432 ◆ PH-A      variants changed       Lower Third › Variant 2    name: "Lower Thir – abswitch bench" → "Lower – abswitch bench", tvGroup_Content__Title: "Lower Thi" → "Lower ", output-values/tvOut_SettingName: "Lower Thir – abswitch bench" → "Lower – abswitch bench"
+20:14:45.471 ◆ PH-A      variants changed       Lower Third › Variant 2    tvGroup_Content__Title: "Lower " → "Lower"
+20:14:45.772 ◆ PH-A      variants changed       Lower Third › Variant 2    name: "Lower – abswitch bench" → "Lo – abswitch bench", tvGroup_Content__Title: "Lower" → "Lo", output-values/tvOut_SettingName: "Lower – abswitch bench" → "Lo – abswitch bench"
+20:14:45.804 ◆ PH-A      variants changed       Lower Third › Variant 2    tvGroup_Content__Title: "Lo" → "L"
+20:14:46.111 ◆ PH-A      variants changed       Lower Third › Variant 2    name: "Lo – abswitch bench" → " – abswitch bench", tvGroup_Content__Title: "L" → "", output-values/tvOut_Cursor: "" → "openHand", output-values/tvOut_SettingName: "Lo – abswitch bench" → " – abswitch bench"
+20:14:46.577 ◆ PH-A      variants changed       Lower Third › Variant 2    tvGroup_Content__Title: "" → "‹typed›"
+20:14:46.881 ◆ PH-A      variants changed       Lower Third › Variant 2    name: " – abswitch bench" → "‹typed› – abswitch bench", tvGroup_Content__Title: "‹typed›" → "‹typed›", output-values/tvOut_Cursor: "openHand" → "", output-values/tvOut_SettingName: " – abswitch bench" → "‹typed› – abswitch bench"
+20:14:46.883 ◆ PH-A      variants changed       Lower Third › Variant 2    tvGroup_Content__Title: "‹typed›" → "‹typed›"
+20:14:47.184 ◆ PH-A      variants changed       Lower Third › Variant 2    name: "‹typed› – abswitch bench" → "‹typed› – abswitch bench", tvGroup_Content__Title: "‹typed›" → "‹typed›", output-values/tvOut_SettingName: "‹typed› – abswitch bench" → "‹typed› – abswitch bench"
+20:14:47.593 ◆ PH-A      variants changed       Lower Third › Variant 2    name: "‹typed› – abswitch bench" → "‹typed› – abswitch bench", tvGroup_Content__Title: "‹typed›" → "‹typed›", output-values/tvOut_SettingName: "‹typed› – abswitch bench" → "‹typed› – abswitch bench"
+20:14:47.754 ◆ PH-A      variants changed       Lower Third › Variant 2    tvGroup_Content__Title: "‹typed›" → "‹typed›"
+20:14:48.059 ◆ PH-A      variants changed       Lower Third › Variant 2    name: "‹typed› – abswitch bench" → "‹typed› – abswitch bench", output-values/tvOut_SettingName: "‹typed› – abswitch bench" → "‹typed› – abswitch bench"
+20:14:48.109 ◆ PH-A      variants changed       Lower Third › Variant 2    tvGroup_Content__Title: "‹typed›" → "‹typed›"
+20:14:48.409 ◆ PH-A      variants changed       Lower Third › Variant 2    name: "‹typed› – abswitch bench" → "‹typed› – abswitch bench", output-values/tvOut_SettingName: "‹typed› – abswitch bench" → "‹typed› – abswitch bench"
+20:14:48.489 ◆ PH-A      variants changed       Lower Third › Variant 2    tvGroup_Content__Title: "‹typed›" → "‹typed›"
+20:14:48.793 ◆ PH-A      variants changed       Lower Third › Variant 2    name: "‹typed› – abswitch bench" → "‹typed› – abswitch bench", tvGroup_Content__Title: "‹typed›" → "‹typed›", output-values/tvOut_SettingName: "‹typed› – abswitch bench" → "‹typed› – abswitch bench"
+20:14:51.974 ◆ PH-A      layers changed         Lower Third                output-values/tvOut_Cursor: "openHand" → "", output-values/tvOut_SettingName: "Lower Third – abswitch bench" → "‹typed› – abswitch bench", tvGroup_Content__Title: "Lower Third" → "‹typed›"
+20:14:54.234 ◆ PH-A      layers changed         Lower Third                output-values/tvOut_Cursor: "" → "openHand", output-values/tvOut_SettingName: "‹typed› – abswitch bench" → "Lower Third – abswitch bench", tvGroup_Content__Title: "‹typed›" → "Lower Third"
+20:14:55.688 ◆ PH-A      layers changed         Lower Third                live-state: "off" → "live", output-values/tvOut_Cursor: "openHand" → "", output-values/tvOut_Done: false → true
+20:14:55.693 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench live-state: "off" → "live", output-values/tvOut_Cursor: "openHand" → ""
+20:14:58.922 ◆ PH-A      layers changed         Lower Third                live-state: "live" → "shutdown"
+20:14:58.925 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench live-state: "live" → "shutdown"
+20:15:00.463 ◆ PH-A      layers changed         Lower Third                live-state: "shutdown" → "off", output-values/tvOut_Cursor: "" → "openHand"
+20:15:00.494 ◆ PH-A      variants changed       Lower Third › Lower Third – abswitch bench live-state: "shutdown" → "off", output-values/tvOut_Cursor: "" → "openHand", output-values/tvOut_TimeRemaining: 0.23333333333175688 → -1
+20:15:01.006 ◆ PH-A      layers changed         Lower Third                live-state: "off" → "live", output-values/tvOut_Cursor: "openHand" → "", output-values/tvOut_Done: false → true, tvGroup_Content__Title: "Lower Third" → "‹typed›"
+20:15:01.007 ◆ PH-A      variants changed       Lower Third › Variant 2    live-state: "off" → "live", output-values/tvOut_Cursor: "resizeDown" → "", output-values/tvOut_SettingName: "‹typed› – abswitch bench" → "Lower Third – abswitch bench", output-values/tvOut_Done: false → true
+20:15:05.289 ◆ PH-A      layers changed         Lower Third                live-state: "live" → "shutdown"
+20:15:05.293 ◆ PH-A      variants changed       Lower Third › Variant 2    live-state: "live" → "shutdown"
+20:15:06.826 ◆ PH-A      layers changed         Lower Third                live-state: "shutdown" → "off", output-values/tvOut_Cursor: "" → "resizeDown"
+20:15:06.862 ◆ PH-A      variants changed       Lower Third › Variant 2    live-state: "shutdown" → "off", output-values/tvOut_Cursor: "" → "resizeDown", output-values/tvOut_TimeRemaining: 0.23333333333175688 → -1
+20:15:09.659 ◆ PH-A      variants removed       Lower Third › Lower Third – abswitch bench {"id":"698F5A34-6047-4653-8861-2AB41EC97A62","layer-id":"09086ABF-D255-47D5-ACB3-5CA363CF8E09","ts":1794456909658,"type":"variants","event":"removed","document-
+20:16:30.351 ◆ PH-A      layers changed         Two Shot                   live-state: "off" → "live", tvIn_VideoSourceBName: "CAM 2" → "None", tvIn_VideoSourceAName: "CAM 1" → "None"
+20:16:30.356 ◆ PH-A      layer-sets changed     Two Shot                   active: false → true
+20:16:30.357 ◆ PH-A      layer-sets changed     Speaker Wide               active: true → false
+20:16:30.358 ◆ PH-A      variants changed       Two Shot › 2 x 1           live-state: "off" → "live", tvIn_VideoSourceBName: "CAM 2" → "None", tvIn_VideoSourceAName: "CAM 1" → "None"
+20:16:30.359 ◆ PH-A      layers changed         Cam Wide                   live-state: "live" → "shutdown"
+20:16:30.360 ◆ PH-A      variants changed       Cam Wide › CAM 1 (Fullscreen) live-state: "live" → "shutdown"
+20:16:30.652 ◆ PH-A      layers changed         Two Shot                   tvIn_VideoSourceBName: "None" → "CAM 2", tvIn_VideoSourceAName: "None" → "CAM 1"
+20:16:30.654 ◆ PH-A      layers changed         Cam Wide                   live-state: "shutdown" → "off"
+20:16:30.658 ◆ PH-A      variants changed       Cam Wide › CAM 1 (Fullscreen) live-state: "shutdown" → "off"
+20:16:31.807 ◆ PH-A      layers changed         Two Shot                   live-state: "live" → "shutdown"
+20:16:31.809 ◆ PH-A      layer-sets changed     Two Shot                   active: true → false
+20:16:31.810 ◆ PH-A      layer-sets changed     Speaker Wide               active: false → true
+20:16:31.811 ◆ PH-A      variants changed       Two Shot › 2 x 1           live-state: "live" → "shutdown", tvIn_VideoSourceBName: "None" → "CAM 2", tvIn_VideoSourceAName: "None" → "CAM 1"
+20:16:31.812 ◆ PH-A      layers changed         Cam Wide                   live-state: "off" → "live", output-values/tvSetAudioVolumeSignal_tvIn_VideoSourceAImage: false → true, output-values/tvSetAudioVolume_tvIn_VideoSourceAImage: 1 → 0, output-values/tvOut_Done: false → true, tvIn_VideoSourceAName: "CAM 1" → "None"
+20:16:31.813 ◆ PH-A      variants changed       Cam Wide › CAM 1 (Fullscreen) live-state: "off" → "live", tvIn_VideoSourceAName: "CAM 1" → "None", output-values/tvSetAudioVolumeSignal_tvIn_VideoSourceAImage: false → true, output-values/tvSetAudioVolume_tvIn_VideoSourceAImage: 1 → 0, output-values/tvOut_Done: false → true
+20:16:31.856   PH-A      sources changed        CAM 2                      tally-state: "program" → "in-use"
+20:16:32.113 ◆ PH-A      layers changed         Two Shot                   live-state: "shutdown" → "off"
+20:16:32.116 ◆ PH-A      variants changed       Two Shot › 2 x 1           live-state: "shutdown" → "off"
+20:16:32.118 ◆ PH-A      layers changed         Cam Wide                   output-values/tvSetAudioVolumeSignal_tvIn_VideoSourceAImage: true → false, output-values/tvSetAudioVolume_tvIn_VideoSourceAImage: 0 → 1, output-values/tvOut_Done: true → false, tvIn_VideoSourceAName: "None" → "CAM 1"
+20:16:32.119 ◆ PH-A      variants changed       Cam Wide › CAM 1 (Fullscreen) tvIn_VideoSourceAName: "None" → "CAM 1", output-values/tvSetAudioVolumeSignal_tvIn_VideoSourceAImage: true → false, output-values/tvSetAudioVolume_tvIn_VideoSourceAImage: 0 → 1, output-values/tvOut_Done: true → false
+20:17:29.465 ◆ PH-A      variants changed       Lower Third › Variant 2    tvGroup_Content__Title: "‹typed›" → "Lower Third"
+20:17:29.772 ◆ PH-A      variants changed       Lower Third › Variant 2    name: "‹typed› – abswitch bench" → "Lower Third – abswitch bench", output-values/tvOut_SettingName: "‹typed› – abswitch bench" → "Lower Third – abswitch bench"
+
+(recorder stopped at 20:18:07, before its 900 s were up; this summary was computed afterwards from its raw log)
+3114 messages from 20:12:26 to 20:18:05. By kind: layers values-changed 1724, documents changed 1080, variants changed 274, layers changed 27, layer-sets changed 4, sources changed 2, variants added 1, variants values-changed 1, variants removed 1
+The two lines at 20:17:29 are not the UI test: they are an HTTP write made after it, setting PH-A's Lower Third title back to "Lower Third". They read exactly like the UI's own edits.
