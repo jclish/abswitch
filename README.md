@@ -1,5 +1,7 @@
 # abswitch — A/B composition switcher for mimoLive 7
 
+[Demo video](https://youtu.be/xISjuuxs1Po) · [Article](https://www.linkedin.com/pulse/preview-bus-mimolive-built-from-stock-parts-jourdan-clish-tcaac/)
+
 > **Status: v0.2.0, a working proof, not a product.** Tested on mimoLive 7.0b3 (build 30982) with NDI test sources on one Mac.
 > Bench tests 3, 4 and 7 (real cameras, real audio, glass-to-glass latency) have not been run yet.
 > The source-tally item (9 in CHANGES.md: a source's tally stuck at `program` on 7.0b3) is open.
