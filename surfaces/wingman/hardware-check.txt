@@ -201,3 +201,49 @@ Result: 5 of 5 steps passed (14 of 14 in all).
 20:36:22.345 ('B', 'A', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'busy', 'TAKE to document B')
 20:36:22.873 ('A', 'B', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'busy', 'TAKE to document A (stinger)')
 20:36:23.398 ('A', 'B', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'idle', 'TAKE to document A (stinger)')
+
+
+=== Tally, 2026-11-14 (ruled 2026-11-14: the adapter may write the two tally banks to FFE2, nothing else) ===
+Run by Jourdan in Terminal.app; presses NOT armed throughout (no --arm), so nothing in this section sent a command.
+
+T1 PASS  Echo check (echo_check.py: no takectl, no adapter). One captured PREVIEW 3 write to FFE2, answered in 15 ms;
+         Jourdan: "Light still on" (PREVIEW 3 amber). Nothing on FFE1 in the 3 s before or the 5 s after: no echo.
+T2 PASS  Connect (adapter --tally --raw, takectl up): PROGRAM 1 and PREVIEW 4 written 57 and 74 ms after connecting,
+         as /state had them (A on air with key 1 "Speaker Wide", B in Preview with key 4 "Full Slides"); the full
+         refresh replaced T1's PREVIEW 3. (From the logs; Jourdan reported the run done with no fault, not each lamp.)
+T3 PASS  Browser Preview -> amber: three panel keys clicked (2, 3, 4); /state changed and the PREVIEW bank followed
+         48, 189 and 234 ms later (the poll is 250 ms). PROGRAM was not rewritten (change-only). (From the
+         logs, as T2.)
+T4 PASS  Ctrl-C: Jourdan: "Yes, both dark". The log does not show it: Ctrl-C also killed the tee the log was
+         piped to. Fixed after this run: the adapter's log now ignores a dead output (it could have stopped the
+         lamps following), test_a_log_with_nowhere_to_go_stops_nothing and mutant M36; later runs use tee -i.
+         With --raw, the Surface sent no packet at all from T2 to T4: no echo across four more writes.
+
+--- echo_check.txt ---
+echo check, 2026-11-14 10:12:44: one captured PREVIEW 3 write (96 bytes) to FFE2
+connected; listening on FFE1.
+3 s of quiet, one write, 5 s more.
+wrote PREVIEW 3: the write was answered in 15 ms. Look: PREVIEW 3 should be amber.
+before the write (3 s): 0 packet(s)
+after the write (5 s): 0 packet(s)
+NO ECHO: nothing came back in 5 s after the write.
+
+--- the adapter's log, T2-T4 ---
+10:16:39.414 Mode: DRY RUN: nothing is sent (add --arm)
+10:16:39.414 Tally: ON: PROGRAM and PREVIEW light as the panel buses do
+10:16:39.414 Scanning for BirdDogSwitcher (25 s)...
+10:16:41.134 Connected to BirdDogSwitcher; presses count in 1 s. Ctrl-C to stop.
+10:16:41.191   tally: PROGRAM 1
+10:16:41.208   tally: PREVIEW 4
+10:17:06.544   tally: PREVIEW 2
+10:17:10.355   tally: PREVIEW 3
+10:17:14.930   tally: PREVIEW 4
+
+--- takectl's /state, changes only (read every 100 ms) ---
+10:14:00.076 takectl not answering (URLError)
+10:15:04.822 takectl answers
+10:15:04.822 ready=False PGM None PVW None looks null keys []
+10:15:54.100 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Full Slides"} keys ['Speaker Wide', 'Two Shot', 'Slides PiP', 'Full Slides']
+10:17:06.496 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Two Shot"} keys ['Speaker Wide', 'Two Shot', 'Slides PiP', 'Full Slides']
+10:17:10.166 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Slides PiP"} keys ['Speaker Wide', 'Two Shot', 'Slides PiP', 'Full Slides']
+10:17:14.696 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Full Slides"} keys ['Speaker Wide', 'Two Shot', 'Slides PiP', 'Full Slides']

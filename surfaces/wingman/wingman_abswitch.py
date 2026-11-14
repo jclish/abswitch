@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 """Wingman Surface -> abswitch: PREVIEW 1-6 recall look keys 1-6 in Preview; AUTO is TAKE, CUT is CUT.
+With --tally, the Surface's PROGRAM and PREVIEW buttons light as the panel's buses do.
 
-    .venv/bin/python wingman_abswitch.py            dry run: prints what each press would send
-    .venv/bin/python wingman_abswitch.py --arm      sends it to takectl
+    .venv/bin/python wingman_abswitch.py                  dry run: prints what each press would send
+    .venv/bin/python wingman_abswitch.py --arm            sends it to takectl
+    .venv/bin/python wingman_abswitch.py --arm --tally    and lights the Surface's tally
     options: --takectl http://127.0.0.1:8991   --raw (every packet in hex)   --settle 1.0
 
-abswitch is the switcher; the Surface is an input device. A press calls the same takectl route the
-panel's key calls (/pvw/layer-set?name=..., /take, /cut), so takectl's own checks apply and the panel
-follows. Nothing is written to the Surface, nothing goes to mimoLive except through takectl, and there
-is no state here beyond "a command is in flight".
+abswitch is the switcher; the Surface is an input device and, with --tally, a display. A press calls
+the same takectl route the panel's key calls (/pvw/layer-set?name=..., /take, /cut), so takectl's own
+checks apply and the panel follows. The tally only reads /state, as the panel does, and never sends a
+command. The one thing ever written to the Surface is its two tally banks (FFE2, tally_bank()'s bytes;
+ruled 2026-11-14). Nothing goes to mimoLive except through takectl, and there is no state here beyond
+"a command is in flight" and "the lamps last written".
 
 What a press does, and does not:
 - DOWN acts, UP never does.
@@ -33,11 +37,13 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import urlopen
 
-from wingman_protocol import DEVICE_NAME, NOTIFY_UUID, Bad, Button, decode, describe
+from wingman_protocol import DEVICE_NAME, NOTIFY_UUID, TALLY_BUTTONS, TALLY_UUID, Bad, Button, decode, describe, tally_bank
 
 ACTIONS = {**{f"PREVIEW {n}": ("preview", n) for n in range(1, 7)}, "AUTO": ("take", None), "CUT": ("cut", None)}
 READ_TIMEOUT_S = 2.0  # /state
 COMMAND_TIMEOUT_S = 10.0  # a TAKE answers once its signal is sent, after any pre-hooks and stinger cover
+TALLY_POLL_S = 0.25  # as often as the panel reads /state
+TALLY_WRITE_TIMEOUT_S = 2.0
 
 
 def stamp() -> str:
@@ -45,7 +51,10 @@ def stamp() -> str:
 
 
 def say(line: str) -> None:
-    print(f"{stamp()} {line}", flush=True)
+    try:
+        print(f"{stamp()} {line}", flush=True)
+    except OSError:  # the terminal or a pipe went away (Ctrl-C kills tee too): a log line never stops the lamps or a press
+        pass
 
 
 class Takectl:
@@ -94,6 +103,98 @@ def greyed(s: dict) -> str | None:
     if s.get("rehearsal"):
         return "hooks are being rehearsed"
     return None
+
+
+# The panel's lines that light its buses, as lamps() mirrors them; test_wingman.py holds them to operator.html.
+PANEL_LAMPS = (
+    "const looks = (s && s.looks) || {};",
+    'const pgmLookNow = s && (s.pgm === "A" || s.pgm === "B") ? looks[s.pgm] : null;',
+    "const pvwLookNow = s && s.pvw ? looks[s.pvw] : null;",
+    '$("pgmBus").querySelectorAll(".lampkey").forEach((l) => { l.dataset.on = l.dataset.name && l.dataset.name === pgmLookNow ? "1" : ""; });',
+    'b.dataset.sel = n && n === pvwLookNow ? "1" : "";',
+    'lamp.dataset.name = it ? it.name : ""; lamp.dataset.empty = it ? "" : "1";',
+)
+
+
+def lamps(s: dict) -> tuple[int | None, int | None]:
+    """The PROGRAM and PREVIEW buttons the Surface's tally would light now, each 1-6 or None: the key
+    the panel lights on its Program bus (the look on air) and on its Preview bus (the look in Preview).
+    No Program look in SAFE or OTHER; keys past six have no button. Nothing writes the lamps yet."""
+    looks = s.get("looks") or {}
+    keys = [x.get("name") for x in (s.get("layerSetsAll") or [])][:TALLY_BUTTONS]
+
+    def key(look):
+        return keys.index(look) + 1 if look and look in keys else None
+
+    return key(looks.get(s["pgm"]) if s.get("pgm") in ("A", "B") else None), key(looks.get(s["pvw"]) if s.get("pvw") else None)
+
+
+def tally_writer(client):
+    """The one write the adapter makes to the Surface: a tally bank, to FFE2, with a write response."""
+    return lambda data: client.write_gatt_char(TALLY_UUID, data, response=True)
+
+
+class Tally:
+    """The Surface's lamps, following takectl: PROGRAM red on the key whose look is on air, PREVIEW amber
+    on the key whose look is in Preview, as lamps() reads /state. It reads /state only and never sends a
+    command, so a refresh or a reconnect can never TAKE. A bank is written only when its lamp changes."""
+
+    def __init__(self, takectl, write, log=say, write_timeout_s=TALLY_WRITE_TIMEOUT_S):
+        self.takectl, self.write, self.log, self.write_timeout_s = takectl, write, log, write_timeout_s
+        self.shown = {}  # bank -> the lamp last written; a bank not here is not known (just connected, a failed write)
+        self.trouble = None  # what was last logged as wrong, so a fault is logged once, not every poll
+
+    def forget(self) -> None:
+        """On (re)connecting: what the Surface shows is not known, so the next refresh writes both banks."""
+        self.shown = {}
+
+    def _trouble(self, what: str | None) -> None:
+        if what != self.trouble:
+            self.log(f"  tally: {what}" if what else "  tally: back to normal")
+        self.trouble = what
+
+    async def refresh(self) -> None:
+        try:
+            state = await asyncio.to_thread(self.takectl.get, "/state")
+        except (URLError, TimeoutError, OSError, ValueError) as e:  # takectl not there: an outage, not a state
+            self._trouble(f"takectl not reachable ({e}); the lamps stay as they are")  # as the panel keeps its last state
+            return
+        if not isinstance(state, dict) or state.get("ok") is False:
+            self._trouble("takectl's /state was not an answer; the lamps stay as they are")
+            return
+        want = dict(zip(("PROGRAM", "PREVIEW"), lamps(state)))
+        for bank in ("PROGRAM", "PREVIEW"):  # Program first, as the iPad app writes them
+            if bank in self.shown and self.shown[bank] == want[bank]:
+                continue
+            self.shown.pop(bank, None)
+            try:
+                await asyncio.wait_for(self.write(tally_bank(bank, want[bank])), self.write_timeout_s)
+            except Exception as e:  # not known now: the next poll writes it again. PREVIEW waits for PROGRAM.
+                self._trouble(f"{bank} lamp not written ({type(e).__name__}: {e}); trying again")
+                return
+            self.shown[bank] = want[bank]
+            self.log(f"  tally: {bank} {want[bank] if want[bank] else 'dark'}")
+        self._trouble(None)
+
+    async def follow(self, stop: asyncio.Event) -> None:
+        """Refresh until stop is set: once at once, then every TALLY_POLL_S."""
+        while not stop.is_set():
+            await self.refresh()
+            try:
+                await asyncio.wait_for(stop.wait(), TALLY_POLL_S)
+            except asyncio.TimeoutError:
+                pass
+
+    async def darken(self) -> None:
+        """On stopping: both banks dark, so the Surface never shows lamps nobody is keeping true."""
+        for bank in ("PROGRAM", "PREVIEW"):
+            try:
+                await asyncio.wait_for(self.write(tally_bank(bank, None)), self.write_timeout_s)
+            except Exception as e:
+                self.log(f"  tally: {bank} not darkened ({type(e).__name__}); it shows what it last showed")
+                return
+        self.shown = {}
+        self.log("  tally: both banks dark")
 
 
 class Surface:
@@ -189,7 +290,9 @@ async def run(args) -> None:
     from bleak import BleakClient, BleakScanner
 
     surface = Surface(Takectl(args.takectl), armed=args.arm, settle_s=args.settle, raw=args.raw)
+    tally = Tally(Takectl(args.takectl), write=None) if args.tally else None
     say(f"Mode: {'ARMED: presses go to ' + args.takectl if args.arm else 'DRY RUN: nothing is sent (add --arm)'}")
+    say(f"Tally: {'ON: PROGRAM and PREVIEW light as the panel buses do' if tally else 'off (add --tally to light PROGRAM and PREVIEW)'}")
     while True:
         say(f"Scanning for {DEVICE_NAME} (25 s)...")
         device = await BleakScanner.find_device_by_filter(
@@ -205,8 +308,28 @@ async def run(args) -> None:
                 await client.start_notify(NOTIFY_UUID, lambda _s, data: surface.feed(data))
                 surface.connected()
                 say(f"Connected to {device.name or DEVICE_NAME}; presses count in {args.settle:g} s. Ctrl-C to stop.")
-                await gone.wait()
-                say("The Surface disconnected.")
+                lamps_task = None
+                if tally:
+                    ch = client.services.get_characteristic(TALLY_UUID)
+                    if ch is None or "write" not in ch.properties:
+                        say("Tally: this Surface has no FFE2 with write response; its lamps are left alone.")
+                    else:
+                        tally.write = tally_writer(client)
+                        tally.forget()
+                        lamps_task = asyncio.ensure_future(tally.follow(gone))
+                try:
+                    await gone.wait()
+                    say("The Surface disconnected.")
+                except asyncio.CancelledError:  # Ctrl-C: darken the lamps while still connected, then stop
+                    if lamps_task:
+                        lamps_task.cancel()
+                        await asyncio.gather(lamps_task, return_exceptions=True)
+                        lamps_task = None
+                        await tally.darken()
+                    raise
+                finally:
+                    if lamps_task:
+                        lamps_task.cancel()
         except Exception as e:  # a failed connect is reported and retried; it never fires anything
             say(f"Bluetooth: {type(e).__name__}: {e}")
         finally:
@@ -217,6 +340,7 @@ async def run(args) -> None:
 def main() -> None:
     p = argparse.ArgumentParser(description="Wingman Surface -> abswitch (PREVIEW 1-6, AUTO, CUT). Dry run unless --arm.")
     p.add_argument("--arm", action="store_true", help="send commands to takectl (default: print them only)")
+    p.add_argument("--tally", action="store_true", help="light the Surface's PROGRAM and PREVIEW buttons from takectl's state")
     p.add_argument("--takectl", default="http://127.0.0.1:8991", help="takectl's address")
     p.add_argument("--settle", type=float, default=1.0, help="seconds after connecting before presses count")
     p.add_argument("--raw", action="store_true", help="log every packet in hex")

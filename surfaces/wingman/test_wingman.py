@@ -49,6 +49,25 @@ def packet(kind, state, value):
     return first + bytes([x])
 
 
+def tally_captures():
+    """The tally writes seen to work on the Surface: (bank, lit button, the 96 bytes)."""
+    with open(os.path.join(HERE, "tally_captures.txt"), encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#"):
+                bank, lit, *recs = line.split()
+                yield bank, int(lit), bytes.fromhex("".join(recs))
+
+
+def records(payload):
+    return [payload[i:i + 8] for i in range(0, len(payload), 8)]
+
+
+def panel_lines():
+    with open(os.path.join(os.path.dirname(os.path.dirname(HERE)), "operator.html"), encoding="utf-8") as f:
+        return {line.strip() for line in f}
+
+
 BY_NAME = {name: i for i, name in monitor_buttons().items()}
 
 
@@ -292,8 +311,7 @@ class TakeAndCut(unittest.TestCase):
                 self.assertIn("not sent", log[-1], f"{name} while {why}")
 
     def test_greyed_mirrors_the_panels_lines_as_they_are(self):
-        with open(os.path.join(os.path.dirname(os.path.dirname(HERE)), "operator.html"), encoding="utf-8") as f:
-            panel = {line.strip() for line in f}
+        panel = panel_lines()
         for line in W.PANEL_GREYING:
             self.assertIn(line, panel, "the panel's TAKE/CUT greying changed: revisit greyed() in wingman_abswitch.py")
 
@@ -325,6 +343,253 @@ class TakeAndCut(unittest.TestCase):
         s, log, _ = surface(tk)
         run(s.handle(press("AUTO")))
         self.assertIn("refused: busy: transition in progress", log[-1])
+
+
+class Tally(unittest.TestCase):
+    def test_every_captured_write_is_rebuilt_byte_for_byte(self):
+        n = 0
+        for bank, lit, raw in tally_captures():
+            self.assertEqual(P.tally_bank(bank, lit), raw, f"{bank} {lit}")
+            n += 1
+        self.assertGreater(n, 0)
+
+    def test_every_button_and_a_dark_bank_keep_the_captured_shape(self):
+        # The shape comes from the captures: their length, each record's first six bytes, and which
+        # STATE byte the lit record and the others carry. Only which record is lit may change.
+        ref = {}
+        for bank, lit, raw in tally_captures():
+            recs = records(raw)
+            ref[bank] = ([r[:6] for r in recs], {recs[lit - 1][6]}, {r[6] for i, r in enumerate(recs) if i != lit - 1})
+        self.assertEqual(set(ref), set(P.TALLY_FIRST_ID), "a bank with no captured write")
+        for bank, (heads, lit_state, off_state) in ref.items():
+            for lit in (None, *range(1, P.TALLY_BUTTONS + 1)):
+                got = records(P.tally_bank(bank, lit))
+                self.assertEqual([g[:6] for g in got], heads, f"{bank} {lit}")
+                for i, g in enumerate(got):
+                    self.assertEqual({g[6]}, lit_state if lit == i + 1 else off_state, f"{bank} {lit} record {i}")
+                    x = 0
+                    for b in g[:7]:
+                        x ^= b
+                    self.assertEqual(g[7], x, f"{bank} {lit} record {i}: check byte")
+
+    def test_a_bank_or_button_that_does_not_exist_is_refused(self):
+        for bank, lit in (("PROGRAM", 0), ("PREVIEW", 7), ("PREVIEW", "3"), ("PREVIEW", True), ("ON AIR", 1)):
+            with self.assertRaises(ValueError, msg=f"{bank} {lit!r}"):
+                P.tally_bank(bank, lit)
+
+    def test_a_tally_record_read_back_is_dropped_unless_it_is_a_press(self):
+        # A lit record is byte for byte its button's DOWN; an off record differs only in byte 6 and is
+        # dropped. If the Surface ever echoed a write, only the lit record could read as a press.
+        downs = {raw for raw, label in captures() if label.endswith(" down")}
+        for bank, lit, raw in tally_captures():
+            for i, rec in enumerate(records(raw)):
+                event = P.decode(rec)
+                if i == lit - 1:
+                    self.assertEqual(event, P.Button(rec[5], P.BUTTONS[rec[5]], True), f"{bank} {lit}")
+                    if bank == "PREVIEW" and lit == 3:
+                        self.assertIn(rec, downs, "PREVIEW 3 lit is no longer the captured PREVIEW 3 DOWN")
+                else:
+                    self.assertIsInstance(event, P.Bad, f"{bank} {lit} off record {i}")
+
+
+def lamp_state(**over):
+    s = {"ready": True, "pgm": "A", "pvw": "B", "looks": {"A": "Two Shot", "B": "Speaker Wide"},
+         "layerSetsAll": [{"name": n, "inA": True, "inB": True} for n in ("Speaker Wide", "Two Shot", "Q&A / Panel")]}
+    return {**s, **over}
+
+
+class Lamps(unittest.TestCase):
+    def test_the_keys_of_the_looks_on_program_and_in_preview(self):
+        self.assertEqual(W.lamps(lamp_state()), (2, 1))
+        self.assertEqual(W.lamps(lamp_state(pgm="B", pvw="A")), (1, 2))
+        self.assertEqual(W.lamps(lamp_state(looks={"A": "Q&A / Panel", "B": "Q&A / Panel"})), (3, 3))
+
+    def test_no_program_button_in_safe_or_other(self):
+        for pgm in ("SAFE", "OTHER", None):
+            self.assertEqual(W.lamps(lamp_state(pgm=pgm)), (None, 1), pgm)
+
+    def test_a_look_with_no_button_lights_nothing(self):
+        eight = [{"name": f"Look {n}", "inA": True, "inB": True} for n in range(1, 9)]
+        self.assertEqual(W.lamps(lamp_state(layerSetsAll=eight, looks={"A": "Look 7", "B": "Look 6"})), (None, 6))
+        self.assertEqual(W.lamps(lamp_state(looks={"A": "Not A Key", "B": None})), (None, None))
+        self.assertEqual(W.lamps(lamp_state(layerSetsAll=[])), (None, None))
+
+    def test_not_ready_lights_nothing(self):
+        self.assertEqual(W.lamps({"ready": False, "mode": "setup"}), (None, None))
+
+    def test_lamps_mirror_the_panels_lines_as_they_are(self):
+        panel = panel_lines()
+        for line in W.PANEL_LAMPS:
+            self.assertIn(line, panel, "the panel's bus lamps changed: revisit lamps() in wingman_abswitch.py")
+
+
+class Writer:
+    """The Surface's tally characteristic as the adapter sees it: every write recorded. fail: how many
+    writes raise first; hang: writes never answer."""
+
+    def __init__(self, fail=0, hang=False):
+        self.writes, self.fail, self.hang = [], fail, hang
+
+    async def __call__(self, data):
+        if self.hang:
+            await asyncio.sleep(2)  # far past the test's write timeout, short enough that waiting on it only fails
+        if self.fail:
+            self.fail -= 1
+            raise OSError("write failed")
+        self.writes.append(bytes(data))
+
+
+def bank(name, lit):
+    """A bank as it should reach the Surface. The bytes are tally_bank()'s, which the Tally tests hold to the captures."""
+    return (name, lit, P.tally_bank(name, lit))
+
+
+def written(w):
+    """Each write as (bank, lit, bytes), named by the tally_bank() it equals, or ("?", None, bytes)."""
+    names = {P.tally_bank(n, lit): (n, lit) for n in P.TALLY_FIRST_ID for lit in (None, *range(1, P.TALLY_BUTTONS + 1))}
+    return [(*names.get(b, ("?", None)), b) for b in w.writes]
+
+
+def follower(state, **kw):
+    tk, w, log = FakeTakectl(state=state), Writer(**kw), []
+    return W.Tally(tk, w, log=log.append, write_timeout_s=0.05), tk, w, log
+
+
+class TallyFollowsTakectl(unittest.TestCase):
+    def test_connecting_writes_program_then_preview_as_the_panel_lights_them(self):
+        t, tk, w, _ = follower(lamp_state())
+        run(t.refresh())
+        self.assertEqual(written(w), [bank("PROGRAM", 2), bank("PREVIEW", 1)])
+
+    def test_nothing_is_written_while_nothing_changes(self):
+        t, tk, w, _ = follower(lamp_state())
+        for _ in range(5):
+            run(t.refresh())
+        self.assertEqual(len(w.writes), 2)
+
+    def test_only_the_bank_that_changed_is_written(self):
+        t, tk, w, _ = follower(lamp_state())
+        run(t.refresh())
+        tk.state = lamp_state(looks={"A": "Two Shot", "B": "Q&A / Panel"})
+        run(t.refresh())
+        self.assertEqual(written(w)[2:], [bank("PREVIEW", 3)])
+
+    def test_a_take_moves_both_program_first(self):
+        t, tk, w, _ = follower(lamp_state())
+        run(t.refresh())
+        tk.state = lamp_state(pgm="B", pvw="A")
+        run(t.refresh())
+        self.assertEqual(written(w)[2:], [bank("PROGRAM", 1), bank("PREVIEW", 2)])
+
+    def test_takectl_unreachable_leaves_the_lamps_and_says_so_once(self):
+        t, tk, w, log = follower(lamp_state())
+        run(t.refresh())
+        tk.fail = True
+        for _ in range(3):
+            run(t.refresh())
+        self.assertEqual(len(w.writes), 2)
+        self.assertEqual(sum("not reachable" in line for line in log), 1)
+        tk.fail = False
+        run(t.refresh())
+        self.assertEqual(len(w.writes), 2)  # back, and nothing changed: nothing written
+        self.assertIn("back to normal", log[-1])
+
+    def test_an_answer_that_is_not_state_leaves_the_lamps(self):
+        t, tk, w, _ = follower(lamp_state())
+        run(t.refresh())
+        tk.state = {"ok": False, "error": "HTTP 502"}
+        run(t.refresh())
+        self.assertEqual(len(w.writes), 2)
+
+    def test_takectl_not_ready_darkens_both_as_the_panel_does(self):
+        t, tk, w, _ = follower(lamp_state())
+        run(t.refresh())
+        tk.state = {"ready": False, "mode": "setup"}
+        run(t.refresh())
+        self.assertEqual(written(w)[2:], [bank("PROGRAM", None), bank("PREVIEW", None)])
+
+    def test_a_failed_write_is_written_again_and_preview_waits_for_program(self):
+        t, tk, w, log = follower(lamp_state(), fail=1)
+        run(t.refresh())
+        self.assertEqual(w.writes, [])  # PROGRAM failed, so PREVIEW was not written ahead of it
+        self.assertIn("PROGRAM lamp not written", log[-1])
+        run(t.refresh())
+        self.assertEqual(written(w), [bank("PROGRAM", 2), bank("PREVIEW", 1)])
+
+    def test_a_write_that_never_answers_is_given_up_on(self):
+        t, tk, w, log = follower(lamp_state(), hang=True)
+        run(t.refresh())
+        self.assertIn("TimeoutError", log[-1])
+        self.assertEqual(t.shown, {})
+
+    def test_reconnecting_writes_both_again(self):
+        t, tk, w, _ = follower(lamp_state())
+        run(t.refresh())
+        t.forget()
+        run(t.refresh())
+        self.assertEqual(written(w)[2:], [bank("PROGRAM", 2), bank("PREVIEW", 1)])
+
+    def test_the_tally_never_sends_a_command(self):
+        # A refresh or a reconnect must never TAKE: whatever happens, the only route asked is /state.
+        t, tk, w, _ = follower(lamp_state(), fail=1)
+        for over in (lamp_state(), lamp_state(pgm="B", pvw="A"), {"ready": False}, lamp_state(pgm="SAFE")):
+            tk.state = over
+            run(t.refresh())
+            t.forget()
+            run(t.refresh())
+        self.assertEqual(set(tk.calls), {"/state"})
+
+    def test_stopping_darkens_both(self):
+        t, tk, w, _ = follower(lamp_state())
+        run(t.refresh())
+        run(t.darken())
+        self.assertEqual(written(w)[2:], [bank("PROGRAM", None), bank("PREVIEW", None)])
+
+    def test_follow_refreshes_at_once_and_stops_when_told(self):
+        t, tk, w, _ = follower(lamp_state())
+
+        async def follow_then_stop():
+            stop = asyncio.Event()
+            task = asyncio.ensure_future(t.follow(stop))
+            await asyncio.sleep(0.01)
+            self.assertEqual(len(w.writes), 2)  # at once, not after the first poll interval
+            stop.set()
+            await asyncio.wait_for(task, 1.0)
+
+        asyncio.run(follow_then_stop())
+
+    def test_a_log_with_nowhere_to_go_stops_nothing(self):
+        # On the bench, Ctrl-C killed the tee the log was piped to while the adapter was still darkening the lamps.
+        class Gone:
+            def write(self, _s):
+                raise BrokenPipeError(32, "Broken pipe")
+
+            def flush(self):
+                raise BrokenPipeError(32, "Broken pipe")
+
+        t, tk, w, _ = follower(lamp_state())
+        t.log = W.say
+        real, sys.stdout = sys.stdout, Gone()
+        try:
+            run(t.refresh())
+            tk.state = lamp_state(pvw="A")
+            run(t.refresh())
+            run(t.darken())
+        finally:
+            sys.stdout = real
+        self.assertEqual(written(w), [bank("PROGRAM", 2), bank("PREVIEW", 1), bank("PREVIEW", 2), bank("PROGRAM", None), bank("PREVIEW", None)])
+
+    def test_the_one_write_goes_to_ffe2_with_a_response(self):
+        sent = []
+
+        class Client:
+            async def write_gatt_char(self, char, data, response=None):
+                sent.append((char, bytes(data), response))
+
+        asyncio.run(W.tally_writer(Client())(P.tally_bank("PREVIEW", 3)))
+        self.assertEqual(sent, [(P.TALLY_UUID, P.tally_bank("PREVIEW", 3), True)])
+        self.assertEqual(P.TALLY_UUID, "0000ffe2-0000-1000-8000-00805f9b34fb")  # the ruling names FFE2; nothing else
+        self.assertNotEqual(P.TALLY_UUID, P.NOTIFY_UUID)
 
 
 if __name__ == "__main__":

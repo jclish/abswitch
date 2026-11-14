@@ -1,0 +1,7 @@
+echo check, 2026-11-14 10:12:44: one captured PREVIEW 3 write (96 bytes) to FFE2
+connected; listening on FFE1.
+3 s of quiet, one write, 5 s more.
+wrote PREVIEW 3: the write was answered in 15 ms. Look: PREVIEW 3 should be amber.
+before the write (3 s): 0 packet(s)
+after the write (5 s): 0 packet(s)
+NO ECHO: nothing came back in 5 s after the write.

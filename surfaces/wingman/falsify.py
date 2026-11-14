@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Falsification: break one mechanism per copy of the adapter and show the checks catch each.
 
-    python3 falsify.py           (from surfaces/wingman/; the offline check needs :8991 and :18989 free)
+    python3 falsify.py           (from surfaces/wingman/; the offline check needs :18991 and :18989 free)
 
 Every mutant must FAIL test_wingman.py; the ones that change what reaches takectl must also fail
 offline_check.py. A mutant that passes means a check is vacuous. Output: falsify.txt.
@@ -40,6 +40,33 @@ MUTANTS = [
      "            try:\n                await asyncio.to_thread(self.takectl.get, route, COMMAND_TIMEOUT_S)\n            except Exception:\n                pass\n", False),
     ("M16 a TAKE with no answer is called unsent", A, "no answer within {COMMAND_TIMEOUT_S:g} s; not retried. Look at the panel.",
      "takectl not reachable; nothing sent", False),
+    ("M17 tally lit and off swapped", P, "0x00 if lit == i + 1 else 0x01", "0x01 if lit == i + 1 else 0x00", False),
+    ("M18 the PREVIEW bank starts one id early", P, '"PREVIEW": 0x0D}', '"PREVIEW": 0x0C}', False),
+    ("M19 a tally record's check byte is not its own", P, "out += first + bytes((check_byte(first),))",
+     "out += first + bytes((check_byte(first[:6]),))", False),
+    ("M20 a bank's write is six records, not twelve", P, "    for i in range(TALLY_RECORDS):\n", "    for i in range(TALLY_BUTTONS):\n", False),
+    ("M21 a tally record read back counts as a press", P, "    if packet[6] != 0x00:\n", "    if False:\n", False),
+    ("M22 a key past six lights a button", A, '(s.get("layerSetsAll") or [])][:TALLY_BUTTONS]', '(s.get("layerSetsAll") or [])]', False),
+    # (SAFE on air lighting a PROGRAM button is not a mutant here: /state's looks only ever holds A and B.)
+    ("M23 the Preview lamp follows Program's look", A, 'key(looks.get(s["pvw"]) if s.get("pvw")', 'key(looks.get(s["pgm"]) if s.get("pvw")', False),
+    ("M24 the lamps are one key off", A, "return keys.index(look) + 1 if", "return keys.index(look) if", False),
+    ("M25 a lamp is written on every poll", A, "            if bank in self.shown and self.shown[bank] == want[bank]:\n", "            if False:\n", True),
+    ("M26 PREVIEW is written before PROGRAM", A, 'for bank in ("PROGRAM", "PREVIEW"):  # Program first', 'for bank in ("PREVIEW", "PROGRAM"):  # Program first', True),
+    ("M27 a takectl outage darkens the lamps", A, "# as the panel keeps its last state\n            return\n",
+     "# as the panel keeps its last state\n            state = {}\n", False),
+    ("M28 a reconnect is not a full refresh", A, 'so the next refresh writes both banks."""\n        self.shown = {}\n',
+     'so the next refresh writes both banks."""\n        pass\n', False),
+    ("M29 the tally is written without a response", A, "data, response=True)", "data, response=False)", False),
+    ("M30 the tally is written to FFE1", A, "client.write_gatt_char(TALLY_UUID,", "client.write_gatt_char(NOTIFY_UUID,", False),
+    ("M31 a failed write counts as written", A, 'trying again")\n                return\n',
+     'trying again")\n                self.shown[bank] = want[bank]\n                continue\n', False),
+    ("M32 PREVIEW is written although PROGRAM failed", A, 'trying again")\n                return\n', 'trying again")\n                continue\n', False),
+    ("M33 a write that never answers is waited on", A, "await asyncio.wait_for(self.write(tally_bank(bank, want[bank])), self.write_timeout_s)",
+     "await self.write(tally_bank(bank, want[bank]))", False),
+    ("M34 stopping leaves the lamps lit", A, "await asyncio.wait_for(self.write(tally_bank(bank, None)), self.write_timeout_s)", "pass", False),
+    ("M35 the first refresh waits a poll", A, "        while not stop.is_set():\n            await self.refresh()\n",
+     "        while not stop.is_set():\n            await asyncio.sleep(TALLY_POLL_S)\n            await self.refresh()\n", False),
+    ("M36 a dead log stops the lamps", A, "    except OSError:  # the terminal or a pipe went away", "    except ZeroDivisionError:  # the terminal or a pipe went away", False),
 ]
 
 

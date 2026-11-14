@@ -1,13 +1,17 @@
 # Wingman Surface for abswitch (optional)
 
 The BirdDog Wingman Surface (formerly Maki Studio Surface), connected to the Mac over Bluetooth,
-as a hardware panel for abswitch. **abswitch stays the switcher: the Surface is an input device.**
-A press calls the same takectl route the panel's key calls, so takectl's own checks apply and the
-panel follows. Nothing is written to the Surface, and nothing reaches mimoLive except through takectl.
+as a hardware panel for abswitch. **abswitch stays the switcher: the Surface is an input device and a
+display.** A press calls the same takectl route the panel's key calls, so takectl's own checks apply and
+the panel follows. With `--tally`, the PROGRAM and PREVIEW buttons light as the panel's buses do, read
+from takectl's `/state`. The only thing ever written to the Surface is those two tally banks (ruled
+2026-11-14), and nothing reaches mimoLive except through takectl.
 
-**Status: PREVIEW 1–6, AUTO and CUT.** PREVIEW recalls look keys 1–6 in Preview; AUTO is the panel's
-TAKE, CUT its CUT. Every other control is shown in the log and does nothing yet. All three passed the
-hardware check on the real Surface (2026-11-13, 14 of 14, `hardware-check.txt`).
+**Status: PREVIEW 1–6, AUTO and CUT, and tally.** PREVIEW recalls look keys 1–6 in Preview; AUTO is the
+panel's TAKE, CUT its CUT. Every other control is shown in the log and does nothing yet. The three
+controls passed the hardware check on the real Surface (2026-11-13, 14 of 14). Tally passed its first
+four steps, all with presses not armed (2026-11-14, `hardware-check.txt`); tally with presses armed is
+not checked on the Surface yet.
 
 The Surface's protocol was decoded by Production Engineering on 2026-11-13 (`wingman_monitor.py` is
 their known-good monitor, kept as it was). This folder is optional: takectl never loads it, and it
@@ -44,8 +48,24 @@ Then armed, to send:
 .venv/bin/python wingman_abswitch.py --arm
 ```
 
-Options: `--takectl http://127.0.0.1:8991` (takectl's address), `--raw` (every packet in hex),
-`--settle 1.0` (seconds after connecting before presses count). Ctrl-C stops it.
+And with the lamps:
+
+```bash
+.venv/bin/python wingman_abswitch.py --arm --tally
+```
+
+Options: `--tally` (light PROGRAM and PREVIEW from takectl), `--takectl http://127.0.0.1:8991`
+(takectl's address), `--raw` (every packet in hex), `--settle 1.0` (seconds after connecting before
+presses count). Ctrl-C stops it, and with `--tally` darkens both banks first. To keep a log, pipe it
+through `tee -i` (plain `tee` dies with the Ctrl-C and loses the last lines).
+
+**Tally:** PROGRAM n is red when key n's look is on air, PREVIEW n amber when it is in Preview, exactly
+as the panel's buses light them; none when the look is not one of keys 1–6, and no PROGRAM button in
+SAFE. The adapter reads `/state` every 250 ms, as the panel does, and writes a bank only when its lamp
+changes, PROGRAM first. Lamps follow takectl's state, never a press. After (re)connecting it writes both
+banks. If takectl stops answering, the lamps keep their last state (as the panel does) and the log says
+so; when takectl is up but not ready, both go dark, as the panel's do. A failed write is written again
+on the next poll. The tally only ever reads `/state`, so it can never send a command.
 
 `wingman_monitor.py` is the standalone diagnostic: it shows every control and sends nothing.
 
@@ -54,7 +74,7 @@ Options: `--takectl http://127.0.0.1:8991` (takectl's address), `--raw` (every p
 | Surface | abswitch |
 |---|---|
 | PREVIEW 1–6 | Look key 1–6, recalled in Preview (`/pvw/layer-set?name=…`, the panel's own route). An empty key sends nothing. |
-| PROGRAM 1–6 | Nothing yet. abswitch's PGM row is lamps only: you compose in the green document. Once the Surface's lights are decoded, these become Program tally lamps. (Ruled 2026-11-13.) |
+| PROGRAM 1–6 | Pressing them does nothing: abswitch's PGM row is lamps only, and you compose in the green document. (Ruled 2026-11-13.) With `--tally` they are the Program tally lamps. |
 | AUTO | TAKE (`/take`): the panel's MIX or STINGER, at its RATE. Sent only when the panel's TAKE is not greyed. |
 | CUT | CUT (`/cut`): always a bare cut, as on the panel. Sent only when the panel's CUT is not greyed. |
 | T-bar | Shown in the log, never acted on. abswitch takes a look in one step; a T-bar parked halfway is a state it has no name for. (Ruled 2026-11-13.) |
@@ -84,19 +104,22 @@ Options: `--takectl http://127.0.0.1:8991` (takectl's address), `--raw` (every p
 ## Tests
 
 ```bash
-python3 test_wingman.py      # 24 offline tests, standard library only: no Bluetooth, no takectl
-python3 offline_check.py     # the adapter against the real takectl on test/mock-mimolive.mjs: 9 steps
-python3 falsify.py           # 16 mutants, each one mechanism broken: every one must fail a check
+python3 test_wingman.py      # 48 offline tests, standard library only: no Bluetooth, no takectl
+python3 offline_check.py     # the adapter against the real takectl on test/mock-mimolive.mjs: 10 steps
+python3 falsify.py           # 36 mutants, each one mechanism broken: every one must fail a check
 ```
 
-The tests read their authorities at run time: `captures.txt` (packets the real Surface sent) and the
-button map in `wingman_monitor.py`. The packet check byte (XOR of the first seven bytes) is held to the
-captures, and a single flipped bit anywhere in a captured packet is dropped. `offline_check.txt` and
-`falsify.txt` are the last results.
+The tests read their authorities at run time: `captures.txt` (packets the real Surface sent),
+`tally_captures.txt` (tally writes seen to light it), the button map in `wingman_monitor.py`, and the
+panel's own lines in `operator.html`. The packet check byte (XOR of the first seven bytes) is held to the
+captures, and a single flipped bit anywhere in a captured packet is dropped. Bluetooth is a fake that
+records every write, so nothing here can reach the Surface. `offline_check.txt` and `falsify.txt` are the
+last results.
 
-**`offline_check.py` starts its own takectl on :8991 and refuses to run if anything already answers there
-or on the mock's port.** It used not to: on 2026-11-13 it ran while the bench's takectl was up, its own
-could not start, and its presses (three TAKEs, a CUT, RATE 2 s) went to the bench. Stop any takectl first.
+**`offline_check.py` runs its own takectl on :18991 and its mock on :18989, never on :8991, and refuses to
+run if anything already answers on either.** It used to share :8991: on 2026-11-13 it ran while the
+bench's takectl was up, its own could not start, and its presses (three TAKEs, a CUT, RATE 2 s) went to
+the bench.
 
 ## Hardware check (the real Surface, on the bench)
 
@@ -127,13 +150,29 @@ landed (15–20 ms) before the next arrived; the guard is covered by the tests a
 14. **Out of SAFE.** PANIC on the panel (hold). Press AUTO: it takes out of SAFE to the document in TAKE
     GOES TO, as the panel's TAKE does.
 
+**Tally**, presses not armed (no `--arm`), passed 4 of 4 on 2026-11-14:
+
+- T1. **Echo.** With the adapter stopped, `.venv/bin/python echo_check.py`, hands off: it writes one captured
+  PREVIEW 3 write and listens on FFE1. PREVIEW 3 lights amber, and the verdict is `NO ECHO`. (A lit tally
+  record is byte for byte its button's DOWN, so an echo would read as a press; there is none.)
+- T2. **Connect.** `wingman_abswitch.py --tally --raw`: red on Program's key, amber on Preview's.
+- T3. **Browser Preview.** Click Preview keys on the panel, one at a time: amber follows each within a
+  quarter second, red stays.
+- T4. **Stop.** Ctrl-C: both banks go dark.
+
+Not checked on the Surface yet: tally with presses armed (PREVIEW, AUTO and CUT from the Surface), a TAKE
+from the panel, power off and on, takectl stopped and started, and rapid changes.
+
 ## Known limits
 
 - PREVIEW, AUTO and CUT so far; looks 7 and 8 have no button.
 - A dissolve started in mimoLive's own window is caught only if takectl's view of the switcher has seen it
   (it is refreshed every few seconds), as on the panel; takectl itself does not refuse a TAKE then.
-- No lights: tally and button lights need the commands sent *to* the Surface, which are not decoded.
-  Nothing is ever written to it.
+- Tally lights PROGRAM and PREVIEW 1–6 only: red and amber, by bank, as the Surface chooses. Three tally
+  writes were captured from the iPad app (PROGRAM 2, PREVIEW 3 and 4); the rest are built from the same
+  format. Of those, PROGRAM 1, PREVIEW 2 and both dark banks have been written to the Surface (T2–T4);
+  buttons 5 and 6 of either bank, and PROGRAM 3 and 4, have not.
+- Tally lags takectl by up to a quarter second (the poll), as the panel does.
 - The T-bar's range (0–119) was measured on one Surface.
 - Tested on macOS only.
 
@@ -143,6 +182,8 @@ landed (15–20 ms) before the next arrived; the guard is covered by the tests a
 - `wingman_protocol.py`: the packet decoder, standard library only
 - `wingman_monitor.py`: Production Engineering's known-good monitor, unchanged
 - `captures.txt`: packets captured from the real Surface, with what was pressed
+- `tally_captures.txt`: tally writes captured from the iPad Wingman app and seen to light the Surface
 - `test_wingman.py`, `offline_check.py`, `falsify.py`: the checks; `offline_check.txt`, `falsify.txt`: their last results
+- `echo_check.py`: the echo check (one tally write, FFE1 listened to); `echo_check.txt`: its last result
 - `hardware-check.txt`: the hardware check on the real Surface, 2026-11-13
 - `requirements.txt`: Bleak, pinned

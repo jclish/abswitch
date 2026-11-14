@@ -1388,6 +1388,56 @@ the panel as Jourdan set it, which neither record shows; AUTO with STINGER: the 
 answering after it (606 ms); AUTO twice at 3.0 s: one TAKE, the presses at 375 ms and 1.7 s "not sent, a transition
 is in progress"; after PANIC, AUTO took out of SAFE to the TAKE GOES TO document. RATE is back at 3.0 s.
 
+## After v0.2.0, 2026-11-14: the Wingman Surface, tally (branch wingman, unreleased)
+
+Production Engineering's tally brief. **Ruled 2026-11-14: the adapter may write the Surface's two tally banks to
+FFE2, and nothing else** (this lifts, for those writes only, the 2026-11-13 ruling that nothing is written to the
+Surface). Also ruled: AUTO stays the panel's TAKE (the brief asked for a dissolve; no new path), the lamps follow
+`/state` on the panel's 250 ms poll with change-only writes, a reconnect is a full refresh, and lamps kept through
+a takectl outage are last-known state. With `--tally`:
+
+- PROGRAM n is red when key n's look is on air, PREVIEW n amber when it is in Preview, as the panel's buses light
+  them (`lamps()`; `PANEL_LAMPS`, held to `operator.html`). No PROGRAM button in SAFE or OTHER, none for keys 7–8.
+- `tally_bank(bank, lit)` builds a bank's write: twelve records `AA 00 07 4D 00 ID STATE CHECK`, STATE 00 lit, 01
+  off. It rebuilds the three writes the iPad app sent (`tally_captures.txt`: PROGRAM 2, PREVIEW 3, PREVIEW 4, copied
+  out of the experimental team's scripts by program, not retyped) byte for byte. The traces they came from
+  (`pcap1.pklg`, `3to4.pklg`) are not on this Mac.
+- The tally only reads `/state` and never sends a command, so a refresh or a reconnect can never TAKE.
+
+**Decisions made at the keyboard, flagged:**
+- **[CONFIG]** `--tally` is off unless given, so the adapter as committed before behaves as it did.
+- **When takectl is up but not ready, both banks go dark**, as the panel's lamps do; when it does not answer at all,
+  they keep their last state, as the panel keeps its last `/state`.
+- **Ctrl-C darkens both banks** before disconnecting, so the Surface never shows lamps nobody is keeping true.
+- **A failed or unanswered tally write (2 s) is written again on the next poll**: it is a state, not a command.
+  PREVIEW is never written ahead of a PROGRAM that failed.
+- **`offline_check.py` now runs its own takectl on :18991** (takectl's `port` setting), never :8991, so it cannot
+  reach an operator's takectl at all; it still refuses if its ports are taken.
+
+**Found and fixed:**
+- **A lit tally record is byte for byte its button's DOWN** (PREVIEW 3 lit is the captured PREVIEW 3 DOWN), and the
+  decoder read an off record as a DOWN too, because it never looked at byte 6. It now drops any packet whose byte 6
+  is not 00; every capture has 00 there. Whether the Surface sends writes back was then measured: it does not (T1).
+- **A log with nowhere to go could stop the lamps.** On the bench, Ctrl-C killed the `tee` the log was piped to;
+  a failed `print` raises, and mid-follow it would have stopped the lamps following. The log now ignores a dead
+  output. Use `tee -i`.
+
+**Tested offline:** `test_wingman.py` 48/48 (Bluetooth a fake that records each write); `offline_check.py` 10/10 on
+the mock, the new P8 following a Preview recall and a TAKE through the real takectl (Program first, then nothing
+more on an unchanged poll); `falsify.py` 36 mutants (20 new), every one caught, write-order and change-only also
+end to end. `echo_check.py`'s verdicts checked against a fake Bluetooth (quiet, a full echo, a stray packet, a void
+run, a cancel).
+
+**Hardware, presses not armed: 4 of 4** (`surfaces/wingman/hardware-check.txt`). T1 the echo check: one captured
+PREVIEW 3 write, answered in 15 ms, PREVIEW 3 amber, nothing on FFE1 for 3 s before or 5 s after. T2 connect: PROGRAM
+1 and PREVIEW 4 written 57 and 74 ms after connecting, as `/state` had them. T3 three panel Preview clicks: the
+PREVIEW bank followed in 48, 189 and 234 ms, PROGRAM untouched. T4 Ctrl-C: both banks dark (Jourdan). With `--raw`,
+the Surface sent no packet from T2 to T4. T2 and T3 are from the logs; Jourdan reported the run done without fault,
+not each lamp.
+
+**Not checked on the Surface yet:** tally with presses armed (PREVIEW, AUTO and CUT from the Surface), a TAKE from
+the panel, power off and on, takectl stopped and started, rapid changes, buttons 5 and 6.
+
 ## Next
 
 **v0.2.1:** when a key's hooks text does not fit whole beside the count, show a small hook marker instead of

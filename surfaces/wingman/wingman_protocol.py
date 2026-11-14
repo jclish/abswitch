@@ -5,19 +5,30 @@ Every notification is eight bytes:  AA 00 07 TYPE STATE VALUE 00 CHECK
   TYPE 0x80  the T-bar: VALUE = position, 0 (bottom) to 119 (top) on the Surface it was measured on
   TYPE 0x49  the wheel: VALUE = a signed step, 0x01 = +1, 0xFF = -1
 CHECK is the XOR of the first seven bytes: it holds for every packet captured so far
-(captures.txt), and a packet whose CHECK does not match is dropped, never guessed at.
+(captures.txt), and a packet whose CHECK does not match is dropped, never guessed at. Byte 6 is
+00 in every capture; a packet where it is not is dropped too.
 
 The button ids are the ones Production Engineering mapped on the real Surface (2026-11-13) and
 kept in wingman_monitor.py, the known-good monitor; test_wingman.py checks the two never drift.
+
+The tally lamps, the other way (tally_bank): one write sets a whole bank, twelve 8-byte records
+AA 00 07 4D 00 ID STATE CHECK, STATE 00 lit and 01 off, exactly as the iPad Wingman app writes
+them (tally_captures.txt). A lit record is byte for byte the same as its button's DOWN, and an
+off record differs from one only in byte 6: that is why byte 6 is checked on the way in.
 """
 
 from dataclasses import dataclass
 
 DEVICE_NAME = "BirdDogSwitcher"
 SERVICE_UUID = "0000ffe0-0000-1000-8000-00805f9b34fb"
-NOTIFY_UUID = "0000ffe1-0000-1000-8000-00805f9b34fb"  # read only: nothing is ever written to the Surface
+NOTIFY_UUID = "0000ffe1-0000-1000-8000-00805f9b34fb"  # the controls: read only
+TALLY_UUID = "0000ffe2-0000-1000-8000-00805f9b34fb"  # the lamps: tally_bank()'s bytes only, write with response
 HEADER = b"\xAA\x00\x07"
 TBAR_MAX = 119  # measured on one Surface; others may differ
+
+TALLY_FIRST_ID = {"PROGRAM": 0x01, "PREVIEW": 0x0D}  # a bank's write covers 12 ids from here
+TALLY_RECORDS = 12  # as captured; this Surface has buttons for the first six of each bank
+TALLY_BUTTONS = 6
 
 BUTTONS = {
     0x00: "ON AIR",
@@ -98,6 +109,8 @@ def decode(packet: bytes):
         return Bad("header is not AA 00 07")
     if check_byte(packet[:7]) != packet[7]:
         return Bad(f"check byte {packet[7]:02X}, expected {check_byte(packet[:7]):02X}")
+    if packet[6] != 0x00:
+        return Bad(f"byte 6 is {packet[6]:02X}, not 00 (a tally record read back?)")
     kind, state, value = packet[3], packet[4], packet[5]
     if kind == 0x4D:
         return Button(value, BUTTONS.get(value), {0x00: True, 0x01: False}.get(state))
@@ -106,6 +119,21 @@ def decode(packet: bytes):
     if kind == 0x49:
         return Wheel({0x01: +1, 0xFF: -1}.get(value))
     return Other(kind)
+
+
+def tally_bank(bank: str, lit: int | None) -> bytes:
+    """One whole bank's lamps, as one write: "PROGRAM" (red) or "PREVIEW" (amber), with button lit
+    (1-6) or None for the whole bank dark. The ids count up from the bank's first. A dark bank was
+    never captured: it is the captured records with every STATE 01."""
+    if bank not in TALLY_FIRST_ID:
+        raise ValueError(f"no tally bank {bank!r}")
+    if lit is not None and (type(lit) is not int or not 1 <= lit <= TALLY_BUTTONS):
+        raise ValueError(f"{bank} {lit!r}: the lit button is 1-{TALLY_BUTTONS}, or None")
+    out = bytearray()
+    for i in range(TALLY_RECORDS):
+        first = HEADER + bytes((0x4D, 0x00, TALLY_FIRST_ID[bank] + i, 0x00 if lit == i + 1 else 0x01))
+        out += first + bytes((check_byte(first),))
+    return bytes(out)
 
 
 def describe(event) -> str:
