@@ -1466,6 +1466,16 @@ the rulings say confirmed abswitch state drives tally, which this is.
 
 **Next, as ruled, only after these:** power-cycle recovery, a takectl restart, rapid presses, all six positions.
 
+## After v0.2.0, 2026-11-14: rulings on the first armed tally test (branch wingman, unreleased)
+
+No code changes.
+- **TAKE timing: KEEP.** Tally follows takectl's bus assignments when they change at the start of a dissolve, as
+  the panel does; no delay and no transition-completion state. PROGRAM's red means the document assigned to
+  Program, not that only its picture is visible: during a dissolve both are on screen. (README, Known limits.)
+- **takectl's refusal to switch into a document whose show is not running stays.** Nothing starts a show to
+  satisfy a switching command, from the Surface or anywhere else.
+- The outside-dissolve HOLD stands unchanged. No merge or push.
+
 ## Next
 
 **v0.2.1:** when a key's hooks text does not fit whole beside the count, show a small hook marker instead of

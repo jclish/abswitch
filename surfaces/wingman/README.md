@@ -173,7 +173,9 @@ PH-MASTER's File Recording off, no streaming output; wait for each CUT or TAKE t
 - A5. **Stop.** Ctrl-C: both banks go dark.
 
 With a show off, takectl refuses to switch to that document (`B document is not live (show not started)`),
-from the Surface and from the browser alike, and the log shows its reason.
+from the Surface and from the browser alike, and the log shows its reason. That refusal stays (ruled
+2026-11-14): nothing starts a show to satisfy a press. To keep recording off for a test, switch off only
+PH-MASTER's File Recording output, not its show.
 
 Not checked on the Surface yet: power off and on, takectl stopped and started, rapid presses, and all six
 positions of each bank.
@@ -190,8 +192,10 @@ positions of each bank.
   format. Of those, PROGRAM 1, PREVIEW 1, 2 and both dark banks have been written to the Surface (T2–T4,
   A1–A5); buttons 5 and 6 of either bank, and PROGRAM 3 and 4, have not.
 - Tally lags takectl by up to a quarter second (the poll), as the panel does.
-- On a TAKE, the lamps move when takectl's state does, at the start of the dissolve, not at its end, as the
-  panel's buses do.
+- **PROGRAM's red means the document assigned to Program, not that only its picture is on air.** On a TAKE
+  the lamps move when takectl's state does, at the start of the dissolve, as the panel's buses do; during
+  the dissolve both pictures are on screen. Ruled 2026-11-14: keep it, with no delay and no
+  transition-completion state.
 - The T-bar's range (0–119) was measured on one Surface.
 - Tested on macOS only.
 
