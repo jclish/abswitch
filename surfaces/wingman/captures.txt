@@ -1,0 +1,27 @@
+# Packets captured from the real Wingman Surface (Production Engineering, 2026-11-13).
+# One per line: the packet in hex, then what was done on the Surface. Add new captures as they are made
+# (wingman_abswitch.py --raw prints every packet); test_wingman.py reads this file, so a capture that
+# stops decoding the way it is labelled fails the tests.
+# hex               label
+AA00074900FF001B    wheel -1
+AA000749000100E5    wheel +1
+AA0007800000002D    tbar 0
+AA0007800077005A    tbar 119
+# 2026-11-13, the hardware check's dry run: Jourdan pressed PREVIEW 1-6, AUTO, CUT, in that order, one at a time;
+# the packets arrived in that order, each a DOWN then an UP.
+AA00074D000D00ED    button PREVIEW 1 down
+AA00074D010D00EC    button PREVIEW 1 up
+AA00074D000E00EE    button PREVIEW 2 down
+AA00074D010E00EF    button PREVIEW 2 up
+AA00074D000F00EF    button PREVIEW 3 down
+AA00074D010F00EE    button PREVIEW 3 up
+AA00074D001000F0    button PREVIEW 4 down
+AA00074D011000F1    button PREVIEW 4 up
+AA00074D001100F1    button PREVIEW 5 down
+AA00074D011100F0    button PREVIEW 5 up
+AA00074D001200F2    button PREVIEW 6 down
+AA00074D011200F3    button PREVIEW 6 up
+AA00074D002100C1    button AUTO down
+AA00074D012100C0    button AUTO up
+AA00074D002200C2    button CUT down
+AA00074D012200C3    button CUT up

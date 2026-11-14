@@ -1,0 +1,144 @@
+Hardware check, 2026-11-13: the real Wingman Surface, Bluetooth to this Mac, on the bench documents (mimoLive 7.0b3).
+Jourdan pressed; wingman_abswitch.py ran in Terminal.app (--raw; dry run, then --arm). Two records, merged by time:
+the adapter's log, and takectl's own /state read every 100 ms (only changes kept: PGM, PVW, looks, busy, last line).
+
+Result: 9 of 9 steps passed.
+ 1+2 connect and dry run: connected in 7.6 s; PREVIEW n named the panel's key n (Speaker Wide, Two Shot, Slides PiP,
+     Full Slides; 5 and 6 empty, nothing sent); AUTO, CUT logged only; the panel did not change.
+ 3   captures: the 16 button packets of steps 1+2 are in captures.txt; the tests pass on all 20 captures.
+ 4   armed, PREVIEW 2: sent 42 ms after the press; Preview (B) became Two Shot; Program stayed A, Speaker Wide.
+ 5   fast presses (PREVIEW 1 and 3 together, repeatedly): every press sent once, 15-20 ms after it arrived, in order;
+     Preview ended on the last press; nothing after. The Surface delivered the "simultaneous" presses one at a time
+     (closest pair 45 ms apart) and each command had landed before the next arrived, so no press needed dropping:
+     the in-flight guard is covered by test_wingman and mutant M2, not by this check.
+ 6   during a TAKE (3 s MIX from the panel): PREVIEW 4 refused by takectl ("a transition is in progress"); after
+     the TAKE landed, nothing arrived late: Preview (A) kept its look until the next press, 3.7 s later.
+ 7   PROGRAM 1, AUTO, CUT, ON AIR: logged only; takectl recorded no change.
+ 8   Surface switched off and on: "disconnected", reconnected by itself in 6 s; PREVIEW 2 0.57 s after connecting
+     was ignored ("only just connected"); nothing was sent on reconnecting; later presses on that link counted.
+ 9   takectl stopped: PREVIEW 1 "not reachable; nothing sent, not retried"; takectl restarted: PREVIEW 2 sent, and
+     PREVIEW 1 was never sent afterwards (Preview kept Full Slides until PREVIEW 2 made it Two Shot).
+
+Found on the way: Bluetooth from a process started by the Claude app is killed by macOS ("Fatal Python error:
+Aborted", no prompt); from Terminal.app macOS asks once. README's setup now says so.
+
+--- the adapter's log ---
+20:08:39.346 Mode: DRY RUN: nothing is sent (add --arm)
+20:08:39.346 Scanning for BirdDogSwitcher (25 s)...
+20:08:46.926 Connected to BirdDogSwitcher; presses count in 1 s. Ctrl-C to stop.
+20:09:06.336 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+20:09:06.373   would send /pvw/layer-set?name=Speaker%20Wide  (key 1, "Speaker Wide"; dry run)
+20:09:06.696 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+20:09:07.372 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+20:09:07.374   would send /pvw/layer-set?name=Two%20Shot  (key 2, "Two Shot"; dry run)
+20:09:07.717 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+20:09:08.256 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+20:09:08.258   would send /pvw/layer-set?name=Slides%20PiP  (key 3, "Slides PiP"; dry run)
+20:09:08.571 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+20:09:09.066 BUTTON PREVIEW 4 DOWN  [AA00074D001000F0]
+20:09:09.068   would send /pvw/layer-set?name=Full%20Slides  (key 4, "Full Slides"; dry run)
+20:09:09.458 BUTTON PREVIEW 4 UP  [AA00074D011000F1]
+20:09:09.982 BUTTON PREVIEW 5 DOWN  [AA00074D001100F1]
+20:09:09.984   key 5 is empty; nothing sent
+20:09:10.386 BUTTON PREVIEW 5 UP  [AA00074D011100F0]
+20:09:10.928 BUTTON PREVIEW 6 DOWN  [AA00074D001200F2]
+20:09:10.929   key 6 is empty; nothing sent
+20:09:11.346 BUTTON PREVIEW 6 UP  [AA00074D011200F3]
+20:09:11.992 BUTTON AUTO DOWN  [AA00074D002100C1]
+20:09:12.411 BUTTON AUTO UP  [AA00074D012100C0]
+20:09:12.876 BUTTON CUT DOWN  [AA00074D002200C2]
+20:09:13.236 BUTTON CUT UP  [AA00074D012200C3]
+20:10:31.633 Mode: ARMED: presses go to http://127.0.0.1:8991
+20:10:31.633 Scanning for BirdDogSwitcher (25 s)...
+20:10:33.522 Connected to BirdDogSwitcher; presses count in 1 s. Ctrl-C to stop.
+20:12:29.467 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+20:12:29.509   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (B)
+20:12:29.958 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+20:12:51.380 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+20:12:51.398   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (B)
+20:12:51.604 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+20:12:51.949 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+20:12:51.965   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (B)
+20:12:52.265 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+20:12:52.459 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+20:12:52.477   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (B)
+20:12:52.699 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+20:12:52.969 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+20:12:52.985   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (B)
+20:12:53.254 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+20:12:53.390 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+20:12:53.405   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (B)
+20:12:53.629 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+20:12:53.869 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+20:12:53.886   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (B)
+20:12:53.914 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+20:12:53.932   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (B)
+20:12:54.109 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+20:12:54.139 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+20:12:54.469 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+20:12:54.491   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (B)
+20:12:54.694 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+20:12:54.949 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+20:12:54.969   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (B)
+20:12:55.174 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+20:12:55.534 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+20:12:55.555   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (B)
+20:12:55.820 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+20:12:56.119 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+20:12:56.135   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (B)
+20:12:56.389 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+20:12:56.704 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+20:12:56.718   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (B)
+20:12:57.079 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+20:12:57.304 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+20:12:57.321   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (B)
+20:12:57.500 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+20:13:50.589 BUTTON AUTO DOWN  [AA00074D002100C1]
+20:13:50.949 BUTTON AUTO UP  [AA00074D012100C0]
+20:13:57.145 BUTTON PREVIEW 4 DOWN  [AA00074D001000F0]
+20:13:57.150   sent /pvw/layer-set?name=Full%20Slides: takectl refused: a transition is in progress; wait for it to land
+20:13:57.386 BUTTON PREVIEW 4 UP  [AA00074D011000F1]
+20:14:00.835 BUTTON PREVIEW 4 DOWN  [AA00074D001000F0]
+20:14:00.849   sent /pvw/layer-set?name=Full%20Slides: "Full Slides" in Preview (A)
+20:14:01.149 BUTTON PREVIEW 4 UP  [AA00074D011000F1]
+20:14:27.027 BUTTON PROGRAM 1 DOWN  [AA00074D000100E1]
+20:14:27.626 BUTTON PROGRAM 1 UP  [AA00074D010100E0]
+20:14:28.437 BUTTON AUTO DOWN  [AA00074D002100C1]
+20:14:28.843 BUTTON AUTO UP  [AA00074D012100C0]
+20:14:29.112 BUTTON CUT DOWN  [AA00074D002200C2]
+20:14:29.547 BUTTON CUT UP  [AA00074D012200C3]
+20:14:29.742 BUTTON ON AIR DOWN  [AA00074D000000E0]
+20:14:30.207 BUTTON ON AIR UP  [AA00074D010000E1]
+20:16:30.472 The Surface disconnected.
+20:16:32.473 Scanning for BirdDogSwitcher (25 s)...
+20:16:36.575 Connected to BirdDogSwitcher; presses count in 1 s. Ctrl-C to stop.
+20:16:37.145 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]: ignored, the Surface has only just connected
+20:16:37.536 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+20:17:26.469 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+20:17:26.472   key 1: takectl not reachable (<urlopen error [Errno 61] Connection refused>); nothing sent, not retried
+20:17:26.873 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+20:17:47.154 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+20:17:47.174   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+20:17:47.589 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+
+--- takectl's /state, changes only (from 20:09:57) ---
+20:09:57.691 ('A', 'B', '{"A": "Speaker Wide", "B": "Full Slides"}', 'idle', None)
+20:12:29.544 ('A', 'B', '{"A": "Speaker Wide", "B": "Two Shot"}', 'idle', None)
+20:12:51.463 ('A', 'B', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'idle', None)
+20:12:51.992 ('A', 'B', '{"A": "Speaker Wide", "B": "Slides PiP"}', 'idle', None)
+20:12:52.517 ('A', 'B', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'idle', None)
+20:12:53.039 ('A', 'B', '{"A": "Speaker Wide", "B": "Slides PiP"}', 'idle', None)
+20:12:53.460 ('A', 'B', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'idle', None)
+20:12:54.512 ('A', 'B', '{"A": "Speaker Wide", "B": "Slides PiP"}', 'idle', None)
+20:12:55.042 ('A', 'B', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'idle', None)
+20:12:55.569 ('A', 'B', '{"A": "Speaker Wide", "B": "Slides PiP"}', 'idle', None)
+20:12:56.199 ('A', 'B', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'idle', None)
+20:12:56.824 ('A', 'B', '{"A": "Speaker Wide", "B": "Slides PiP"}', 'idle', None)
+20:12:57.355 ('A', 'B', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'idle', None)
+20:13:56.466 ('B', 'A', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'busy', 'TAKE to document B')
+20:13:59.832 ('B', 'A', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'idle', 'TAKE to document B')
+20:14:00.883 ('B', 'A', '{"A": "Full Slides", "B": "Speaker Wide"}', 'idle', 'TAKE to document B')
+20:17:08.196 ('unreachable', 'URLError')
+20:17:42.087 (None, None, 'null', 'idle', None)
+20:17:42.296 ('B', 'A', '{"A": "Full Slides", "B": "Speaker Wide"}', 'idle', None)
+20:17:47.233 ('B', 'A', '{"A": "Two Shot", "B": "Speaker Wide"}', 'idle', None)

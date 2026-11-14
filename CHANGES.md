@@ -1308,6 +1308,47 @@ and `round4-offline-check`: 8, 23 and 37, all pass.
 **Fixed in the test:** the look-key check measured the steps strip even in view-only mode, where it is hidden
 (a false "look keys run into the steps strip"); it now skips hidden rows.
 
+## After v0.2.0, 2026-11-13: the Wingman Surface, PREVIEW 1–6 (branch wingman, unreleased)
+
+Production Engineering decoded the BirdDog Wingman Surface's Bluetooth messages (2026-11-13) and asked for it
+as a hardware panel for abswitch. `surfaces/wingman/` is that adapter: optional, outside takectl, in Python with
+Bleak, which abswitch itself does not need. The Surface is an input device; abswitch stays the switcher.
+
+**Ruled (Jourdan, 2026-11-13):**
+- **PROGRAM 1–6 do nothing:** the PGM row is lamps only. Once the Surface's lights are decoded they become
+  Program tally lamps.
+- **The T-bar is shown, never acted on:** a take is one step in abswitch; a T-bar parked halfway is a state it
+  has no name for.
+- **The adapter lives in an optional folder** that takectl never loads.
+
+**Decisions made at the keyboard, flagged:**
+- **[ROUTE]** None: PREVIEW n calls the panel's own `/pvw/layer-set?name=…`, naming key n from `/state`'s
+  `layerSetsAll` as the panel does. **[CONFIG]** None in `takectl.config.json`. **[AIR]** Preview only, and
+  only through takectl's own checks.
+- **Dry run unless `--arm`.** DOWN acts, UP never; one command at a time, and a press while one is in flight is
+  dropped, not queued; nothing counts for `--settle` (1 s) after connecting; a failure is logged, not retried.
+  ON AIR is not PANIC.
+- **`pack.sh` and `test/privacy-scan.py` skip `.venv` and `__pycache__`:** a venv's `pyvenv.cfg` names the
+  home folder, so the scan would refuse the package (checked), and neither belongs in it.
+- **Any error inside a command is caught and logged:** mutant M7 (an unencoded look name) crashed the offline
+  check instead of failing a step, which showed an exception could escape the adapter.
+
+**Tested offline:** `test_wingman.py` 18/18, reading `captures.txt` and the known-good monitor's button map at run
+time; `offline_check.py` against the real takectl on the mock, 6/6 (PREVIEW 1 and 2 change only Preview; UP, an
+empty key, PROGRAM, AUTO, CUT and ON AIR change nothing; a press during a TAKE is refused by takectl and nothing
+lands late); `falsify.py`, 11 mutants, every one caught, and the three that change what reaches takectl caught end
+to end as well.
+
+**Hardware check, the real Surface on the bench (Jourdan pressing): 9 of 9** (`surfaces/wingman/hardware-check.txt`,
+the adapter's log and takectl's own `/state` record merged by time). PREVIEW n named the panel's key n; armed,
+PREVIEW 2 reached Preview 42 ms after the press with Program unmoved; a press during a 3 s TAKE was refused and
+nothing landed after it; PROGRAM, AUTO, CUT and ON AIR changed nothing; switched off and on, the Surface reconnected
+by itself and a press 0.57 s after connecting was ignored; with takectl stopped a press was dropped and never sent
+later. Not shown on hardware: the in-flight guard dropping a press (the Surface sends presses one at a time and each
+command landed in 15–20 ms, before the next arrived). The 16 button packets from the check are now in `captures.txt`.
+Found: Bluetooth from a process started by the Claude app is killed by macOS ("Fatal Python error: Aborted", no
+prompt); it runs from Terminal.app, and the folder's README says so.
+
 ## Next
 
 **v0.2.1:** when a key's hooks text does not fit whole beside the count, show a small hook marker instead of
