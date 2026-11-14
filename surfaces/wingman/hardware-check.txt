@@ -247,3 +247,112 @@ NO ECHO: nothing came back in 5 s after the write.
 10:17:06.496 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Two Shot"} keys ['Speaker Wide', 'Two Shot', 'Slides PiP', 'Full Slides']
 10:17:10.166 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Slides PiP"} keys ['Speaker Wide', 'Two Shot', 'Slides PiP', 'Full Slides']
 10:17:14.696 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Full Slides"} keys ['Speaker Wide', 'Two Shot', 'Slides PiP', 'Full Slides']
+
+
+=== Tally with presses armed, 2026-11-14 (the pen's first limited armed test) ===
+Streaming and recording off, as ruled, by takectl's own outputs: PH-MASTER has no Live Streaming output
+(takectl outputs.stream null); its File Recording was switched off before the run (outputs.rec false from
+10:33:48 to the end). Run on the bench documents PH-A, PH-B, PH-MASTER, all three shows live. Overlapping
+transitions excluded, as ruled (the outside-dissolve limitation is on HOLD). Every result below is from the
+logs: Jourdan reported each run "Done", not each lamp.
+
+Run 1 (10:30-10:32), stopped at CUT: PH-B and PH-MASTER's shows were off (Jourdan: "with shows off"; recording
+went off at 10:29:33). Connect lit PROGRAM 1 / PREVIEW 4; a PROGRAM 2 press was logged and sent nothing (as ruled);
+PREVIEW 2 recalled "Two Shot" and amber followed 200 ms after the press; CUT was refused by takectl, "B document
+is not live (show not started)", and the adapter showed takectl's reason; Ctrl-C darkened both banks (logged,
+tee -i). Not a fault: takectl will not switch to a document whose show is not running.
+
+Run 2 (10:34-10:35), shows on, recording off:
+A1 PASS  Start (--arm --tally --raw): PROGRAM 1 and PREVIEW 2 written 33 and 47 ms after connecting, as /state had
+         them (A on air "Speaker Wide", key 1; B in Preview "Two Shot", key 2). A browser click on Preview key 4 then
+         moved amber to PREVIEW 4, 18 ms after /state changed.
+A2 PASS  PREVIEW 2 from the Surface: /pvw/layer-set?name=Two%20Shot sent 14 ms after the press; /state had "Two
+         Shot" in B; amber on PREVIEW 2 168 ms after the press. PROGRAM not rewritten.
+A3 PASS  CUT once: /cut answered in 62 ms, "CUT to B (cut)"; /state PGM B, PVW A, lastTake cut. PROGRAM 2 then
+         PREVIEW 1 written 108 and 137 ms after the press, Program first.
+A4 PASS  Reset: MIX, RATE set to 1.0 s on the panel (0.5 -> 1.1 -> 1.0 s), looks left as A3 left them. AUTO once:
+         /take answered in 91 ms, "TAKE to A (dissolve 1060 ms)", which is the panel's MIX at RATE 1.0 s, takectl's
+         own TAKE (lastTake take -> A, dissolve, 1060 ms). PROGRAM 1 then PREVIEW 2 written 231 and 243 ms after the
+         press. takectl idle again 1.37 s after the press.
+A5 PASS  Ctrl-C: "tally: both banks dark", logged 10:35:24.454.
+         The Surface sent only the presses made (each DOWN and UP), no other packet: no echo across 10 writes.
+
+Seen, for a ruling (not changed): the lamps move when takectl's /state changes, which for a TAKE is at its start
+(PGM flips while busy), not when the dissolve ends: in A4 red moved to PROGRAM 1 ~1 s before the dissolve finished.
+The panel's buses move at the same moment, since they read the same /state. The brief said "after the transition
+completes"; the pen's rulings say only confirmed abswitch state drives tally, which this is.
+
+--- the adapter's log, run 1 ---
+10:30:39.409 Mode: ARMED: presses go to http://127.0.0.1:8991
+10:30:39.409 Tally: ON: PROGRAM and PREVIEW light as the panel buses do
+10:30:39.409 Scanning for BirdDogSwitcher (25 s)...
+10:30:41.625 Connected to BirdDogSwitcher; presses count in 1 s. Ctrl-C to stop.
+10:30:41.656   tally: PROGRAM 1
+10:30:41.671   tally: PREVIEW 4
+10:31:01.695 BUTTON PROGRAM 2 DOWN  [AA00074D000200E2]
+10:31:01.904 BUTTON PROGRAM 2 UP  [AA00074D010200E3]
+10:31:04.485 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+10:31:04.504   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (B)
+10:31:04.685   tally: PREVIEW 2
+10:31:04.756 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+10:31:20.521 BUTTON CUT DOWN  [AA00074D002200C2]
+10:31:20.574   sent /cut: takectl refused: B document is not live (show not started)
+10:31:21.120 BUTTON CUT UP  [AA00074D012200C3]
+10:32:05.197   tally: both banks dark
+
+Stopped.
+
+--- the adapter's log, run 2 ---
+10:34:06.201 Mode: ARMED: presses go to http://127.0.0.1:8991
+10:34:06.201 Tally: ON: PROGRAM and PREVIEW light as the panel buses do
+10:34:06.201 Scanning for BirdDogSwitcher (25 s)...
+10:34:08.442 Connected to BirdDogSwitcher; presses count in 1 s. Ctrl-C to stop.
+10:34:08.475   tally: PROGRAM 1
+10:34:08.489   tally: PREVIEW 2
+10:34:32.793   tally: PREVIEW 4
+10:34:40.229 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+10:34:40.243   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (B)
+10:34:40.397   tally: PREVIEW 2
+10:34:40.469 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+10:34:45.359 BUTTON CUT DOWN  [AA00074D002200C2]
+10:34:45.421   sent /cut: CUT to B (cut); Preview is now A
+10:34:45.467   tally: PROGRAM 2
+10:34:45.496   tally: PREVIEW 1
+10:34:45.691 BUTTON CUT UP  [AA00074D012200C3]
+10:35:14.101 BUTTON AUTO DOWN  [AA00074D002100C1]
+10:35:14.192   sent /take: TAKE to A (dissolve 1060 ms); Preview is now B
+10:35:14.332   tally: PROGRAM 1
+10:35:14.344   tally: PREVIEW 2
+10:35:14.537 BUTTON AUTO UP  [AA00074D012100C0]
+10:35:24.454   tally: both banks dark
+
+Stopped.
+
+--- takectl's /state, changes only (read every 100 ms), both runs ---
+10:28:48.147 takectl answers
+10:28:48.147 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Full Slides"} | mix 0.5s idle | last None->None None Nonems | outputs {"rec": true, "stream": null}
+10:29:33.796 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Full Slides"} | mix 0.5s idle | last None->None None Nonems | outputs {"rec": false, "stream": null}
+10:31:04.583 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 0.5s idle | last None->None None Nonems | outputs {"rec": false, "stream": null}
+10:33:47.854 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 0.5s idle | last None->None None Nonems | outputs {"rec": true, "stream": null}
+10:33:48.794 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 0.5s idle | last None->None None Nonems | outputs {"rec": false, "stream": null}
+10:34:32.775 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Full Slides"} | mix 0.5s idle | last None->None None Nonems | outputs {"rec": false, "stream": null}
+10:34:40.316 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 0.5s idle | last None->None None Nonems | outputs {"rec": false, "stream": null}
+10:34:45.462 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 0.5s busy | last cut->B cut 0ms | outputs {"rec": false, "stream": null}
+10:34:45.672 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 0.5s idle | last cut->B cut 0ms | outputs {"rec": false, "stream": null}
+10:34:58.067 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 0.4s idle | last cut->B cut 0ms | outputs {"rec": false, "stream": null}
+10:34:58.273 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 0.3s idle | last cut->B cut 0ms | outputs {"rec": false, "stream": null}
+10:34:58.486 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 0.2s idle | last cut->B cut 0ms | outputs {"rec": false, "stream": null}
+10:34:58.696 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 0.1s idle | last cut->B cut 0ms | outputs {"rec": false, "stream": null}
+10:35:00.279 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 0.2s idle | last cut->B cut 0ms | outputs {"rec": false, "stream": null}
+10:35:00.490 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 0.3s idle | last cut->B cut 0ms | outputs {"rec": false, "stream": null}
+10:35:00.809 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 0.4s idle | last cut->B cut 0ms | outputs {"rec": false, "stream": null}
+10:35:01.440 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 0.5s idle | last cut->B cut 0ms | outputs {"rec": false, "stream": null}
+10:35:01.855 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 0.6s idle | last cut->B cut 0ms | outputs {"rec": false, "stream": null}
+10:35:02.168 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 0.7s idle | last cut->B cut 0ms | outputs {"rec": false, "stream": null}
+10:35:02.590 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 0.8s idle | last cut->B cut 0ms | outputs {"rec": false, "stream": null}
+10:35:02.798 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 0.9s idle | last cut->B cut 0ms | outputs {"rec": false, "stream": null}
+10:35:03.112 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last cut->B cut 0ms | outputs {"rec": false, "stream": null}
+10:35:03.317 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1.1s idle | last cut->B cut 0ms | outputs {"rec": false, "stream": null}
+10:35:06.775 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last cut->B cut 0ms | outputs {"rec": false, "stream": null}
+10:35:14.229 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s busy | last take->A dissolve 1060ms | outputs {"rec": false, "stream": null}
+10:35:15.475 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last take->A dissolve 1060ms | outputs {"rec": false, "stream": null}

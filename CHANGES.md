@@ -1438,6 +1438,34 @@ not each lamp.
 **Not checked on the Surface yet:** tally with presses armed (PREVIEW, AUTO and CUT from the Surface), a TAKE from
 the panel, power off and on, takectl stopped and started, rapid changes, buttons 5 and 6.
 
+## After v0.2.0, 2026-11-14: the Wingman Surface, first armed tally test (branch wingman, unreleased)
+
+No code changes: the hardware record, and two rulings on the AUTO/CUT findings.
+
+**Ruled (the pen, 2026-11-14):**
+- **A TAKE during a dissolve started in mimoLive's own window: HOLD.** Documented, existing semantics kept.
+  abswitch does not own every way into a transition; no lock, cancel, queue or override, and no guard until
+  mimoLive's API is shown to report a transition in progress reliably (otherwise it would be another inferred
+  state machine). Overlapping transitions are left out of the armed tests.
+- **The other offline suites on :8991 with no free-port check: FIX, in a separate maintenance commit,** not with
+  the Wingman work and not before its hardware checks. The pattern is the Wingman check's: an isolated port, and a
+  test that owns the process it starts and never talks to, or stops, an operator's takectl.
+
+**Hardware, presses armed and tally on: 5 of 5** (`surfaces/wingman/hardware-check.txt`), on the bench documents
+with all three shows running, PH-MASTER's File Recording off and no streaming output (takectl's `outputs`). A1
+connect, red and amber as `/state`; A2 PREVIEW 2 from the Surface, amber 168 ms after the press; A3 CUT, a bare cut
+(62 ms), red and amber swapped, Program first; A4 AUTO with MIX at 1.0 s, takectl's own TAKE (`dissolve 1060 ms`),
+red and amber swapped; A5 Ctrl-C, both banks dark. The Surface sent nothing but the presses made. A first run had
+stopped at CUT: two of the shows were off, and takectl refused ("B document is not live"), as it should. All from
+the logs; Jourdan reported each run done, not each lamp.
+
+**Seen, for a ruling (not changed):** on a TAKE the lamps move when takectl's `/state` does, at the start of the
+dissolve (Program flips while busy), not at its end: in A4 red moved to PROGRAM 1 about 1 s before the dissolve
+finished. The panel's buses move at the same moment. The brief said tally updates "after the transition completes";
+the rulings say confirmed abswitch state drives tally, which this is.
+
+**Next, as ruled, only after these:** power-cycle recovery, a takectl restart, rapid presses, all six positions.
+
 ## Next
 
 **v0.2.1:** when a key's hooks text does not fit whole beside the count, show a small hook marker instead of

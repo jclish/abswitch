@@ -9,9 +9,10 @@ from takectl's `/state`. The only thing ever written to the Surface is those two
 
 **Status: PREVIEW 1–6, AUTO and CUT, and tally.** PREVIEW recalls look keys 1–6 in Preview; AUTO is the
 panel's TAKE, CUT its CUT. Every other control is shown in the log and does nothing yet. The three
-controls passed the hardware check on the real Surface (2026-11-13, 14 of 14). Tally passed its first
-four steps, all with presses not armed (2026-11-14, `hardware-check.txt`); tally with presses armed is
-not checked on the Surface yet.
+controls passed the hardware check on the real Surface (2026-11-13, 14 of 14). Tally passed 4 of 4 with
+presses not armed and then the first limited armed test, 5 of 5, PREVIEW, CUT and AUTO from the Surface
+(2026-11-14, `hardware-check.txt`). Power cycles, a takectl restart, rapid presses and all six positions
+are not checked with tally yet.
 
 The Surface's protocol was decoded by Production Engineering on 2026-11-13 (`wingman_monitor.py` is
 their known-good monitor, kept as it was). This folder is optional: takectl never loads it, and it
@@ -160,19 +161,37 @@ landed (15–20 ms) before the next arrived; the guard is covered by the tests a
   quarter second, red stays.
 - T4. **Stop.** Ctrl-C: both banks go dark.
 
-Not checked on the Surface yet: tally with presses armed (PREVIEW, AUTO and CUT from the Surface), a TAKE
-from the panel, power off and on, takectl stopped and started, and rapid changes.
+**Tally with presses armed** (`--arm --tally`), passed 5 of 5 on 2026-11-14. All three shows running,
+PH-MASTER's File Recording off, no streaming output; wait for each CUT or TAKE to land before the next press
+(overlapping transitions are out of this test, as ruled).
+
+- A1. **Start.** Red on Program's key, amber on Preview's.
+- A2. **PREVIEW 2.** The panel's Preview key 2 lights; amber moves to PREVIEW 2; red stays.
+- A3. **CUT.** Program and Preview swap at once; red and amber swap with them, PROGRAM first.
+- A4. **AUTO.** MIX, RATE 1.0 s on the panel: AUTO dissolves for 1 s, as the panel's TAKE (takectl's `lastTake`
+  says `dissolve 1060 ms`); red and amber swap.
+- A5. **Stop.** Ctrl-C: both banks go dark.
+
+With a show off, takectl refuses to switch to that document (`B document is not live (show not started)`),
+from the Surface and from the browser alike, and the log shows its reason.
+
+Not checked on the Surface yet: power off and on, takectl stopped and started, rapid presses, and all six
+positions of each bank.
 
 ## Known limits
 
 - PREVIEW, AUTO and CUT so far; looks 7 and 8 have no button.
 - A dissolve started in mimoLive's own window is caught only if takectl's view of the switcher has seen it
-  (it is refreshed every few seconds), as on the panel; takectl itself does not refuse a TAKE then.
+  (it is refreshed every few seconds), as on the panel; takectl itself does not refuse a TAKE then. Ruled
+  2026-11-14: HOLD. abswitch does not own every way into a transition, and no guard is added until mimoLive's
+  API is shown to report a transition in progress reliably.
 - Tally lights PROGRAM and PREVIEW 1–6 only: red and amber, by bank, as the Surface chooses. Three tally
   writes were captured from the iPad app (PROGRAM 2, PREVIEW 3 and 4); the rest are built from the same
-  format. Of those, PROGRAM 1, PREVIEW 2 and both dark banks have been written to the Surface (T2–T4);
-  buttons 5 and 6 of either bank, and PROGRAM 3 and 4, have not.
+  format. Of those, PROGRAM 1, PREVIEW 1, 2 and both dark banks have been written to the Surface (T2–T4,
+  A1–A5); buttons 5 and 6 of either bank, and PROGRAM 3 and 4, have not.
 - Tally lags takectl by up to a quarter second (the poll), as the panel does.
+- On a TAKE, the lamps move when takectl's state does, at the start of the dissolve, not at its end, as the
+  panel's buses do.
 - The T-bar's range (0–119) was measured on one Surface.
 - Tested on macOS only.
 
