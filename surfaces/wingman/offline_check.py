@@ -11,6 +11,7 @@ The mock's A and B both hold two Layer Sets, "Speaker Wide" and "Slides PiP". Ou
 
 import asyncio
 import json
+import socket
 import os
 import subprocess
 import sys
@@ -64,7 +65,21 @@ def looks():
     return s["pgm"], s["pvw"], dict(s.get("looks") or {})
 
 
+def listening(port):
+    with socket.socket() as s:
+        s.settimeout(0.5)
+        return s.connect_ex(("127.0.0.1", port)) == 0
+
+
 def main():
+    # Refuse to start if anything already holds the ports: an operator's takectl on :8991 would answer
+    # in place of this check's own (which then cannot start), and every press below would go to the real
+    # show. That happened once, 2026-11-13, against the bench; never again.
+    busy = [p for p in (8991, MP) if listening(p)]
+    if busy:
+        print(f"REFUSED: something is already listening on {', '.join(':' + str(p) for p in busy)} (an operator's takectl?).\n"
+              "This check starts its own takectl there; stop the other one first. Nothing was sent.", flush=True)
+        sys.exit(2)
     procs = []
     tmp = tempfile.mkdtemp(prefix="abswitch-wingman-")
     try:
@@ -84,10 +99,15 @@ def main():
         if not until(lambda: (lambda s: s.get("ready") is not False and s.get("pgm"))(get("/state")), 9):
             check(False, "takectl came up on the mock")
             return
+        # And make sure the takectl answering is this check's own, on the mock, before a single press.
+        master_host = ((get("/state").get("docs") or {}).get("MASTER") or {}).get("host") or ""
+        if procs[-1].poll() is not None or not master_host.endswith(f":{MP}"):
+            check(False, f"the takectl on :8991 is not this check's own on the mock (MASTER host {master_host!r}); nothing sent")
+            return
         time.sleep(0.6)
 
         log = []
-        surface = W.Surface(W.Takectl(T, timeout=10), armed=True, settle_s=0.0, log=log.append)
+        surface = W.Surface(W.Takectl(T), armed=True, settle_s=0.0, log=log.append)
         surface.connected()
 
         def feed(data):
@@ -117,11 +137,11 @@ def main():
         time.sleep(0.5)
         check(looks() == before and "empty" in log[-1], f"P2 UP and empty key {len(keys) + 1}: nothing changed ({log[-1].strip()})")
 
-        # P3  The rest of the Surface sends nothing (PROGRAM, AUTO, CUT and the others are not mapped yet).
-        for name in ("PROGRAM 1", "PROGRAM 2", "AUTO", "CUT", "ON AIR", "TITLE ON"):
+        # P3  The rest of the Surface sends nothing (PROGRAM and the T-bar as ruled; ON AIR is not PANIC).
+        for name in ("PROGRAM 1", "PROGRAM 2", "ON AIR", "TITLE ON", "PIP T-BAR", "PLUS"):
             feed(press(name))
         time.sleep(0.5)
-        check(looks() == before, "P3 PROGRAM 1-2, AUTO, CUT, ON AIR, TITLE ON: nothing changed")
+        check(looks() == before, "P3 PROGRAM 1-2, ON AIR, TITLE ON, PIP T-BAR, PLUS: nothing changed")
 
         # P4  A press during a TAKE: takectl refuses it, the adapter says so, and nothing lands late.
         get("/rate?s=2")
@@ -138,6 +158,52 @@ def main():
         after = looks()
         check("refused" in refused and after[0] == pvw and after[2] == lk and other not in after[2].values(),
               f"P4 PREVIEW \"{other}\" during a TAKE: \"{refused.strip()}\"; landed PGM {after[0]}, looks unchanged {after[2]}")
+
+        def mock_switches(since):
+            with urlopen(f"http://127.0.0.1:{MP}/mock/log", timeout=5) as r:
+                return [e["what"] for e in json.loads(r.read())["log"] if e["t"] >= since and e["what"].startswith("MASTER ")]
+
+        def settled():
+            return until(lambda: (lambda s: s if not s.get("busy") and not (s.get("switcher") or {}).get("inFlight") else None)(get("/state")), 8)
+
+        def mock_now():
+            with urlopen(f"http://127.0.0.1:{MP}/mock/log", timeout=5) as r:
+                return json.loads(r.read())["now"]
+
+        # The switcher slot each document sits in, from takectl's own setup (its /state switcher view can lag).
+        master = get("/state")["docs"]["MASTER"]
+        slot_of = {"A": master["slotA"], "B": master["slotB"]}
+
+        # P5  AUTO is TAKE: the off-air document goes to Program with the panel's MIX.
+        settled()
+        pgm, pvw, _ = looks()
+        t0 = mock_now()
+        feed(press("AUTO"))
+        sent = log[-1]
+        s = settled()
+        check(s["pgm"] == pvw and (s.get("lastTake") or {}).get("transition") == "dissolve" and mock_switches(t0) == [f"MASTER dissolve {slot_of[pvw]}"],
+              f"P5 AUTO: \"{sent.strip()}\"; PGM {pgm} -> {s['pgm']}, {(s.get('lastTake') or {}).get('transition')}; switcher saw {mock_switches(t0)}")
+
+        # P6  CUT is CUT: always bare, whatever the panel's transition.
+        pgm, pvw, _ = looks()
+        t0 = mock_now()
+        feed(press("CUT"))
+        sent = log[-1]
+        s = settled()
+        check(s["pgm"] == pvw and (s.get("lastTake") or {}).get("transition") == "cut" and mock_switches(t0) == [f"MASTER cut {slot_of[pvw]}"],
+              f"P6 CUT: \"{sent.strip()}\"; PGM {pgm} -> {s['pgm']}, {(s.get('lastTake') or {}).get('transition')}; switcher saw {mock_switches(t0)}")
+
+        # P7  AUTO pressed twice, the second during the dissolve: one TAKE, and the second says why not.
+        pgm, pvw, _ = looks()
+        t0 = mock_now()
+        feed(press("AUTO"))
+        feed(press("AUTO"))
+        second = log[-1]
+        s = settled()
+        time.sleep(1.0)
+        seen = mock_switches(t0)
+        check(len(seen) == 1 and get("/state")["pgm"] == pvw and "not sent" in second,
+              f"P7 AUTO twice: second \"{second.strip()}\"; switcher saw {seen}; PGM {pgm} -> {get('/state')['pgm']}")
     finally:
         for p in reversed(procs):
             p.terminate()

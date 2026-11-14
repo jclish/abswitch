@@ -142,3 +142,62 @@ Aborted", no prompt); from Terminal.app macOS asks once. README's setup now says
 20:17:42.087 (None, None, 'null', 'idle', None)
 20:17:42.296 ('B', 'A', '{"A": "Full Slides", "B": "Speaker Wide"}', 'idle', None)
 20:17:47.233 ('B', 'A', '{"A": "Two Shot", "B": "Speaker Wide"}', 'idle', None)
+
+
+==========================================================================================================
+Hardware check, steps 10-14 (AUTO and CUT), 2026-11-13, same bench and Surface; adapter --arm --raw from Terminal.app.
+
+Result: 5 of 5 steps passed (14 of 14 in all).
+ 10  AUTO, MIX 1.0 s: /take sent 110 ms after the press; TAKE to A, 1060 ms dissolve; busy 1.26 s, then idle.
+ 11  CUT (STINGER selected on the panel, as Jourdan set it; neither record shows the panel's choice): /cut sent
+     68 ms after the press; a bare cut to B, busy 0.2 s.
+ 12  AUTO with STINGER: TAKE to A under the stinger (500 ms cover); takectl answered after the cover, 606 ms
+     after the press; recorded "TAKE to document A (stinger)".
+ 13  AUTO twice, MIX 3.0 s: one TAKE (3060 ms dissolve); the second press 375 ms later and a third at 1.7 s each
+     "not sent, a transition is in progress"; takectl recorded one TAKE.
+ 14  PANIC on the panel ("Next TAKE goes to document B"), then AUTO 1.7 s later: TAKE out of SAFE to B, dissolve.
+
+--- the adapter's log (from the armed restart with AUTO and CUT) ---
+20:32:53.814 Mode: ARMED: presses go to http://127.0.0.1:8991
+20:32:53.814 Scanning for BirdDogSwitcher (25 s)...
+20:32:55.403 Connected to BirdDogSwitcher; presses count in 1 s. Ctrl-C to stop.
+20:33:32.215 BUTTON AUTO DOWN  [AA00074D002100C1]
+20:33:32.325   sent /take: TAKE to A (dissolve 1060 ms); Preview is now B
+20:33:32.560 BUTTON AUTO UP  [AA00074D012100C0]
+20:33:49.780 BUTTON CUT DOWN  [AA00074D002200C2]
+20:33:49.848   sent /cut: CUT to B (cut); Preview is now A
+20:33:50.187 BUTTON CUT UP  [AA00074D012200C3]
+20:34:20.457 BUTTON AUTO DOWN  [AA00074D002100C1]
+20:34:20.535   sent /take: TAKE to A (dissolve 3060 ms); Preview is now B
+20:34:20.727 BUTTON AUTO UP  [AA00074D012100C0]
+20:34:20.832 BUTTON AUTO DOWN  [AA00074D002100C1]
+20:34:20.833   TAKE: not sent, a transition is in progress (the panel's TAKE is greyed too)
+20:34:20.877 BUTTON AUTO UP  [AA00074D012100C0]
+20:34:22.182 BUTTON AUTO DOWN  [AA00074D002100C1]
+20:34:22.184   TAKE: not sent, a transition is in progress (the panel's TAKE is greyed too)
+20:34:22.392 BUTTON AUTO UP  [AA00074D012100C0]
+20:34:48.043 BUTTON AUTO DOWN  [AA00074D002100C1]
+20:34:48.119   sent /take: TAKE to B (dissolve 3060 ms); Preview is now A
+20:34:48.403 BUTTON AUTO UP  [AA00074D012100C0]
+20:36:22.203 BUTTON AUTO DOWN  [AA00074D002100C1]
+20:36:22.773 BUTTON AUTO UP  [AA00074D012100C0]
+20:36:22.809   sent /take: TAKE to A (stinger 500 ms); Preview is now B
+
+--- takectl's /state, changes only (from 20:31:30; takectl was stopped for the offline check until 20:32:07) ---
+20:31:30.129 ('unreachable', 'URLError')
+20:32:07.286 (None, None, 'null', 'idle', None)
+20:32:07.394 ('B', 'A', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'idle', None)
+20:33:32.395 ('A', 'B', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'busy', 'TAKE to document A')
+20:33:33.651 ('A', 'B', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'idle', 'TAKE to document A')
+20:33:49.886 ('B', 'A', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'busy', 'CUT to document B')
+20:33:50.099 ('B', 'A', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'idle', 'CUT to document B')
+20:34:20.525 ('B', 'A', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'busy', 'CUT to document B')
+20:34:20.629 ('A', 'B', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'busy', 'TAKE to document A')
+20:34:23.865 ('A', 'B', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'idle', 'TAKE to document A')
+20:34:46.350 ('SAFE', 'B', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'busy', 'PANIC: SAFE on air. Next TAKE goes to document B')
+20:34:46.670 ('SAFE', 'B', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'idle', 'PANIC: SAFE on air. Next TAKE goes to document B')
+20:34:48.138 ('B', 'A', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'busy', 'TAKE to document B')
+20:34:51.504 ('B', 'A', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'idle', 'TAKE to document B')
+20:36:22.345 ('B', 'A', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'busy', 'TAKE to document B')
+20:36:22.873 ('A', 'B', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'busy', 'TAKE to document A (stinger)')
+20:36:23.398 ('A', 'B', '{"A": "Speaker Wide", "B": "Speaker Wide"}', 'idle', 'TAKE to document A (stinger)')

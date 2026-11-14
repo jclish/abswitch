@@ -115,17 +115,25 @@ class Decoding(unittest.TestCase):
 
 
 class FakeTakectl:
-    def __init__(self, looks=("Speaker Wide", "Two Shot", "Q&A / Panel"), fail=False, state=None, answer=None):
-        self.looks, self.fail, self.state, self.answer = looks, fail, state, answer
+    """takectl as the adapter sees it: /state as the panel reads it, and every route asked recorded."""
+
+    def __init__(self, looks=("Speaker Wide", "Two Shot", "Q&A / Panel"), fail=False, state=None, answer=None, silent=None, **over):
+        self.looks, self.fail, self.state, self.answer, self.silent, self.over = looks, fail, state, answer, silent, over
         self.calls = []
 
-    def get(self, path):
+    def get(self, path, timeout=None):
         self.calls.append(path)
         if self.fail:
             raise URLError("connection refused")
         if path == "/state":
-            return self.state if self.state is not None else {"layerSetsAll": [{"name": n, "inA": True, "inB": True} for n in self.looks]}
-        return self.answer if self.answer is not None else {"ok": True, "pvw": "B"}
+            if self.state is not None:
+                return self.state
+            s = {"ready": True, "pgm": "A", "pvw": "B", "busy": False, "switcher": {"inFlight": False}, "steps": {"running": False},
+                 "rehearsal": None, "layerSetsAll": [{"name": n, "inA": True, "inB": True} for n in self.looks]}
+            return {**s, **self.over}
+        if path == self.silent:
+            raise TimeoutError("timed out")
+        return self.answer if self.answer is not None else {"ok": True, "pgm": "B", "pvw": "A", "transition": "dissolve", "ms": 560}
 
 
 class Clock:
@@ -181,7 +189,7 @@ class Commands(unittest.TestCase):
         tk = FakeTakectl()
         s, _, _ = surface(tk)
         for name in BY_NAME:
-            if not name.startswith("PREVIEW "):
+            if not name.startswith("PREVIEW ") and name not in ("AUTO", "CUT"):
                 self.assertIsNone(s.handle(press(name)), name)
         for data in (packet(0x80, 0x00, 60), packet(0x49, 0x00, 0x01), packet(0x55, 0x00, 0x0D), b"\x00" * 8):
             self.assertIsNone(s.handle(data))
@@ -249,6 +257,74 @@ class Commands(unittest.TestCase):
         run(s.handle(press("PREVIEW 2")))
         self.assertEqual(tk.calls, ["/state"])
         self.assertIn("would send /pvw/layer-set?name=Two%20Shot", log[-1])
+        for name, route in (("AUTO", "/take"), ("CUT", "/cut")):
+            run(s.handle(press(name)))
+            self.assertIn(f"would send {route}", log[-1])
+        self.assertEqual(tk.calls, ["/state"] * 3)
+
+
+class TakeAndCut(unittest.TestCase):
+    def test_auto_is_take_and_cut_is_cut_on_down_only(self):
+        for name, route in (("AUTO", "/take"), ("CUT", "/cut")):
+            tk = FakeTakectl()
+            s, log, _ = surface(tk)
+            run(s.handle(press(name)))
+            self.assertEqual(tk.calls, ["/state", route], name)
+            self.assertIn(f"sent {route}: {name if name == 'CUT' else 'TAKE'} to B", log[-1])
+            self.assertIsNone(s.handle(press(name, down=False)))
+            self.assertEqual(len(tk.calls), 2)
+
+    def test_not_sent_whenever_the_panel_greys_take_and_cut(self):
+        greyings = {
+            "not ready": {"ready": False, "mode": "setup"},
+            "Program not known": {"pgm": None},
+            "busy": {"busy": True},
+            "switcher in flight": {"switcher": {"inFlight": True}},
+            "steps running": {"steps": {"running": True}},
+            "rehearsing": {"rehearsal": {"look": "Speaker Wide"}},
+        }
+        for why, over in greyings.items():
+            for name in ("AUTO", "CUT"):
+                tk = FakeTakectl(**over)
+                s, log, _ = surface(tk)
+                run(s.handle(press(name)))
+                self.assertEqual(tk.calls, ["/state"], f"{name} while {why}")
+                self.assertIn("not sent", log[-1], f"{name} while {why}")
+
+    def test_greyed_mirrors_the_panels_lines_as_they_are(self):
+        with open(os.path.join(os.path.dirname(os.path.dirname(HERE)), "operator.html"), encoding="utf-8") as f:
+            panel = {line.strip() for line in f}
+        for line in W.PANEL_GREYING:
+            self.assertIn(line, panel, "the panel's TAKE/CUT greying changed: revisit greyed() in wingman_abswitch.py")
+
+    def test_one_command_at_a_time_across_controls(self):
+        tk = FakeTakectl()
+        s, log, _ = surface(tk)
+
+        async def preview_then_auto():
+            first = s.handle(press("PREVIEW 1"))
+            self.assertIsNone(s.handle(press("AUTO")))
+            self.assertIsNone(s.handle(press("CUT")))
+            await first
+
+        asyncio.run(preview_then_auto())
+        self.assertNotIn("/take", tk.calls)
+        self.assertNotIn("/cut", tk.calls)
+
+    def test_a_take_with_no_answer_is_not_reported_as_unsent_or_retried(self):
+        tk = FakeTakectl(silent="/take")
+        s, log, _ = surface(tk)
+        run(s.handle(press("AUTO")))
+        self.assertEqual(tk.calls, ["/state", "/take"])
+        self.assertIn("no answer within", log[-1])
+        self.assertNotIn("nothing sent", log[-1])
+        self.assertFalse(s.busy)
+
+    def test_a_refused_take_shows_takectls_reason(self):
+        tk = FakeTakectl(answer={"ok": False, "error": "busy: transition in progress (812 ms left)"})
+        s, log, _ = surface(tk)
+        run(s.handle(press("AUTO")))
+        self.assertIn("refused: busy: transition in progress", log[-1])
 
 
 if __name__ == "__main__":

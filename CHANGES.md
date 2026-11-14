@@ -1349,6 +1349,45 @@ command landed in 15–20 ms, before the next arrived). The 16 button packets fr
 Found: Bluetooth from a process started by the Claude app is killed by macOS ("Fatal Python error: Aborted", no
 prompt); it runs from Terminal.app, and the folder's README says so.
 
+## After v0.2.0, 2026-11-13: the Wingman Surface, AUTO and CUT (branch wingman, unreleased)
+
+AUTO is the panel's TAKE (`/take`) and CUT its CUT (`/cut`), as the brief asked, on the same terms as PREVIEW:
+DOWN only, one command at a time, nothing for a second after connecting, dry run unless `--arm`.
+
+**Decisions made at the keyboard, flagged:**
+- **[ROUTE]** None. **[CONFIG]** None. **[AIR]** TAKE and CUT, only through takectl's own `/take` and `/cut`.
+- **AUTO and CUT are sent only when the panel's TAKE and CUT would be pressable** (`greyed()`): takectl ready,
+  Program known, nothing busy or in flight on the switcher, no steps running, no rehearsal. takectl refuses most
+  of these itself, but not a TAKE while a transition started in mimoLive's own window is in flight: only the
+  panel's greying guards that, so the Surface mirrors it rather than going around it. The panel's lines are kept
+  in `PANEL_GREYING`, and a test reads `operator.html` and fails if they change.
+- **A TAKE or CUT that gets no answer (10 s) is reported as sent, not as "nothing sent", and is not sent again:**
+  takectl answers a TAKE once its signal has gone, after any pre-hooks and stinger cover, so silence does not
+  mean it did not happen.
+
+**Found, for a ruling (not changed here):**
+- **takectl does not refuse a TAKE or CUT while the switcher is mid-transition from outside it.** Only the panel's
+  greying does, and the panel reads takectl's switcher view, refreshed on the poll (5 s), so even the panel can
+  miss it. Companion presses go straight through today.
+- **The repo's other offline suites (`test/round4-offline-check.mjs` and the rest) start their own takectl on
+  :8991 and do not check that the port is free.** With an operator's takectl running they would drive it.
+
+**My mistake, 2026-11-13, on the bench (not a show):** `offline_check.py` was run while the takectl from the
+hardware check was still on :8991. Its own takectl could not start, so its presses went to the bench: Preview
+recalls, RATE 2.0 s (it had been 3.0 s), a TAKE, AUTO (TAKE), CUT, AUTO (TAKE), while PH-MASTER's File Recording
+was live. It now refuses to start if :8991 or the mock's port already answers, and before any press it checks
+that MASTER is the mock; run with the bench takectl up, it refused and sent nothing.
+
+**Tested offline:** `test_wingman.py` 24/24; `offline_check.py` 9/9 on the mock (AUTO dissolves to the off-air
+document, CUT cuts to it, and a second AUTO during the dissolve is not sent: the switcher saw one TAKE);
+`falsify.py` 16 mutants, every one caught, AUTO-sends-CUT also end to end.
+
+**Hardware check, steps 10–14 on the real Surface: 5 of 5** (`surfaces/wingman/hardware-check.txt`). AUTO with MIX
+1.0 s: a 1060 ms dissolve, `/take` sent 110 ms after the press; CUT: a bare cut (68 ms), with STINGER selected on
+the panel as Jourdan set it, which neither record shows; AUTO with STINGER: the stinger's 500 ms cover, takectl
+answering after it (606 ms); AUTO twice at 3.0 s: one TAKE, the presses at 375 ms and 1.7 s "not sent, a transition
+is in progress"; after PANIC, AUTO took out of SAFE to the TAKE GOES TO document. RATE is back at 3.0 s.
+
 ## Next
 
 **v0.2.1:** when a key's hooks text does not fit whole beside the count, show a small hook marker instead of

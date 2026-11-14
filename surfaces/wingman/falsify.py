@@ -18,19 +18,28 @@ A, P = "wingman_abswitch.py", "wingman_protocol.py"
 
 # (name, file, text to replace, replacement, also run the offline check)
 MUTANTS = [
-    ("M1 acts on UP, not DOWN", A, "event.down is True and event.name in PREVIEW_KEYS", "event.down is False and event.name in PREVIEW_KEYS", False),
+    ("M1 acts on UP, not DOWN", A, "event.down is True and event.name in ACTIONS", "event.down is False and event.name in ACTIONS", False),
     ("M2 no in-flight guard", A, "        if self.busy:\n", "        if False:\n", False),
     ("M3 no settle window", A, "if self.ready_at is None or self.clock() < self.ready_at:", "if False:", False),
     ("M4 check byte not checked", P, "    if check_byte(packet[:7]) != packet[7]:\n", "    if False:\n", False),
     ("M5 PREVIEW n is the wrong key", A, 'name = looks[n - 1]["name"]', 'name = looks[n % len(looks)]["name"]', True),
-    ("M6 PROGRAM buttons recall too", A, 'PREVIEW_KEYS = {f"PREVIEW {n}": n for n in range(1, 7)}',
-     'PREVIEW_KEYS = {**{f"PREVIEW {n}": n for n in range(1, 7)}, **{f"PROGRAM {n}": n for n in range(1, 7)}}', True),
-    ("M7 look name not encoded", A, 'route = "/pvw/layer-set?name=" + quote(name, safe="")', 'route = "/pvw/layer-set?name=" + name', True),
+    ("M6 PROGRAM buttons recall too", A, '"AUTO": ("take", None),',
+     '"AUTO": ("take", None), **{f"PROGRAM {n}": ("preview", n) for n in range(1, 7)},', True),
+    ("M7 look name not encoded", A, '"/pvw/layer-set?name=" + quote(name, safe="")', '"/pvw/layer-set?name=" + name', True),
     ("M8 a failed command is retried", A, "        except (URLError, TimeoutError, OSError, ValueError) as e:\n",
      "        except (URLError, TimeoutError, OSError, ValueError) as e:\n            try:\n                await asyncio.to_thread(self.takectl.get, \"/state\")\n            except Exception:\n                pass\n", False),
     ("M9 dry run sends anyway", A, "            if not self.armed:\n", "            if False:\n", False),
     ("M10 button map drifts from the monitor", P, '    0x21: "AUTO",', '    0x21: "CUT",', False),
-    ("M11 an empty key recalls the last look", A, "            if n > len(looks):\n", "            if not looks:\n", False),
+    ("M11 an empty key recalls the last look", A, "                if n > len(looks):\n", "                if not looks:\n", False),
+    ("M12 AUTO sends CUT", A, '"AUTO": ("take", None)', '"AUTO": ("cut", None)', True),
+    ("M13 a transition in flight is not checked", A, '    if (s.get("switcher") or {}).get("inFlight"):\n', "    if False:\n", False),
+    ("M14 the panel's greying is ignored", A, "                why = greyed(state)\n", "                why = None\n", False),
+    ("M15 a TAKE with no answer is sent again", A,
+     '        except TimeoutError:  # sent, and takectl did not answer: it may still act, so this must not say "nothing sent"\n',
+     '        except TimeoutError:  # sent, and takectl did not answer: it may still act, so this must not say "nothing sent"\n'
+     "            try:\n                await asyncio.to_thread(self.takectl.get, route, COMMAND_TIMEOUT_S)\n            except Exception:\n                pass\n", False),
+    ("M16 a TAKE with no answer is called unsent", A, "no answer within {COMMAND_TIMEOUT_S:g} s; not retried. Look at the panel.",
+     "takectl not reachable; nothing sent", False),
 ]
 
 

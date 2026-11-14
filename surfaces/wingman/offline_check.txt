@@ -4,6 +4,9 @@ PASS  P1 PREVIEW 1: B shows "Speaker Wide" (key 1 is "Speaker Wide"); PGM still 
 PASS  P1 PREVIEW 2: B shows "Slides PiP" (key 2 is "Slides PiP"); PGM still A "Speaker Wide"
 PASS  P1 PREVIEW 1: B shows "Speaker Wide" (key 1 is "Speaker Wide"); PGM still A "Speaker Wide"
 PASS  P2 UP and empty key 3: nothing changed (key 3 is empty; nothing sent)
-PASS  P3 PROGRAM 1-2, AUTO, CUT, ON AIR, TITLE ON: nothing changed
+PASS  P3 PROGRAM 1-2, ON AIR, TITLE ON, PIP T-BAR, PLUS: nothing changed
 PASS  P4 PREVIEW "Slides PiP" during a TAKE: "sent /pvw/layer-set?name=Slides%20PiP: takectl refused: a transition is in progress; wait for it to land"; landed PGM B, looks unchanged {'A': 'Speaker Wide', 'B': 'Speaker Wide'}
+PASS  P5 AUTO: "sent /take: TAKE to A (dissolve 2060 ms); Preview is now B"; PGM B -> A, dissolve; switcher saw ['MASTER dissolve 1']
+PASS  P6 CUT: "sent /cut: CUT to B (cut); Preview is now A"; PGM A -> B, cut; switcher saw ['MASTER cut 2']
+PASS  P7 AUTO twice: second "TAKE: not sent, a transition is in progress (the panel's TAKE is greyed too)"; switcher saw ['MASTER dissolve 1']; PGM B -> A
 ALL PASS
