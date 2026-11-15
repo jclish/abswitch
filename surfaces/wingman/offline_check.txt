@@ -10,4 +10,5 @@ PASS  P5 AUTO: "sent /take: TAKE to A (dissolve 2060 ms); Preview is now B"; PGM
 PASS  P6 CUT: "sent /cut: CUT to B (cut); Preview is now A"; PGM A -> B, cut; switcher saw ['MASTER cut 2']
 PASS  P7 AUTO twice: second "TAKE: not sent, a transition is in progress (the panel's TAKE is greyed too)"; switcher saw ['MASTER dissolve 1']; PGM B -> A
 PASS  P8 tally: at the start ['PROGRAM 1', 'PREVIEW 1'], after PREVIEW 2 ['PREVIEW 2'], after AUTO ['PROGRAM 2', 'PREVIEW 1']; then 0 more on a poll with nothing changed
+PASS  P9 PREVIEW 1 and 3 in one notification: B shows "Speaker Wide" (key 1 is "Speaker Wide"); PGM still A; the adapter: ['BUTTON PREVIEW 1 DOWN', 'BUTTON PREVIEW 3 DOWN: dropped, the last press has not finished', 'sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (B)']
 ALL PASS

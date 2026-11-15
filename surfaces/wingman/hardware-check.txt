@@ -435,3 +435,462 @@ Stopped.
 17:35:05.114 ready=False PGM None PVW None looks null | None Nones idle | last None->None None Nonems | outputs null
 17:35:05.326 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last None->None None Nonems | outputs {"rec": null, "stream": null}
 17:35:06.269 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last None->None None Nonems | outputs {"rec": false, "stream": null}
+
+=== Fast presses, 2026-11-14 (armed, --arm --tally --raw; PREVIEW 1-4 only, no TAKE or CUT) ===
+Same bench and conditions as the recovery run: all three shows live, recording off and no streaming output by
+takectl's own outputs for the whole run, two NDI cameras in PH-A and PH-B. Keys 5 and 6 are empty on this bench,
+so only PREVIEW 1-4 were pressed. Jourdan reported the run "Done", not each lamp: every result below is from the
+logs.
+
+F1 PASS  Connect: PROGRAM 2 and PREVIEW 1 written 47 and 61 ms after connecting (B on air "Two Shot", key 2;
+         A in Preview "Speaker Wide", key 1).
+F2 PASS  Keys run 1-2-3-4-3-2-1 and on, 38 presses in two runs, 211-974 ms apart. Each press was sent once,
+         13-33 ms after it; none dropped, none sent late. Amber followed all 36 changes of look before the next
+         press, 33-302 ms after the press (the quarter-second poll); PROGRAM was not rewritten. Ended on
+         PREVIEW 1, "Speaker Wide" in Preview.
+F3 PASS  PREVIEW 1 and 3 together, five times. Three times the two DOWNs arrived as separate packets, 106, 30
+         and 45 ms apart: both were sent, the second won, and Preview ended on "Speaker Wide" each time. Twice
+         both DOWNs arrived in ONE 16-byte Bluetooth notification (AA00074D000D00ED + AA00074D000F00EF, each half
+         a valid packet): the adapter dropped it whole, "DROPPED (16 bytes, not 8)", and nothing was sent. Three
+         UP pairs arrived the same way (an UP does nothing). Amber ended on PREVIEW 1, the panel's Preview: where
+         both DOWNs were sent 30-45 ms apart, Preview went to "Slides PiP" and back before a poll saw it, so the
+         lamp did not move. The in-flight guard never fired: each command had finished before the next packet
+         arrived.
+F4 PASS  PREVIEW 2 eleven times, fast: each press sent (the same look recalled again), one lamp write for the
+         first change and none after (written only on change).
+F5 PASS  Ctrl-C: "tally: both banks dark", logged 17:51:01.154, and "Stopped.".
+         With --raw every packet the Surface sent was a press's DOWN or UP, alone or in a pair: nothing read back.
+
+Found, for a ruling (not changed): the Surface can put two packets in one notification when two buttons go down
+(or up) at the same instant. The adapter drops such a notification whole, as Production Engineering's known-good
+monitor and the prototype do, so neither press counts. Seen only for two buttons pressed together; a lone press
+that shares a notification with another packet (another button's release, a T-bar move) would be lost the same
+way, which this run did not show. The choice: keep it, or split a notification whose length is a multiple of 8
+into packets, each checked on its own and handled in order (two buttons pressed together would then send the
+first, and the in-flight rule would drop the second).
+
+--- the adapter's log ---
+17:50:08.092 Mode: ARMED: presses go to http://127.0.0.1:8991
+17:50:08.092 Tally: ON: PROGRAM and PREVIEW light as the panel buses do
+17:50:08.092 Scanning for BirdDogSwitcher (25 s)...
+17:50:09.218 Connected to BirdDogSwitcher; presses count in 1 s. Ctrl-C to stop.
+17:50:09.265   tally: PROGRAM 2
+17:50:09.279   tally: PREVIEW 1
+17:50:16.597 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+17:50:16.616   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (A)
+17:50:16.837 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+17:50:17.062 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:17.078   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:17.126   tally: PREVIEW 2
+17:50:17.348 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:17.543 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+17:50:17.561   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (A)
+17:50:17.651   tally: PREVIEW 3
+17:50:17.767 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+17:50:17.962 BUTTON PREVIEW 4 DOWN  [AA00074D001000F0]
+17:50:17.993   sent /pvw/layer-set?name=Full%20Slides: "Full Slides" in Preview (A)
+17:50:18.175   tally: PREVIEW 4
+17:50:18.232 BUTTON PREVIEW 4 UP  [AA00074D011000F1]
+17:50:18.442 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+17:50:18.456   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (A)
+17:50:18.682 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+17:50:18.700   tally: PREVIEW 3
+17:50:18.817 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:18.839   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:18.983   tally: PREVIEW 2
+17:50:19.027 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:19.223 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+17:50:19.237   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (A)
+17:50:19.417 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+17:50:19.495   tally: PREVIEW 1
+17:50:19.582 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:19.607   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:19.778   tally: PREVIEW 2
+17:50:19.793 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:19.957 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+17:50:19.973   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (A)
+17:50:20.051   tally: PREVIEW 3
+17:50:20.198 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+17:50:20.377 BUTTON PREVIEW 4 DOWN  [AA00074D001000F0]
+17:50:20.407   sent /pvw/layer-set?name=Full%20Slides: "Full Slides" in Preview (A)
+17:50:20.603 BUTTON PREVIEW 4 UP  [AA00074D011000F1]
+17:50:20.606   tally: PREVIEW 4
+17:50:20.737 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+17:50:20.751   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (A)
+17:50:20.903   tally: PREVIEW 3
+17:50:20.932 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+17:50:21.082 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:21.097   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:21.175   tally: PREVIEW 2
+17:50:21.263 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:21.502 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+17:50:21.518   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (A)
+17:50:21.682 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+17:50:21.701   tally: PREVIEW 1
+17:50:21.862 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:21.877   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:21.971   tally: PREVIEW 2
+17:50:22.057 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:22.222 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+17:50:22.244   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (A)
+17:50:22.418 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+17:50:22.496   tally: PREVIEW 3
+17:50:22.582 BUTTON PREVIEW 4 DOWN  [AA00074D001000F0]
+17:50:22.606   sent /pvw/layer-set?name=Full%20Slides: "Full Slides" in Preview (A)
+17:50:22.764 BUTTON PREVIEW 4 UP  [AA00074D011000F1]
+17:50:22.768   tally: PREVIEW 4
+17:50:22.897 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+17:50:22.916   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (A)
+17:50:23.036   tally: PREVIEW 3
+17:50:23.064 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+17:50:23.228 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:23.243   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:23.306   tally: PREVIEW 2
+17:50:23.363 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:23.529 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+17:50:23.562   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (A)
+17:50:23.678 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+17:50:23.831   tally: PREVIEW 1
+17:50:30.564 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+17:50:30.586   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (A)
+17:50:30.698 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+17:50:30.893 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:30.908   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:30.926   tally: PREVIEW 2
+17:50:31.043 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:31.208 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+17:50:31.223   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (A)
+17:50:31.388 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+17:50:31.452   tally: PREVIEW 3
+17:50:31.553 BUTTON PREVIEW 4 DOWN  [AA00074D001000F0]
+17:50:31.568   sent /pvw/layer-set?name=Full%20Slides: "Full Slides" in Preview (A)
+17:50:31.721   tally: PREVIEW 4
+17:50:31.734 BUTTON PREVIEW 4 UP  [AA00074D011000F1]
+17:50:31.869 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+17:50:31.885   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (A)
+17:50:31.992   tally: PREVIEW 3
+17:50:32.019 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+17:50:32.183 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:32.199   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:32.262   tally: PREVIEW 2
+17:50:32.318 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:32.483 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+17:50:32.499   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (A)
+17:50:32.531   tally: PREVIEW 1
+17:50:32.648 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+17:50:32.828 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:32.844   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:32.993 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:33.056   tally: PREVIEW 2
+17:50:33.128 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+17:50:33.144   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (A)
+17:50:33.308 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+17:50:33.339   tally: PREVIEW 3
+17:50:33.444 BUTTON PREVIEW 4 DOWN  [AA00074D001000F0]
+17:50:33.458   sent /pvw/layer-set?name=Full%20Slides: "Full Slides" in Preview (A)
+17:50:33.639 BUTTON PREVIEW 4 UP  [AA00074D011000F1]
+17:50:33.642   tally: PREVIEW 4
+17:50:34.418 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+17:50:34.433   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (A)
+17:50:34.583 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+17:50:34.662   tally: PREVIEW 3
+17:50:34.748 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:34.763   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:34.869 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:34.931   tally: PREVIEW 2
+17:50:35.004 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+17:50:35.021   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (A)
+17:50:35.140 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+17:50:35.201   tally: PREVIEW 1
+17:50:35.303 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:35.320   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:35.469 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:35.472   tally: PREVIEW 2
+17:50:35.589 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+17:50:35.605   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (A)
+17:50:35.739 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+17:50:35.742   tally: PREVIEW 3
+17:50:35.858 BUTTON PREVIEW 4 DOWN  [AA00074D001000F0]
+17:50:35.874   sent /pvw/layer-set?name=Full%20Slides: "Full Slides" in Preview (A)
+17:50:35.964 BUTTON PREVIEW 4 UP  [AA00074D011000F1]
+17:50:36.012   tally: PREVIEW 4
+17:50:36.098 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+17:50:36.114   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (A)
+17:50:36.219 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+17:50:36.281   tally: PREVIEW 3
+17:50:36.353 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:36.374   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:36.413 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:36.552   tally: PREVIEW 2
+17:50:36.564 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+17:50:36.579   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (A)
+17:50:36.638 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+17:50:36.822   tally: PREVIEW 1
+17:50:42.069 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+17:50:42.085   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (A)
+17:50:42.147   tally: PREVIEW 3
+17:50:42.175 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+17:50:42.202   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (A)
+17:50:42.417   tally: PREVIEW 1
+17:50:42.474 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+17:50:42.519 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+17:50:42.909 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+17:50:42.923   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (A)
+17:50:42.939 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+17:50:42.953   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (A)
+17:50:43.329 DROPPED (16 bytes, not 8)  [AA00074D010D00ECAA00074D010F00EE]
+17:50:43.734 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+17:50:43.764   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (A)
+17:50:43.779 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+17:50:43.794   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (A)
+17:50:44.199 DROPPED (16 bytes, not 8)  [AA00074D010D00ECAA00074D010F00EE]
+17:50:44.620 DROPPED (16 bytes, not 8)  [AA00074D000D00EDAA00074D000F00EF]
+17:50:45.027 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+17:50:45.054 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+17:50:45.444 DROPPED (16 bytes, not 8)  [AA00074D000D00EDAA00074D000F00EF]
+17:50:45.849 DROPPED (16 bytes, not 8)  [AA00074D010D00ECAA00074D010F00EE]
+17:50:50.515 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:50.530   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:50.590 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:50.725 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:50.742   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:50.755 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:50.788   tally: PREVIEW 2
+17:50:50.890 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:50.905   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:50.949 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:51.084 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:51.098   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:51.204 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:51.309 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:51.330   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:51.415 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:51.520 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:51.534   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:51.654 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:51.745 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:51.758   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:51.879 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:51.939 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:51.953   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:52.539 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:52.600 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:52.618   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:52.779 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:52.841 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:52.858   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:53.034 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:50:53.110 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+17:50:53.123   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+17:50:53.304 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+17:51:01.154   tally: both banks dark
+
+Stopped.
+
+--- takectl's /state, changes only (read every 100 ms) ---
+17:49:17.176 takectl answers
+17:49:17.176 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:17.133 ready=True PGM B PVW A looks {"A": "Two Shot", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:17.662 ready=True PGM B PVW A looks {"A": "Slides PiP", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:18.076 ready=True PGM B PVW A looks {"A": "Full Slides", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:18.499 ready=True PGM B PVW A looks {"A": "Slides PiP", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:18.914 ready=True PGM B PVW A looks {"A": "Two Shot", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:19.335 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:19.653 ready=True PGM B PVW A looks {"A": "Two Shot", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:20.078 ready=True PGM B PVW A looks {"A": "Slides PiP", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:20.488 ready=True PGM B PVW A looks {"A": "Full Slides", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:20.807 ready=True PGM B PVW A looks {"A": "Slides PiP", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:21.127 ready=True PGM B PVW A looks {"A": "Two Shot", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:21.551 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:21.970 ready=True PGM B PVW A looks {"A": "Two Shot", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:22.285 ready=True PGM B PVW A looks {"A": "Slides PiP", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:22.706 ready=True PGM B PVW A looks {"A": "Full Slides", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:22.919 ready=True PGM B PVW A looks {"A": "Slides PiP", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:23.346 ready=True PGM B PVW A looks {"A": "Two Shot", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:23.670 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:30.928 ready=True PGM B PVW A looks {"A": "Two Shot", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:31.239 ready=True PGM B PVW A looks {"A": "Slides PiP", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:31.660 ready=True PGM B PVW A looks {"A": "Full Slides", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:31.977 ready=True PGM B PVW A looks {"A": "Slides PiP", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:32.288 ready=True PGM B PVW A looks {"A": "Two Shot", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:32.603 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:32.919 ready=True PGM B PVW A looks {"A": "Two Shot", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:33.234 ready=True PGM B PVW A looks {"A": "Slides PiP", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:33.550 ready=True PGM B PVW A looks {"A": "Full Slides", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:34.494 ready=True PGM B PVW A looks {"A": "Slides PiP", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:34.813 ready=True PGM B PVW A looks {"A": "Two Shot", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:35.026 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:35.344 ready=True PGM B PVW A looks {"A": "Two Shot", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:35.654 ready=True PGM B PVW A looks {"A": "Slides PiP", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:35.967 ready=True PGM B PVW A looks {"A": "Full Slides", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:36.177 ready=True PGM B PVW A looks {"A": "Slides PiP", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:36.389 ready=True PGM B PVW A looks {"A": "Two Shot", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:36.596 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:42.146 ready=True PGM B PVW A looks {"A": "Slides PiP", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:42.248 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+17:50:50.611 ready=True PGM B PVW A looks {"A": "Two Shot", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+
+=== Two buttons at once, after the framing fix, 2026-11-14 (armed, --arm --tally --raw) ===
+The adapter as ruled 2026-11-14: a notification is whole 8-byte records, each checked on its own and judged in
+the order received, as if it had come alone; a notification with any failing record is dropped whole. Same bench
+and conditions as the fast presses: all three shows live, recording off and no streaming output by takectl's own
+outputs for the whole run. Jourdan pressed PREVIEW 2 once, then PREVIEW 1 and 3 together ten times, and
+reported "Done": every result below is from the logs.
+
+C1 PASS  Connect: PROGRAM 2 and PREVIEW 2 written 32 and 47 ms after connecting (B on air "Two Shot", key 2;
+         A in Preview "Two Shot", key 2).
+C2 PASS  PREVIEW 2: sent; Preview already held "Two Shot", so no lamp changed.
+C3 PASS  PREVIEW 1 and 3 together, ten times: amber ended on the panel's Preview key after every one, nothing was
+         sent late, and no notification was dropped.
+         - Six times both DOWNs were logged within 1 ms, the second "dropped, the last press has not finished"
+           before the first was sent: one notification handled in one pass, as ruled. The first press acted; the
+           in-flight rule dropped the second. (Inferred: the log does not mark where a notification ends. The
+           fast-press run showed such presses arriving as one 16-byte notification.)
+         - Once (18:08:28) the two came 31 ms apart in separate notifications and the first command took 32 ms:
+           the in-flight rule dropped the second. The first time that guard has fired on hardware.
+         - Three times they came 16, 16 and 75 ms apart, after the first command had finished: both were sent and
+           the second won, as for two presses one after the other.
+C4 PASS  Ctrl-C: "tally: both banks dark", logged 18:08:56.223, and "Stopped.".
+         Every packet the Surface sent was a press's DOWN or UP: nothing read back, nothing malformed.
+
+--- the adapter's log ---
+18:08:03.630 Mode: ARMED: presses go to http://127.0.0.1:8991
+18:08:03.630 Tally: ON: PROGRAM and PREVIEW light as the panel buses do
+18:08:03.630 Scanning for BirdDogSwitcher (25 s)...
+18:08:05.277 Connected to BirdDogSwitcher; presses count in 1 s. Ctrl-C to stop.
+18:08:05.309   tally: PROGRAM 2
+18:08:05.324   tally: PREVIEW 2
+18:08:25.242 BUTTON PREVIEW 2 DOWN  [AA00074D000E00EE]
+18:08:25.258   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (A)
+18:08:25.707 BUTTON PREVIEW 2 UP  [AA00074D010E00EF]
+18:08:28.182 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+18:08:28.213 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]: dropped, the last press has not finished
+18:08:28.214   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (A)
+18:08:28.336   tally: PREVIEW 3
+18:08:28.512 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+18:08:28.559 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+18:08:29.473 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+18:08:29.487   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (A)
+18:08:29.489 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+18:08:29.503   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (A)
+18:08:29.952 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+18:08:29.982 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+18:08:30.867 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+18:08:30.868 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]: dropped, the last press has not finished
+18:08:30.883   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (A)
+18:08:31.126   tally: PREVIEW 1
+18:08:31.242 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+18:08:31.303 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+18:08:32.248 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+18:08:32.248 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]: dropped, the last press has not finished
+18:08:32.261   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (A)
+18:08:32.429   tally: PREVIEW 3
+18:08:32.682 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+18:08:32.728 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+18:08:33.629 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+18:08:33.629 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]: dropped, the last press has not finished
+18:08:33.646   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (A)
+18:08:33.706   tally: PREVIEW 1
+18:08:34.018 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+18:08:34.078 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+18:08:35.024 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+18:08:35.025 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]: dropped, the last press has not finished
+18:08:35.043   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (A)
+18:08:35.398 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+18:08:35.443 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+18:08:36.418 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+18:08:36.418 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]: dropped, the last press has not finished
+18:08:36.432   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (A)
+18:08:36.883 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+18:08:36.928 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+18:08:37.738 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+18:08:37.738 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]: dropped, the last press has not finished
+18:08:37.753   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (A)
+18:08:38.218 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+18:08:38.234 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+18:08:39.103 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+18:08:39.118   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (A)
+18:08:39.119 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+18:08:39.132   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (A)
+18:08:39.583 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+18:08:39.613 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+18:08:40.573 BUTTON PREVIEW 3 DOWN  [AA00074D000F00EF]
+18:08:40.588   sent /pvw/layer-set?name=Slides%20PiP: "Slides PiP" in Preview (A)
+18:08:40.648 BUTTON PREVIEW 1 DOWN  [AA00074D000D00ED]
+18:08:40.702   sent /pvw/layer-set?name=Speaker%20Wide: "Speaker Wide" in Preview (A)
+18:08:41.204 BUTTON PREVIEW 3 UP  [AA00074D010F00EE]
+18:08:41.233 BUTTON PREVIEW 1 UP  [AA00074D010D00EC]
+18:08:56.223   tally: both banks dark
+
+Stopped.
+
+--- takectl's /state, changes only (read every 100 ms) ---
+18:07:11.343 takectl answers
+18:07:11.343 ready=True PGM B PVW A looks {"A": "Two Shot", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+18:08:28.266 ready=True PGM B PVW A looks {"A": "Slides PiP", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+18:08:30.886 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+18:08:32.353 ready=True PGM B PVW A looks {"A": "Slides PiP", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+18:08:33.710 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+18:08:40.618 ready=True PGM B PVW A looks {"A": "Slides PiP", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+18:08:40.721 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last take->B dissolve 1060ms | outputs {"rec": false, "stream": null}
+
+=== Lamp walk: every tally position, 2026-11-14 (lamp_walk.py: tally_bank() writes to FFE2 only; no takectl, no adapter) ===
+Asked by Jourdan: check lamps 5 and 6 without takectl. Through the adapter, a lamp lights only for a look on that
+key, and the bench has four looks, so buttons 5 and 6 could never be lit that way. The walk writes each bank
+directly, then asks what the Surface shows. Run by Jourdan in Terminal.app at 19:31:46, the adapter stopped, hands
+off the buttons. Every answer below is Jourdan's, as typed: lamp_walk.txt (below) and his terminal agree line for
+line. Write times and what FFE1 heard are from the log.
+
+Result: 15 of 15 answered y.
+L1 PASS  Both banks written dark: "Are all twelve PROGRAM and PREVIEW buttons dark?" y.
+L2 PASS  PROGRAM 1, 2, 3, 4, 5, 6, one at a time: "Is PROGRAM n the only button lit, and is it red?" y, six times.
+L3 PASS  PROGRAM written dark: all twelve dark, y.
+L4 PASS  PREVIEW 1, 2, 3, 4, 5, 6, one at a time: "Is PREVIEW n the only button lit, and is it amber?" y, six times.
+L5 PASS  PREVIEW written dark: all twelve dark, y.
+         On the way out, both banks were written dark again (not asked about: the walk had already ended dark).
+         18 writes in all, each answered in 7-21 ms. FFE1 heard nothing during the walk: 0 notifications, so no
+         lit record of any of the twelve positions was read back.
+
+First time on the Surface: PROGRAM 3, 4, 5 and 6, and PREVIEW 5 and 6. With this, every position of both banks and
+both dark banks have been written and seen. Not covered here: the adapter lighting key 5 or 6 from takectl's state.
+That is in the tests (a look on key 6 lights PREVIEW 6; one on key 7 lights nothing), not on hardware, because the
+bench has four looks.
+
+--- lamp_walk.txt ---
+lamp walk, 2026-11-14 19:31:46: tally_bank() writes to FFE2 only, no takectl
+connected; listening on FFE1. Hands off the buttons; answer each question by looking.
+wrote PROGRAM dark (17 ms)
+wrote PREVIEW dark (15 ms)
+  Are all twelve PROGRAM and PREVIEW buttons dark? y
+wrote PROGRAM 1 (21 ms)
+  Is PROGRAM 1 the only button lit, and is it red? y
+wrote PROGRAM 2 (17 ms)
+  Is PROGRAM 2 the only button lit, and is it red? y
+wrote PROGRAM 3 (7 ms)
+  Is PROGRAM 3 the only button lit, and is it red? y
+wrote PROGRAM 4 (8 ms)
+  Is PROGRAM 4 the only button lit, and is it red? y
+wrote PROGRAM 5 (14 ms)
+  Is PROGRAM 5 the only button lit, and is it red? y
+wrote PROGRAM 6 (20 ms)
+  Is PROGRAM 6 the only button lit, and is it red? y
+wrote PROGRAM dark (17 ms)
+  Are all twelve PROGRAM and PREVIEW buttons dark? y
+wrote PREVIEW 1 (20 ms)
+  Is PREVIEW 1 the only button lit, and is it amber? y
+wrote PREVIEW 2 (10 ms)
+  Is PREVIEW 2 the only button lit, and is it amber? y
+wrote PREVIEW 3 (20 ms)
+  Is PREVIEW 3 the only button lit, and is it amber? y
+wrote PREVIEW 4 (21 ms)
+  Is PREVIEW 4 the only button lit, and is it amber? y
+wrote PREVIEW 5 (13 ms)
+  Is PREVIEW 5 the only button lit, and is it amber? y
+wrote PREVIEW 6 (19 ms)
+  Is PREVIEW 6 the only button lit, and is it amber? y
+wrote PREVIEW dark (7 ms)
+  Are all twelve PROGRAM and PREVIEW buttons dark? y
+wrote PROGRAM dark (10 ms)
+wrote PREVIEW dark (15 ms)
+heard on FFE1 during the walk: 0 notification(s)
+PASS: every position as asked

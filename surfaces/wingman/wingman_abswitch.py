@@ -15,7 +15,8 @@ ruled 2026-11-14). Nothing goes to mimoLive except through takectl, and there is
 "a command is in flight" and "the lamps last written".
 
 What a press does, and does not:
-- DOWN acts, UP never does.
+- DOWN acts, UP never does. A notification can hold several records (two buttons pressed at the
+  same instant); each is judged in the order received, as if it had come alone.
 - One press, at most one command. A press while a command is in flight is dropped, not queued,
   so nothing can fire late. A failed command is logged and not retried.
 - For --settle seconds after (re)connecting, presses are logged and ignored: a Surface that
@@ -37,7 +38,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import urlopen
 
-from wingman_protocol import DEVICE_NAME, NOTIFY_UUID, TALLY_BUTTONS, TALLY_UUID, Bad, Button, decode, describe, tally_bank
+from wingman_protocol import DEVICE_NAME, NOTIFY_UUID, TALLY_BUTTONS, TALLY_UUID, Bad, Button, decode_notification, describe, tally_bank
 
 ACTIONS = {**{f"PREVIEW {n}": ("preview", n) for n in range(1, 7)}, "AUTO": ("take", None), "CUT": ("cut", None)}
 READ_TIMEOUT_S = 2.0  # /state
@@ -212,10 +213,21 @@ class Surface:
     def disconnected(self) -> None:
         self.ready_at = None
 
-    def handle(self, data: bytes):
-        """Log one packet; return the command to run (an awaitable), or None."""
-        event = decode(data)
-        line = describe(event) + (f"  [{bytes(data).hex().upper()}]" if self.raw or isinstance(event, Bad) else "")
+    def handle(self, data: bytes) -> list:
+        """Log one notification, record by record in the order received; return the commands to run
+        (awaitables), in that order. The decoder frames the notification; each record is then judged
+        here exactly as if it had come alone, so of two DOWNs in one notification the first acts and
+        the in-flight rule drops the second."""
+        commands = []
+        for record, event in decode_notification(data):
+            command = self._record(record, event)
+            if command is not None:
+                commands.append(command)
+        return commands
+
+    def _record(self, record: bytes, event):
+        """Log one record; return its command (an awaitable), or None."""
+        line = describe(event) + (f"  [{record.hex().upper()}]" if self.raw or isinstance(event, Bad) else "")
         if not (isinstance(event, Button) and event.down is True and event.name in ACTIONS):
             self.log(line)
             return None
@@ -230,9 +242,8 @@ class Surface:
         return self._run(*ACTIONS[event.name])
 
     def feed(self, data: bytes) -> None:
-        """For the Bluetooth callback: handle a packet and run its command, if any."""
-        command = self.handle(data)
-        if command is not None:
+        """For the Bluetooth callback: handle a notification and run its commands, if any, in order."""
+        for command in self.handle(data):
             task = asyncio.ensure_future(command)
             self.tasks.add(task)
             task.add_done_callback(self.tasks.discard)

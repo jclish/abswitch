@@ -25,3 +25,8 @@ AA00074D002100C1    button AUTO down
 AA00074D012100C0    button AUTO up
 AA00074D002200C2    button CUT down
 AA00074D012200C3    button CUT up
+# 2026-11-14, fast presses (hardware-check.txt, F3): Jourdan pressed PREVIEW 1 and 3 together; twice the two
+# DOWNs, and three times the two UPs, arrived as ONE 16-byte notification. Copied from the adapter's --raw log.
+# Two records each; the label names them in the order they arrived.
+AA00074D000D00EDAA00074D000F00EF    button PREVIEW 1 down + button PREVIEW 3 down
+AA00074D010D00ECAA00074D010F00EE    button PREVIEW 1 up + button PREVIEW 3 up

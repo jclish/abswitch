@@ -1498,6 +1498,98 @@ takectl not answering. README, Known limits.
 
 **Next, as ruled:** rapid presses, then all six positions.
 
+## After v0.2.0, 2026-11-14: the Wingman Surface, fast presses (branch wingman, unreleased)
+
+No code changes: the hardware record. Same bench and conditions as the recovery run; PREVIEW 1–4 only (keys 5
+and 6 are empty on the bench), no TAKE or CUT, `--arm --tally --raw`. Jourdan reported the run done; every
+result is from the logs.
+
+**Hardware: 5 of 5** (`surfaces/wingman/hardware-check.txt`). F1 connect. F2 38 presses of PREVIEW 1–4, 211–974 ms
+apart: each sent once, 13–33 ms after the press, none dropped or late; amber followed all 36 changes of look,
+33–302 ms after the press. F3 PREVIEW 1 and 3 together, five times: amber ended on the panel's Preview each time.
+F4 PREVIEW 2 eleven times: one lamp write. F5 Ctrl-C, both dark. Nothing read back.
+
+**Found, for a ruling (not changed):** two buttons pressed at the same instant can arrive as two valid packets in
+one 16-byte Bluetooth notification (twice in F3, plus three pairs of UPs). The adapter drops such a notification
+whole, as Production Engineering's known-good monitor and the prototype do, so neither press counts and nothing is
+sent. A lone press sharing a notification with another packet would be lost the same way; not seen. The choice:
+keep it, or split a notification whose length is a multiple of 8 into packets, each checked on its own and handled
+in order (two pressed together would then send the first; the in-flight rule drops the second). The in-flight
+guard itself has still never fired on hardware: every command finished before the next packet arrived.
+
+**Next, as ruled:** all six positions (the bench has four looks; keys 5 and 6 need a decision).
+
+## After v0.2.0, 2026-11-14: the Wingman Surface, notifications of several records (branch wingman, unreleased)
+
+**Ruled (the pen, 2026-11-14), on the fast-press finding:** process a notification as a sequence of whole
+eight-byte records, not as exactly eight bytes. The decoder is responsible for framing, the adapter for whether
+an event is actionable; event order and command dispatch stay as they were; no button combinations or macros;
+no streaming buffer (no record has been seen split across notifications).
+
+**Changed.**
+- `wingman_protocol.decode_notification()`: a notification as (record, event) pairs in the order received. Each
+  record is checked on its own by `decode()` (header, check byte, byte 6), and must be of a known type with,
+  for a button, a known state. Anything but whole records is one Bad. Of two or more records, if any fails, the
+  whole notification is one Bad, naming each record that failed: a tally write read back holds one lit record,
+  byte for byte a DOWN, among eleven off ones, so trusting the good records alone would let it act as a press.
+  A lone record decodes exactly as before.
+- `Surface.handle()` judges each record in order as if it had come alone and returns a list of commands;
+  `feed()` runs them. Of two DOWNs in one notification, the first acts and the in-flight rule drops the second.
+- `captures.txt`: the two real 16-byte notifications from the fast-press run, labelled record by record.
+
+**Tested.** test_wingman 65 (17 new: two presses, two releases, a release and a press in both orders, every
+wrong length, every bit flip in a pair, an unknown type or state beside a good record, every run of two or more
+records from each captured tally write, and the adapter's handling of each). offline_check 11 (P9: the captured
+pair through the real takectl; PREVIEW 1 acts, PREVIEW 3 is dropped). falsify 46, every mutant caught; M37 is
+the old exact-eight-byte assumption, caught by the unit tests and by P9.
+
+**Hardware: 4 of 4** (`surfaces/wingman/hardware-check.txt`), from the logs (Jourdan reported the run done):
+PREVIEW 1 and 3 together ten times. Six times both DOWNs were handled in one pass (inferred: logged within 1 ms,
+the second dropped before the first was sent); once they came 31 ms apart while the first command was still in
+flight, and the in-flight rule dropped the second, the first time that guard has fired on hardware; three times
+the first had landed, both were sent and the second won. Amber ended on the panel's Preview key every time, and
+no notification was dropped.
+
+**Next, as ruled:** all six positions.
+
+## After v0.2.0, 2026-11-14: the Wingman Surface, the lamp walk (branch wingman, unreleased)
+
+**Asked (Jourdan, 2026-11-14):** check lamps 5 and 6 with a lamp walk that doesn't use takectl. This is the
+ruled last hardware step, all six positions. Through the adapter a lamp lights only for a look on its key, and
+the bench has four looks.
+
+**Added.**
+- `surfaces/wingman/lamp_walk.py`. It connects to the Surface, writes each bank with `tally_bank()` to FFE2
+  (with a response; nothing else is written, anywhere), and asks after each step what the Surface shows.
+  - The order is: both dark; PROGRAM 1–6, one at a time; PROGRAM dark; PREVIEW 1–6; PREVIEW dark.
+  - It listens on FFE1 throughout and logs every packet.
+  - However it ends (q, Ctrl-C, a failed write), it darkens both banks.
+  - It writes `lamp_walk.txt` with the answers as typed. It never contacts takectl and does not import the
+    adapter.
+- `test_wingman.py`, 73 (8 new):
+  - A model of the Surface reads which buttons are lit from the bytes actually written.
+  - At every question, the button asked about is the only one lit, and every position of both banks is asked
+    about.
+  - Only `tally_bank()` bytes are written, the walk ends dark, and the writer is FFE2 with a response.
+  - q, Ctrl-C and a failed write all still darken both banks.
+  - Only a full walk of y passes.
+  - No HTTP or socket imports.
+- `falsify.py`, 54, every mutant caught. M47–M54 are the walk's:
+  - it stops at button 5;
+  - it lights one button and asks about another;
+  - it leaves a bank lit going into the next;
+  - it writes with no response;
+  - it writes to FFE1;
+  - a stopped walk leaves the lamps lit;
+  - any answer but n passes;
+  - a walk stopped early can pass.
+
+**Hardware: 15 of 15** (`surfaces/wingman/hardware-check.txt`, L1–L5). Jourdan ran it in Terminal.app and
+answered every question y, by eye. This was the first time PROGRAM 3–6 and PREVIEW 5 and 6 were lit on the
+Surface. The 18 writes were each answered in 7–21 ms, and FFE1 heard nothing (from the log): no position's lit
+record was read back. Still not seen on hardware: the adapter lighting 5 or 6 from a look on that key. The tests
+cover it.
+
 ## Next
 
 **v0.2.1:** when a key's hooks text does not fit whole beside the count, show a small hook marker instead of

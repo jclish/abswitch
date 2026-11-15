@@ -11,8 +11,9 @@ from takectl's `/state`. The only thing ever written to the Surface is those two
 panel's TAKE, CUT its CUT. Every other control is shown in the log and does nothing yet. The three
 controls passed the hardware check on the real Surface (2026-11-13, 14 of 14). Tally passed 4 of 4 with
 presses not armed and then the first limited armed test, 5 of 5, PREVIEW, CUT and AUTO from the Surface
-(2026-11-14, `hardware-check.txt`), then a power cycle and a takectl restart, 9 of 9. Rapid presses and all
-six positions are not checked with tally yet.
+(2026-11-14, `hardware-check.txt`), then a power cycle and a takectl restart, 9 of 9, fast presses, 5 of 5,
+and two buttons at once after the framing fix, 4 of 4. A lamp walk with no takectl lit every position of
+both banks on its own, 15 of 15 by eye.
 
 The Surface's protocol was decoded by Production Engineering on 2026-11-13 (`wingman_monitor.py` is
 their known-good monitor, kept as it was). This folder is optional: takectl never loads it, and it
@@ -105,9 +106,9 @@ on the next poll. The tally only ever reads `/state`, so it can never send a com
 ## Tests
 
 ```bash
-python3 test_wingman.py      # 48 offline tests, standard library only: no Bluetooth, no takectl
-python3 offline_check.py     # the adapter against the real takectl on test/mock-mimolive.mjs: 10 steps
-python3 falsify.py           # 36 mutants, each one mechanism broken: every one must fail a check
+python3 test_wingman.py      # 73 offline tests, standard library only: no Bluetooth, no takectl
+python3 offline_check.py     # the adapter against the real takectl on test/mock-mimolive.mjs: 11 steps
+python3 falsify.py           # 54 mutants, each one mechanism broken: every one must fail a check
 ```
 
 The tests read their authorities at run time: `captures.txt` (packets the real Surface sent),
@@ -190,19 +191,67 @@ PH-MASTER's File Recording output, not its show.
   The press from R7 is never sent.
 - R9. **Stop.** Ctrl-C: both banks go dark.
 
-Not checked on the Surface yet: rapid presses, and all six positions of each bank.
+**Fast presses** (`--arm --tally --raw`), passed 5 of 5 on 2026-11-14, same conditions, PREVIEW only (no TAKE or
+CUT):
+
+- F1. **Start.** Red on Program's key, amber on Preview's.
+- F2. **Run the keys.** PREVIEW 1, 2, 3, 4, 3, 2, 1 as fast as you can, a few times: every press is sent once,
+  none late, and amber ends on the panel's Preview key.
+- F3. **Two at once.** PREVIEW 1 and 3 together, several times: nothing is sent late, and amber ends on the
+  panel's Preview key. Pressed at the same instant, the two can arrive in one notification, which this run
+  dropped whole; that led to the framing fix (Known limits) and the test below.
+- F4. **One key hammered.** PREVIEW 2 ten times: amber stays on 2, written once.
+- F5. **Stop.** Ctrl-C: both banks go dark.
+
+**Two at once, after the framing fix** (`--arm --tally --raw`), passed 4 of 4 on 2026-11-14, same conditions:
+
+- C1. **Start.** Red on Program's key, amber on Preview's.
+- C2. **PREVIEW 2.** As F2.
+- C3. **PREVIEW 1 and 3 together, ten times.** Each time the first to arrive acts and the second is dropped
+  (`dropped, the last press has not finished`), or, if the second came after the first had landed, both are
+  sent and the second wins. Amber ends on the panel's Preview key every time; nothing is dropped as malformed.
+- C4. **Stop.** Ctrl-C: both banks go dark.
+
+**Lamp walk** (`lamp_walk.py`, no takectl, no adapter), passed 15 of 15 on 2026-11-14. Through the adapter a
+lamp lights only for a look on its key, and the bench's four looks can never light 5 or 6, so the walk writes
+each bank itself (`tally_bank()` to FFE2, nothing else) and asks what you see. Stop the adapter first, then
+run it from Terminal.app:
+
+```bash
+.venv/bin/python lamp_walk.py
+```
+
+- L1. **Both banks dark.**
+- L2. **PROGRAM 1–6, one at a time.** Each is the only button lit, and red.
+- L3. **PROGRAM dark.** All twelve dark.
+- L4. **PREVIEW 1–6, one at a time.** Each is the only button lit, and amber.
+- L5. **PREVIEW dark.** All twelve dark.
+
+Answer y or n to each; q or Ctrl-C stops it, and both banks are darkened however it ends. Your answers, as
+typed, and anything heard on FFE1 go to `lamp_walk.txt`. The adapter lighting key 5 or 6 from takectl's state
+is covered by the tests, not by this walk.
 
 ## Known limits
 
 - PREVIEW, AUTO and CUT so far; looks 7 and 8 have no button.
+- Two buttons pressed at the same instant can reach the Mac as one notification of two 8-byte records
+  (captures.txt). Ruled 2026-11-14: each record is checked on its own and judged in the order it came, as if it
+  had come alone, so the first press acts and the in-flight rule drops the second, as for two presses one after
+  the other. No combination of buttons means anything. A notification that is not whole records, or that holds
+  any record that fails (header, check byte, byte 6, an unknown type or button state), is dropped whole and
+  nothing in it acts: so a tally write read back can never act as a press. Nothing is buffered across
+  notifications; a record split across two has never been seen. One lit tally record read back on its own would
+  still look exactly like its button's DOWN. None has been seen: nothing came back on FFE1 in the echo check
+  (T1), nor during the lamp walk's 18 writes, which lit each of the twelve positions in turn.
 - A dissolve started in mimoLive's own window is caught only if takectl's view of the switcher has seen it
   (it is refreshed every few seconds), as on the panel; takectl itself does not refuse a TAKE then. Ruled
   2026-11-14: HOLD. abswitch does not own every way into a transition, and no guard is added until mimoLive's
   API is shown to report a transition in progress reliably.
 - Tally lights PROGRAM and PREVIEW 1–6 only: red and amber, by bank, as the Surface chooses. Three tally
   writes were captured from the iPad app (PROGRAM 2, PREVIEW 3 and 4); the rest are built from the same
-  format. Of those, PROGRAM 1, PREVIEW 1, 2 and both dark banks have been written to the Surface (T2–T4,
-  A1–A5); buttons 5 and 6 of either bank, and PROGRAM 3 and 4, have not.
+  format. All twelve, and both dark banks, have been written to the Surface and seen as built (the lamp walk,
+  2026-11-14). The adapter lighting 5 or 6 from a look on that key has not been seen on the Surface: the bench
+  has four looks.
 - Tally lags takectl by up to a quarter second (the poll), as the panel does.
 - A takectl restart blinks both banks dark for about 0.3 s: takectl's first answer is "not ready", and the
   lamps show it, as the panel's buses do. Keeping the lamps covers takectl not answering, not takectl
@@ -223,5 +272,7 @@ Not checked on the Surface yet: rapid presses, and all six positions of each ban
 - `tally_captures.txt`: tally writes captured from the iPad Wingman app and seen to light the Surface
 - `test_wingman.py`, `offline_check.py`, `falsify.py`: the checks; `offline_check.txt`, `falsify.txt`: their last results
 - `echo_check.py`: the echo check (one tally write, FFE1 listened to); `echo_check.txt`: its last result
+- `lamp_walk.py`: every tally position lit on its own and asked about, FFE2 only, no takectl; `lamp_walk.txt`:
+  its last result, with the answers as typed
 - `hardware-check.txt`: the hardware checks on the real Surface, 2026-11-13 and 14
 - `requirements.txt`: Bleak, pinned

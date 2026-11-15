@@ -14,7 +14,7 @@ import sys
 import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-A, P = "wingman_abswitch.py", "wingman_protocol.py"
+A, P, L = "wingman_abswitch.py", "wingman_protocol.py", "lamp_walk.py"
 
 # (name, file, text to replace, replacement, also run the offline check)
 MUTANTS = [
@@ -67,6 +67,34 @@ MUTANTS = [
     ("M35 the first refresh waits a poll", A, "        while not stop.is_set():\n            await self.refresh()\n",
      "        while not stop.is_set():\n            await asyncio.sleep(TALLY_POLL_S)\n            await self.refresh()\n", False),
     ("M36 a dead log stops the lamps", A, "    except OSError:  # the terminal or a pipe went away", "    except ZeroDivisionError:  # the terminal or a pipe went away", False),
+    # Framing (ruled 2026-11-14): a notification is whole 8-byte records, each checked, in order.
+    ("M37 a notification must be exactly 8 bytes, as before", P, "    if not data or len(data) % RECORD_BYTES:\n", "    if len(data) != RECORD_BYTES:\n", True),
+    ("M38 a notification's records are read last first", P, "for i in range(0, len(data), RECORD_BYTES)]",
+     "for i in reversed(range(0, len(data), RECORD_BYTES))]", True),
+    ("M39 only a notification's first record is read", P, "range(0, len(data), RECORD_BYTES)]", "range(0, RECORD_BYTES, RECORD_BYTES)]", False),
+    ("M40 a bad record does not spoil its notification", P, "    if failed and len(pairs) > 1:\n", "    if False:\n", False),
+    ("M41 a record of unknown type is trusted beside another", P, '    if isinstance(event, Other):\n        return f"type 0x',
+     '    if False:\n        return f"type 0x', False),
+    ("M42 a button state neither DOWN nor UP is trusted beside another", P, "    if isinstance(event, Button) and event.down is None:\n",
+     "    if False:\n", False),
+    ("M43 a truncated notification's whole records are read", P, "    if not data or len(data) % RECORD_BYTES:\n        return [(data, Bad(",
+     "    data = data[:len(data) - len(data) % RECORD_BYTES]\n    if not data:\n        return [(data, Bad(", False),
+    ("M44 the adapter judges only a notification's first record", A, "        for record, event in decode_notification(data):\n",
+     "        for record, event in decode_notification(data)[:1]:\n", False),
+    ("M45 the adapter judges a notification's records last first", A, "        for record, event in decode_notification(data):\n",
+     "        for record, event in reversed(decode_notification(data)):\n", True),
+    ("M46 the Bluetooth callback runs no command", A, "        for command in self.handle(data):\n", "        for command in self.handle(data)[:0]:\n", False),
+    # The lamp walk (lamp_walk.py): every position lit on its own, asked about, FFE2 only.
+    ("M47 the walk stops at button 5", L, "        for n in range(1, TALLY_BUTTONS + 1):\n", "        for n in range(1, TALLY_BUTTONS):\n", False),
+    ("M48 the walk lights one button and asks about another", L, 'walk.append(([(bank, n)], f"Is {bank} {n} the only',
+     'walk.append(([(bank, n % TALLY_BUTTONS + 1)], f"Is {bank} {n} the only', False),
+    ("M49 the walk leaves a bank lit going into the next", L, "        walk.append(([(bank, None)], ALL_DARK))\n", "", False),
+    ("M50 the walk writes without a response", L, "data, response=True)", "data, response=False)", False),
+    ("M51 the walk writes to FFE1", L, "client.write_gatt_char(TALLY_UUID,", "client.write_gatt_char(NOTIFY_UUID,", False),
+    ("M52 a stopped walk leaves the lamps lit", L, '    finally:\n        for bank in ("PROGRAM", "PREVIEW"):\n',
+     "    finally:\n        for bank in ():\n", False),
+    ("M53 any answer but n passes", L, 'all(answer == "y" for', 'all(answer != "n" for', False),
+    ("M54 a walk stopped early can pass", L, "    return len(answers) == len(steps()) and", "    return len(answers) >= 0 and", False),
 ]
 
 
@@ -92,7 +120,7 @@ def main():
     vacuous += (rc != 0) + (rc2 != 0)
     for name, file, old, new, offline in MUTANTS:
         d = tempfile.mkdtemp(prefix="wingman-mutant-")
-        for f in (A, P):
+        for f in (A, P, L):
             shutil.copy(os.path.join(HERE, f), d)
         with open(os.path.join(d, file), encoding="utf-8") as f:
             src = f.read()

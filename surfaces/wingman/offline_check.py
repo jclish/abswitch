@@ -26,7 +26,7 @@ sys.path.insert(0, HERE)  # test_wingman's packet builder
 sys.path.insert(0, os.environ.get("WINGMAN_DIR", HERE))  # the adapter under test, first
 import wingman_abswitch as W  # noqa: E402
 import wingman_protocol as P  # noqa: E402
-from test_wingman import press  # noqa: E402  (a packet as the Surface builds it, held to captures.txt)
+from test_wingman import press, two_record_captures  # noqa: E402  (packets as the Surface builds and sends them, held to captures.txt)
 
 
 def bank_names(writes):
@@ -119,8 +119,7 @@ def main():
         surface.connected()
 
         def feed(data):
-            command = surface.handle(data)
-            if command is not None:
+            for command in surface.handle(data):
                 try:
                     asyncio.run(command)
                 except Exception as e:  # the adapter must never raise; if it does, that is a failure, not a crash
@@ -247,6 +246,24 @@ def main():
         check(start is not None and (at_start, after_preview, after_take) == want and len(writes) == n,
               f"P8 tally: at the start {bank_names(at_start)}, after PREVIEW 2 {bank_names(after_preview)}, after AUTO "
               f"{bank_names(after_take)}; then {len(writes) - n} more on a poll with nothing changed")
+
+        # P9  Two buttons at the same instant, as the Surface sent them: one notification holding PREVIEW 1 DOWN and
+        #     PREVIEW 3 DOWN (captures.txt, 2026-11-14). Each record is judged in order as if it came alone: key 1's
+        #     look goes to Preview, and PREVIEW 3 is dropped by the in-flight rule. Start with key 2 in Preview.
+        pair = two_record_captures("down")[0]
+        settled()
+        feed(press("PREVIEW 2"))
+        in_preview(2)
+        pgm, pvw, lk = looks()
+        mark = len(log)
+        feed(pair)
+        landed = in_preview(1)
+        time.sleep(0.5)
+        after = looks()
+        lines = [line.strip() for line in log[mark:]]
+        check(landed is not None and after[:2] == (pgm, pvw) and after[2].get(pgm) == lk.get(pgm) and any("PREVIEW 3 DOWN" in x and "dropped" in x for x in lines),
+              f"P9 PREVIEW 1 and 3 in one notification: {after[1]} shows \"{after[2].get(after[1])}\" (key 1 is \"{keys[0]}\"); "
+              f"PGM still {after[0]}; the adapter: {lines}")
     finally:
         for p in reversed(procs):
             p.terminate()

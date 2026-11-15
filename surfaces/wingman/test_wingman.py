@@ -18,6 +18,7 @@ from urllib.error import URLError
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.environ.get("WINGMAN_DIR", HERE))
+import lamp_walk as L  # noqa: E402
 import wingman_abswitch as W  # noqa: E402
 import wingman_protocol as P  # noqa: E402
 
@@ -29,6 +30,18 @@ def captures():
             if line and not line.startswith("#"):
                 hexs, label = line.split(None, 1)
                 yield bytes.fromhex(hexs), label
+
+
+def notifications():
+    """Each captured notification and its records with their labels; "a + b" labels two records."""
+    for raw, label in captures():
+        yield raw, list(zip(records(raw), label.split(" + ")))
+
+
+def capture_records():
+    """Every captured record with its own label, whether it came alone or with another."""
+    for _, pairs in notifications():
+        yield from pairs
 
 
 def monitor_buttons():
@@ -77,12 +90,12 @@ def press(name, down=True):
 
 class Decoding(unittest.TestCase):
     def test_builder_reproduces_captures(self):
-        for raw, label in captures():
+        for raw, label in capture_records():
             self.assertEqual(packet(raw[3], raw[4], raw[5]), raw, label)
 
     def test_captures_decode_as_labelled(self):
         n = 0
-        for raw, label in captures():
+        for raw, label in capture_records():
             kind, *rest = label.split()
             event = P.decode(raw)
             if kind == "wheel":
@@ -99,7 +112,7 @@ class Decoding(unittest.TestCase):
         self.assertGreater(n, 0)
 
     def test_any_single_bit_flip_is_dropped(self):
-        for raw, label in captures():
+        for raw, label in capture_records():
             for i in range(8):
                 for bit in range(8):
                     bad = bytearray(raw)
@@ -131,6 +144,92 @@ class Decoding(unittest.TestCase):
         self.assertEqual(P.TBar(P.TBAR_MAX).percent, 100.0)
         self.assertAlmostEqual(P.TBar(60).percent, 60 / P.TBAR_MAX * 100)
         self.assertEqual(P.TBar(255).percent, 100.0)
+
+
+def two_record_captures(way):
+    """The captured notifications that held two records, every one a "down" or every one an "up"."""
+    found = [raw for raw, pairs in notifications() if len(pairs) == 2 and all(label.endswith(" " + way) for _, label in pairs)]
+    assert found, f"captures.txt holds no notification of two {way}s"
+    return found
+
+
+def record(label):
+    """One captured record, by its label in captures.txt."""
+    return next(raw for raw, l in capture_records() if l == label)
+
+
+class Framing(unittest.TestCase):
+    """A notification is one or more whole records (captures.txt, 2026-11-14); decode_notification frames it."""
+
+    def test_every_capture_is_whole_records_with_one_label_each(self):
+        for raw, label in captures():
+            self.assertEqual(len(raw) % P.RECORD_BYTES, 0, label)
+            self.assertEqual(len(label.split(" + ")), len(raw) // P.RECORD_BYTES, label)
+
+    def test_a_lone_record_decodes_as_it_always_has(self):
+        lone = [raw for raw, _ in captures() if len(raw) == P.RECORD_BYTES]
+        for raw in lone + [packet(0x55, 0x00, 0x00), packet(0x4D, 0x02, BY_NAME["CUT"])]:  # and an unknown type and state
+            self.assertEqual(P.decode_notification(raw), [(raw, P.decode(raw))], raw.hex())
+
+    def test_two_presses_together_are_two_downs_in_the_order_they_came(self):
+        for raw in two_record_captures("down"):
+            got = P.decode_notification(raw)
+            self.assertEqual([r for r, _ in got], records(raw))
+            self.assertEqual([e for _, e in got], [P.decode(r) for r in records(raw)])
+            self.assertTrue(all(isinstance(e, P.Button) and e.down is True for _, e in got), got)
+            swapped = P.decode_notification(raw[8:] + raw[:8])
+            self.assertEqual([e for _, e in swapped], [e for _, e in reversed(got)])
+
+    def test_two_releases_together_are_two_ups(self):
+        for raw in two_record_captures("up"):
+            got = P.decode_notification(raw)
+            self.assertEqual([e for _, e in got], [P.decode(r) for r in records(raw)])
+            self.assertTrue(all(isinstance(e, P.Button) and e.down is False for _, e in got), got)
+
+    def test_a_release_and_a_press_together_come_in_order(self):
+        up, down = record("button PREVIEW 1 up"), record("button PREVIEW 2 down")
+        for data in (up + down, down + up):
+            self.assertEqual([e for _, e in P.decode_notification(data)], [P.decode(data[:8]), P.decode(data[8:])], data.hex())
+
+    def test_anything_but_whole_records_is_one_bad(self):
+        pair = two_record_captures("down")[0]
+        for data in [pair[:n] for n in range(16) if n != 8] + [pair + pair[:n] for n in range(1, 8)]:
+            got = P.decode_notification(data)
+            self.assertEqual(len(got), 1, data.hex())
+            self.assertIsInstance(got[0][1], P.Bad, data.hex())
+
+    def test_one_bad_record_and_none_of_the_notification_is_trusted(self):
+        pair = two_record_captures("down")[0]
+        for i in range(len(pair)):
+            for bit in range(8):
+                bad = bytearray(pair)
+                bad[i] ^= 1 << bit
+                got = P.decode_notification(bytes(bad))
+                self.assertEqual(len(got), 1, f"byte {i} bit {bit}")
+                self.assertIsInstance(got[0][1], P.Bad, f"byte {i} bit {bit}")
+                self.assertIn(f"record {i // 8 + 1}:", got[0][1].why, f"byte {i} bit {bit}")
+
+    def test_an_unknown_type_or_state_spoils_a_notification(self):
+        down = record("button PREVIEW 1 down")
+        for odd in (packet(0x55, 0x00, 0x0D), packet(0x4D, 0x02, 0x0D)):
+            for data in (odd + down, down + odd):
+                got = P.decode_notification(data)
+                self.assertEqual(len(got), 1, data.hex())
+                self.assertIsInstance(got[0][1], P.Bad, data.hex())
+
+    def test_a_tally_write_read_back_is_never_a_press(self):
+        # A lit record is byte for byte a DOWN. Read back, a bank holds it among off records, so no run of two
+        # or more of a write's records is trusted; a lone off record is dropped by byte 6.
+        n = 0
+        for bank, lit, raw in tally_captures():
+            recs = records(raw)
+            for a in range(len(recs)):
+                for b in range(a + 2, len(recs) + 1):
+                    got = P.decode_notification(b"".join(recs[a:b]))
+                    self.assertEqual(len(got), 1, f"{bank} {lit} records {a}-{b}")
+                    self.assertIsInstance(got[0][1], P.Bad, f"{bank} {lit} records {a}-{b}")
+                    n += 1
+        self.assertGreater(n, 0)
 
 
 class FakeTakectl:
@@ -172,6 +271,11 @@ def surface(tk=None, armed=True):
 
 
 def run(aw):
+    """Run an awaitable, or each command handle() returned, in order."""
+    if isinstance(aw, list):
+        for command in aw:
+            asyncio.run(command)
+        return None
     return asyncio.run(aw) if aw is not None else None
 
 
@@ -181,7 +285,7 @@ class Commands(unittest.TestCase):
         s, _, _ = surface(tk)
         run(s.handle(press("PREVIEW 2")))
         self.assertEqual(tk.calls, ["/state", "/pvw/layer-set?name=Two%20Shot"])
-        self.assertIsNone(s.handle(press("PREVIEW 2", down=False)))
+        self.assertEqual([], s.handle(press("PREVIEW 2", down=False)))
         self.assertEqual(len(tk.calls), 2)
 
     def test_preview_n_is_the_panels_key_n_and_an_empty_key_sends_nothing(self):
@@ -209,9 +313,9 @@ class Commands(unittest.TestCase):
         s, _, _ = surface(tk)
         for name in BY_NAME:
             if not name.startswith("PREVIEW ") and name not in ("AUTO", "CUT"):
-                self.assertIsNone(s.handle(press(name)), name)
+                self.assertEqual([], s.handle(press(name)), name)
         for data in (packet(0x80, 0x00, 60), packet(0x49, 0x00, 0x01), packet(0x55, 0x00, 0x0D), b"\x00" * 8):
-            self.assertIsNone(s.handle(data))
+            self.assertEqual([], s.handle(data))
         self.assertEqual(tk.calls, [])
 
     def test_a_press_while_one_is_in_flight_is_dropped_not_queued(self):
@@ -219,10 +323,10 @@ class Commands(unittest.TestCase):
         s, log, _ = surface(tk)
 
         async def two_presses():
-            first = s.handle(press("PREVIEW 1"))
+            [first] = s.handle(press("PREVIEW 1"))
             second = s.handle(press("PREVIEW 2"))
             self.assertIsNotNone(first)
-            self.assertIsNone(second)
+            self.assertEqual(second, [])
             await first
 
         asyncio.run(two_presses())
@@ -235,17 +339,17 @@ class Commands(unittest.TestCase):
         tk = FakeTakectl()
         log, clock = [], Clock()
         s = W.Surface(tk, armed=True, settle_s=1.0, log=log.append, clock=clock)
-        self.assertIsNone(s.handle(press("PREVIEW 1")))  # never connected
+        self.assertEqual([], s.handle(press("PREVIEW 1")))  # never connected
         s.connected()
         clock.t += 0.9
-        self.assertIsNone(s.handle(press("PREVIEW 1")))  # inside the settle window
+        self.assertEqual([], s.handle(press("PREVIEW 1")))  # inside the settle window
         clock.t += 0.2
-        settled = s.handle(press("PREVIEW 1"))
+        [settled] = s.handle(press("PREVIEW 1"))
         self.assertIsNotNone(settled)
         settled.close()  # not run: this test is only about when presses count
         s.busy = False
         s.disconnected()
-        self.assertIsNone(s.handle(press("PREVIEW 1")))  # gone again
+        self.assertEqual([], s.handle(press("PREVIEW 1")))  # gone again
         self.assertEqual(tk.calls, [])
 
     def test_takectl_unreachable_is_logged_not_retried(self):
@@ -282,6 +386,82 @@ class Commands(unittest.TestCase):
         self.assertEqual(tk.calls, ["/state"] * 3)
 
 
+class Notifications(unittest.TestCase):
+    """Several records in one notification, at the adapter: each judged in order, as if it had come alone."""
+
+    def test_two_presses_together_send_the_first_and_drop_the_second(self):
+        for raw in two_record_captures("down"):
+            first, second = (P.decode(r).name for r in records(raw))
+            tk = FakeTakectl()
+            s, log, _ = surface(tk)
+            commands = s.handle(raw)
+            self.assertEqual(len(commands), 1, log)
+            self.assertEqual(log[0], f"BUTTON {first} DOWN")
+            self.assertTrue(log[1].startswith(f"BUTTON {second} DOWN") and "dropped" in log[1], log)
+            run(commands)
+            n = int(first.split()[1])
+            self.assertEqual(tk.calls, ["/state", "/pvw/layer-set?name=" + W.quote(tk.looks[n - 1], safe="")])
+
+    def test_two_releases_together_send_nothing(self):
+        for raw in two_record_captures("up"):
+            tk = FakeTakectl()
+            s, log, _ = surface(tk)
+            self.assertEqual(s.handle(raw), [])
+            self.assertEqual(len(log), 2)
+            self.assertEqual(tk.calls, [])
+
+    def test_a_release_and_a_press_together_send_the_press(self):
+        up, down = record("button PREVIEW 1 up"), record("button PREVIEW 2 down")
+        for data in (up + down, down + up):
+            tk = FakeTakectl()
+            s, _, _ = surface(tk)
+            run(s.handle(data))
+            self.assertEqual(tk.calls, ["/state", "/pvw/layer-set?name=Two%20Shot"], data.hex())
+
+    def test_a_control_that_does_nothing_does_not_stop_the_press_beside_it(self):
+        tk = FakeTakectl()
+        s, _, _ = surface(tk)
+        run(s.handle(press("PROGRAM 1") + press("PREVIEW 2")))
+        self.assertEqual(tk.calls, ["/state", "/pvw/layer-set?name=Two%20Shot"])
+
+    def test_a_bad_notification_sends_nothing_and_is_logged_whole(self):
+        pair = two_record_captures("down")[0]
+        for bad in (pair[:15] + bytes([pair[15] ^ 1]), pair[:12], pair + pair[:3]):
+            tk = FakeTakectl()
+            s, log, _ = surface(tk)
+            self.assertEqual(s.handle(bad), [], bad.hex())
+            self.assertEqual(tk.calls, [], bad.hex())
+            self.assertEqual(len(log), 1, log)
+            self.assertIn(bad.hex().upper(), log[0])
+
+    def test_raw_shows_each_record_on_its_own_line(self):
+        pair = two_record_captures("up")[0]
+        log = []
+        s = W.Surface(FakeTakectl(), armed=True, raw=True, log=log.append)
+        s.handle(pair)
+        self.assertEqual([line.split("[")[1].rstrip("]") for line in log], [r.hex().upper() for r in records(pair)])
+
+    def test_inside_the_settle_window_every_record_is_ignored(self):
+        tk = FakeTakectl()
+        log, clock = [], Clock()
+        s = W.Surface(tk, armed=True, settle_s=1.0, log=log.append, clock=clock)
+        s.connected()
+        self.assertEqual(s.handle(press("PREVIEW 1") + press("PREVIEW 2")), [])
+        self.assertEqual(len([line for line in log if "only just connected" in line]), 2)
+        self.assertEqual(tk.calls, [])
+
+    def test_feed_runs_the_notifications_command(self):
+        tk = FakeTakectl()
+        s, _, _ = surface(tk)
+
+        async def go():
+            s.feed(two_record_captures("down")[0])
+            await asyncio.gather(*s.tasks)
+
+        asyncio.run(go())
+        self.assertEqual(len([c for c in tk.calls if c.startswith("/pvw/")]), 1)
+
+
 class TakeAndCut(unittest.TestCase):
     def test_auto_is_take_and_cut_is_cut_on_down_only(self):
         for name, route in (("AUTO", "/take"), ("CUT", "/cut")):
@@ -290,7 +470,7 @@ class TakeAndCut(unittest.TestCase):
             run(s.handle(press(name)))
             self.assertEqual(tk.calls, ["/state", route], name)
             self.assertIn(f"sent {route}: {name if name == 'CUT' else 'TAKE'} to B", log[-1])
-            self.assertIsNone(s.handle(press(name, down=False)))
+            self.assertEqual([], s.handle(press(name, down=False)))
             self.assertEqual(len(tk.calls), 2)
 
     def test_not_sent_whenever_the_panel_greys_take_and_cut(self):
@@ -320,9 +500,9 @@ class TakeAndCut(unittest.TestCase):
         s, log, _ = surface(tk)
 
         async def preview_then_auto():
-            first = s.handle(press("PREVIEW 1"))
-            self.assertIsNone(s.handle(press("AUTO")))
-            self.assertIsNone(s.handle(press("CUT")))
+            [first] = s.handle(press("PREVIEW 1"))
+            self.assertEqual([], s.handle(press("AUTO")))
+            self.assertEqual([], s.handle(press("CUT")))
             await first
 
         asyncio.run(preview_then_auto())
@@ -380,7 +560,7 @@ class Tally(unittest.TestCase):
     def test_a_tally_record_read_back_is_dropped_unless_it_is_a_press(self):
         # A lit record is byte for byte its button's DOWN; an off record differs only in byte 6 and is
         # dropped. If the Surface ever echoed a write, only the lit record could read as a press.
-        downs = {raw for raw, label in captures() if label.endswith(" down")}
+        downs = {raw for raw, label in capture_records() if label.endswith(" down")}
         for bank, lit, raw in tally_captures():
             for i, rec in enumerate(records(raw)):
                 event = P.decode(rec)
@@ -590,6 +770,119 @@ class TallyFollowsTakectl(unittest.TestCase):
         self.assertEqual(sent, [(P.TALLY_UUID, P.tally_bank("PREVIEW", 3), True)])
         self.assertEqual(P.TALLY_UUID, "0000ffe2-0000-1000-8000-00805f9b34fb")  # the ruling names FFE2; nothing else
         self.assertNotEqual(P.TALLY_UUID, P.NOTIFY_UUID)
+
+
+class SurfaceModel:
+    """What the Surface shows, worked out from the bytes written to it: each bank's lit button, by name."""
+
+    def __init__(self):
+        self.lit = {}
+
+    def write(self, data):
+        recs = records(bytes(data))
+        bank = next(b for b, first in P.TALLY_FIRST_ID.items() if recs[0][5] == first)
+        self.lit[bank] = [P.BUTTONS.get(r[5]) for r in recs if r[6] == 0x00]
+
+    def showing(self):
+        return {name for names in self.lit.values() for name in names}
+
+
+def lamp_walk(answers, model=None, fail_write_at=None):
+    """Run the walk with a typed answer per question (an exception is raised instead of answering).
+    Returns (what was asked, with what the Surface showed then; every write; the walk's answers or its exception)."""
+    model, asked, writes, typed = model or SurfaceModel(), [], [], iter(answers)
+
+    async def write(data):
+        if fail_write_at is not None and len(writes) == fail_write_at:
+            writes.append(None)
+            raise OSError("the Surface went away")
+        writes.append(bytes(data))
+        model.write(data)
+
+    async def ask(question):
+        asked.append((question, model.showing()))
+        answer = next(typed)
+        if isinstance(answer, BaseException):
+            raise answer
+        return answer
+
+    try:
+        result = asyncio.run(L.walk(write, ask, lambda line: None))
+    except BaseException as e:  # noqa: BLE001  (CancelledError is the Ctrl-C under test)
+        result = e
+    return asked, writes, result
+
+
+class LampWalk(unittest.TestCase):
+    """lamp_walk.py: every tally position lit on its own, asked about by eye, with no takectl."""
+
+    def every_position(self):
+        return {P.BUTTONS[first + i] for first in P.TALLY_FIRST_ID.values() for i in range(P.TALLY_BUTTONS)}
+
+    def test_every_question_is_about_what_is_lit_and_every_position_is_asked(self):
+        asked, writes, answers = lamp_walk(["y"] * 100)
+        self.assertIsInstance(answers, list)
+        covered = set()
+        for question, showing in asked:
+            if question.startswith(L.ALL_DARK):
+                self.assertEqual(showing, set(), question)
+            else:
+                named = next(name for name in self.every_position() if f"Is {name} the only button lit" in question)
+                self.assertEqual(showing, {named}, question)
+                covered.add(named)
+        self.assertEqual(covered, self.every_position())
+        self.assertTrue(asked[0][0].startswith(L.ALL_DARK) and asked[-1][0].startswith(L.ALL_DARK))
+
+    def test_only_tally_bank_bytes_are_written_and_it_ends_dark(self):
+        allowed = {P.tally_bank(b, lit) for b in P.TALLY_FIRST_ID for lit in (None, *range(1, P.TALLY_BUTTONS + 1))}
+        _, writes, _ = lamp_walk(["y"] * 100)
+        self.assertTrue(set(writes) <= allowed)
+        self.assertEqual(writes[-2:], [P.tally_bank("PROGRAM", None), P.tally_bank("PREVIEW", None)])
+
+    def test_q_stops_the_walk_and_darkens_both(self):
+        asked, writes, answers = lamp_walk(["y", "y", "q"])
+        self.assertEqual(len(asked), 3)
+        self.assertEqual([a for _, a in answers], ["y", "y", "q"])
+        self.assertEqual(writes[-2:], [P.tally_bank("PROGRAM", None), P.tally_bank("PREVIEW", None)])
+        self.assertFalse(L.passed(answers))
+
+    def test_ctrl_c_darkens_both(self):
+        model = SurfaceModel()
+        asked, writes, result = lamp_walk(["y", "y", "y", asyncio.CancelledError()], model)
+        self.assertIsInstance(result, asyncio.CancelledError)
+        self.assertEqual(writes[-2:], [P.tally_bank("PROGRAM", None), P.tally_bank("PREVIEW", None)])
+        self.assertEqual(model.showing(), set())
+
+    def test_a_failed_write_still_darkens_both(self):
+        model = SurfaceModel()
+        _, writes, result = lamp_walk(["y"] * 100, model, fail_write_at=4)
+        self.assertIsInstance(result, OSError)
+        self.assertEqual(writes[-2:], [P.tally_bank("PROGRAM", None), P.tally_bank("PREVIEW", None)])
+        self.assertEqual(model.showing(), set())
+
+    def test_only_every_step_answered_y_passes(self):
+        n = len(L.steps())
+        self.assertTrue(L.passed([("q", "y")] * n))
+        for answers in ([("q", "y")] * (n - 1), [("q", "y")] * (n - 1) + [("q", "n")], [("q", "y")] * (n - 1) + [("q", "")],
+                        [("q", "y")] * (n - 1) + [("q", "yes?")]):
+            self.assertFalse(L.passed(answers), answers[-1])
+
+    def test_the_one_write_goes_to_ffe2_with_a_response(self):
+        sent = []
+
+        class Client:
+            async def write_gatt_char(self, char, data, response=None):
+                sent.append((char, bytes(data), response))
+
+        asyncio.run(L.writer(Client())(P.tally_bank("PROGRAM", 5)))
+        self.assertEqual(sent, [(P.TALLY_UUID, P.tally_bank("PROGRAM", 5), True)])
+
+    def test_the_walk_cannot_reach_takectl(self):
+        with open(L.__file__, encoding="utf-8") as f:
+            tree = ast.parse(f.read())
+        imported = {a.name.split(".")[0] for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names}
+        imported |= {n.module.split(".")[0] for n in ast.walk(tree) if isinstance(n, ast.ImportFrom)}
+        self.assertFalse(imported & {"urllib", "http", "socket", "wingman_abswitch"}, imported)
 
 
 if __name__ == "__main__":

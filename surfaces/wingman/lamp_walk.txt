@@ -1,0 +1,37 @@
+lamp walk, 2026-11-14 19:31:46: tally_bank() writes to FFE2 only, no takectl
+connected; listening on FFE1. Hands off the buttons; answer each question by looking.
+wrote PROGRAM dark (17 ms)
+wrote PREVIEW dark (15 ms)
+  Are all twelve PROGRAM and PREVIEW buttons dark? y
+wrote PROGRAM 1 (21 ms)
+  Is PROGRAM 1 the only button lit, and is it red? y
+wrote PROGRAM 2 (17 ms)
+  Is PROGRAM 2 the only button lit, and is it red? y
+wrote PROGRAM 3 (7 ms)
+  Is PROGRAM 3 the only button lit, and is it red? y
+wrote PROGRAM 4 (8 ms)
+  Is PROGRAM 4 the only button lit, and is it red? y
+wrote PROGRAM 5 (14 ms)
+  Is PROGRAM 5 the only button lit, and is it red? y
+wrote PROGRAM 6 (20 ms)
+  Is PROGRAM 6 the only button lit, and is it red? y
+wrote PROGRAM dark (17 ms)
+  Are all twelve PROGRAM and PREVIEW buttons dark? y
+wrote PREVIEW 1 (20 ms)
+  Is PREVIEW 1 the only button lit, and is it amber? y
+wrote PREVIEW 2 (10 ms)
+  Is PREVIEW 2 the only button lit, and is it amber? y
+wrote PREVIEW 3 (20 ms)
+  Is PREVIEW 3 the only button lit, and is it amber? y
+wrote PREVIEW 4 (21 ms)
+  Is PREVIEW 4 the only button lit, and is it amber? y
+wrote PREVIEW 5 (13 ms)
+  Is PREVIEW 5 the only button lit, and is it amber? y
+wrote PREVIEW 6 (19 ms)
+  Is PREVIEW 6 the only button lit, and is it amber? y
+wrote PREVIEW dark (7 ms)
+  Are all twelve PROGRAM and PREVIEW buttons dark? y
+wrote PROGRAM dark (10 ms)
+wrote PREVIEW dark (15 ms)
+heard on FFE1 during the walk: 0 notification(s)
+PASS: every position as asked

@@ -1,6 +1,6 @@
 """The Wingman Surface's BLE notifications, decoded. Standard library only, no Bluetooth here.
 
-Every notification is eight bytes:  AA 00 07 TYPE STATE VALUE 00 CHECK
+Every record is eight bytes:  AA 00 07 TYPE STATE VALUE 00 CHECK
   TYPE 0x4D  a button: STATE 0x00 = DOWN, 0x01 = UP; VALUE = the button's id
   TYPE 0x80  the T-bar: VALUE = position, 0 (bottom) to 119 (top) on the Surface it was measured on
   TYPE 0x49  the wheel: VALUE = a signed step, 0x01 = +1, 0xFF = -1
@@ -8,13 +8,21 @@ CHECK is the XOR of the first seven bytes: it holds for every packet captured so
 (captures.txt), and a packet whose CHECK does not match is dropped, never guessed at. Byte 6 is
 00 in every capture; a packet where it is not is dropped too.
 
+A notification is one or more whole records (decode_notification): two buttons pressed at the
+same instant arrived as one 16-byte notification on the real Surface (2026-11-14). Each record is
+checked on its own, and a notification is trusted only if every record in it passes; otherwise
+none of it is, since what it holds is then unknown. A record split across two notifications has
+never been seen, so nothing is buffered between them.
+
 The button ids are the ones Production Engineering mapped on the real Surface (2026-11-13) and
 kept in wingman_monitor.py, the known-good monitor; test_wingman.py checks the two never drift.
 
 The tally lamps, the other way (tally_bank): one write sets a whole bank, twelve 8-byte records
 AA 00 07 4D 00 ID STATE CHECK, STATE 00 lit and 01 off, exactly as the iPad Wingman app writes
 them (tally_captures.txt). A lit record is byte for byte the same as its button's DOWN, and an
-off record differs from one only in byte 6: that is why byte 6 is checked on the way in.
+off record differs from one only in byte 6: that is why byte 6 is checked on the way in, and why
+a notification with any bad record is not trusted at all (a whole bank written back would hold
+one lit record, a DOWN to look at, among eleven off ones).
 """
 
 from dataclasses import dataclass
@@ -24,6 +32,7 @@ SERVICE_UUID = "0000ffe0-0000-1000-8000-00805f9b34fb"
 NOTIFY_UUID = "0000ffe1-0000-1000-8000-00805f9b34fb"  # the controls: read only
 TALLY_UUID = "0000ffe2-0000-1000-8000-00805f9b34fb"  # the lamps: tally_bank()'s bytes only, write with response
 HEADER = b"\xAA\x00\x07"
+RECORD_BYTES = 8
 TBAR_MAX = 119  # measured on one Surface; others may differ
 
 TALLY_FIRST_ID = {"PROGRAM": 0x01, "PREVIEW": 0x0D}  # a bank's write covers 12 ids from here
@@ -119,6 +128,34 @@ def decode(packet: bytes):
     if kind == 0x49:
         return Wheel({0x01: +1, 0xFF: -1}.get(value))
     return Other(kind)
+
+
+def untrusted(event) -> str | None:
+    """Why one decoded record cannot be trusted, or None: a bad record, a type nobody has decoded,
+    or a button state that is neither DOWN nor UP."""
+    if isinstance(event, Bad):
+        return event.why
+    if isinstance(event, Other):
+        return f"type 0x{event.kind:02X} is not known"
+    if isinstance(event, Button) and event.down is None:
+        return "a button state that is neither DOWN nor UP"
+    return None
+
+
+def decode_notification(data: bytes) -> list:
+    """One notification, as (record, event) pairs in the order received. Framing only: what to do
+    with an event is the adapter's business. Anything but whole records comes back as one Bad. A
+    lone record comes back as it decodes, as it always has (a Bad, an unknown type or an unknown
+    state is never acted on). Of two or more, if any is not trusted, the whole notification comes
+    back as one Bad, naming each record that failed."""
+    data = bytes(data)
+    if not data or len(data) % RECORD_BYTES:
+        return [(data, Bad(f"{len(data)} bytes, not whole {RECORD_BYTES}-byte records"))]
+    pairs = [(data[i:i + RECORD_BYTES], decode(data[i:i + RECORD_BYTES])) for i in range(0, len(data), RECORD_BYTES)]
+    failed = [f"record {n}: {why}" for n, (_, event) in enumerate(pairs, 1) if (why := untrusted(event))]
+    if failed and len(pairs) > 1:
+        return [(data, Bad(f"{len(pairs)} records, none trusted; " + "; ".join(failed)))]
+    return pairs
 
 
 def tally_bank(bank: str, lit: int | None) -> bytes:
