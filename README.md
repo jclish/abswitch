@@ -532,6 +532,11 @@ by convention; or better, route them through takectl so they only hit PVW: GET `
   mid-dissolve, `in-use` / `effect`). It also has a STINGER layer, layer animations, and `/mock/log`,
   which records what reached it and when. Its socket sends the layer, variant and Layer Set events
   7.0b3 sends, plus a running show's live values. `node test/mock-smoke.mjs` runs takectl against it.
+- `test/offline-ports.mjs` — the offline suites' own ports, mock :18989 and takectl :18991, never takectl's
+  :8991, so they can run while an operator's takectl is up. A suite refuses to start if either port is
+  taken, runs takectl (and `start.command`) from a copy of its own, and sends nothing until the process
+  listening is the one it started. It never stops anything it did not start. Two suites cannot run at once:
+  the second refuses. `node test/offline-ports-check.mjs` checks all of this; add `--falsify` for its mutants.
 - `test/round4-probe.mjs` — records mimoLive's event socket and says what changed in each message (the
   evidence behind Working live: `test/round4-probe-*.txt`)
   Evidence about mimoLive comes from the real app, not the mock.

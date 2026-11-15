@@ -2,7 +2,8 @@
 // mock-smoke: takectl against test/mock-mimolive.mjs, offline. No mimoLive needed.
 //   node test/mock-smoke.mjs
 // Starts the mock on :18989 and takectl on :18991 (a temporary config copied from
-// takectl.config.example.json with those ports), then: takectl starts and reads PGM from the mock's
+// takectl.config.example.json with those ports; it refuses to start if either is taken: offline-ports.mjs),
+// then: takectl starts and reads PGM from the mock's
 // switcher; GET / serves operator.html; /take and back; /panic 200 ms into a /take; /take and /panic together; /panic 200 ms
 // into a dissolve fired at the mock directly. Every case must end with the mock's live slot on A.
 // This proves takectl runs against the mock and that the mock models the switcher's in-flight
@@ -12,9 +13,10 @@ import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { MP, TP, ownCopy, ownUp, refuseIfTaken } from "./offline-ports.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url)), ROOT = dirname(HERE);
-const MP = 18989, TP = 18991, B = `http://localhost:${MP}/api/v1`, T = `http://localhost:${TP}`;
+const B = `http://localhost:${MP}/api/v1`, T = `http://localhost:${TP}`;
 const j = (u) => fetch(u).then((r) => r.json());
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const out = [];
@@ -22,6 +24,8 @@ const say = (s) => { out.push(s); console.log(s); };
 let fails = 0;
 const check = (ok, what) => { if (!ok) fails++; say(`${ok ? "PASS" : "FAIL"}  ${what}`); };
 
+await refuseIfTaken("mock-smoke");
+const RUN = ownCopy(ROOT); // takectl runs from here, on :18991: offline-ports.mjs
 const cfg = JSON.parse(readFileSync(join(ROOT, "takectl.config.example.json"), "utf8"));
 for (const k of ["a", "b", "master"]) cfg[k].host = `http://localhost:${MP}`;
 Object.assign(cfg, { port: TP, companion: { host: null }, pollMs: 5000 });
@@ -29,16 +33,18 @@ const dir = mkdtempSync(join(tmpdir(), "abswitch-mock-"));
 writeFileSync(join(dir, "takectl.config.json"), JSON.stringify(cfg, null, 2));
 
 const mock = spawn("node", [join(HERE, "mock-mimolive.mjs"), String(MP)], { stdio: "ignore" });
-await sleep(500);
 const tkLog = [];
-const tk = spawn("node", [join(ROOT, "takectl.mjs")], { env: { ...process.env, TAKECTL_CONFIG: join(dir, "takectl.config.json") } });
-tk.stdout.on("data", (d) => tkLog.push(String(d))); tk.stderr.on("data", (d) => tkLog.push(String(d)));
-let st = null;
-for (let i = 0; i < 40 && !st; i++) { await sleep(250); st = await j(`${T}/state`).catch(() => null); }
-
-const sw = (await j(`${B}/documents/333/layers`)).data.find((l) => l.attributes.name === "AB Switcher").id;
+let tk = null, sw = null;
 const slot = async () => (await j(`${B}/documents/333/layers/${sw}`)).data.attributes["input-values"].tvGroup_Hidden_Inputs__currentLiveSource;
 try {
+  await ownUp(mock, MP, "mock");
+  await sleep(500);
+  tk = spawn("node", [join(RUN, "takectl.mjs")], { env: { ...process.env, TAKECTL_CONFIG: join(dir, "takectl.config.json") } });
+  tk.stdout.on("data", (d) => tkLog.push(String(d))); tk.stderr.on("data", (d) => tkLog.push(String(d)));
+  await ownUp(tk, TP);
+  let st = null;
+  for (let i = 0; i < 40 && !st; i++) { await sleep(250); st = await j(`${T}/state`).catch(() => null); }
+  sw = (await j(`${B}/documents/333/layers`)).data.find((l) => l.attributes.name === "AB Switcher").id;
   check(st?.pgm === "A" && st?.switcher?.slot === 1, `takectl started against the mock: pgm=${st?.pgm}, switcher ${JSON.stringify(st?.switcher)}`);
   const page = await fetch(`${T}/`);
   const html = await page.text();
@@ -68,8 +74,10 @@ try {
   await j(`${B}/documents/333/layers/${sw}/signals/tvGroup_Control__Dis_2_TypeSignal`); await sleep(200);
   p = await j(`${T}/panic`); await sleep(300);
   check(p.ok && p.rounds >= 2 && (await slot()) === 1, `/panic 200 ms into a dissolve fired at the mock: ${JSON.stringify(p)}, mock slot ${await slot()}`);
+} catch (e) {
+  check(false, `the run stopped: ${e.message}`);
 } finally {
-  tk.kill(); mock.kill();
+  tk?.kill(); mock.kill();
   say("takectl log:\n" + tkLog.join("").trim().split("\n").map((l) => "    " + l).join("\n"));
   say(fails ? `${fails} FAIL(S)` : "ALL PASS");
   writeFileSync(join(HERE, "mock-smoke.txt"), out.join("\n") + "\n");

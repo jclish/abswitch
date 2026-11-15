@@ -1590,6 +1590,73 @@ Surface. The 18 writes were each answered in 7–21 ms, and FFE1 heard nothing (
 record was read back. Still not seen on hardware: the adapter lighting 5 or 6 from a look on that key. The tests
 cover it.
 
+## After v0.2.0, 2026-11-14: the offline suites on their own ports (maintenance, its own commit; branch wingman, unreleased)
+
+**Ruled 2026-11-14,** on the Wingman finding of 2026-11-13: fix the other offline suites, which started their own
+takectl on :8991 and checked nothing, in a separate maintenance commit. The pattern is the Wingman check's: an
+isolated port, and a test that owns the process it starts and never talks to, or stops, an operator's takectl.
+
+**Found while fixing it:** setting the port in each suite's config was not enough, for two reasons.
+- **Setup mode.** takectl with no config takes its port from the example config next to it, which is 8991, and
+  Save copies the example into the config it writes. Three suites test setup mode: round1 S, amend W and safe S.
+- **start.command.** It reads the port from `takectl.config.json` in its own folder and ignores
+  `TAKECTL_CONFIG`. In a working folder that file is the operator's real config. So round1's start.command test,
+  run while an operator's takectl was up, would have found it "already running" and read its `/state`.
+
+**Changed.**
+- **New `test/offline-ports.mjs`,** shared by the seven offline suites (`mock-smoke` and the six
+  `*-offline-check`):
+  - `MP` 18989 and `TP` 18991 are the suites' own mock and takectl ports.
+  - `refuseIfTaken()` runs before anything starts. If anything is listening on either port (127.0.0.1 or ::1),
+    the suite prints "REFUSED" and exits 2, with nothing sent and its last results kept.
+  - `ownCopy()` copies `takectl.mjs`, its pages and `start.command` to a folder of the suite's own. The copy's
+    example config has port 18991, and there is no `takectl.config.json`. Setup mode, Save and start.command
+    all land on 18991, and nothing reads the operator's config.
+  - `ownUp()` runs after every mock and takectl start. Before a single request, it waits until the process the
+    suite started is the one listening on its port, read from lsof, which sends nothing. Another listener, an
+    exit, or no listener within 9 s stops the suite, with nothing sent.
+- **Each suite:**
+  - It talks to :18991, including the requests from the LAN address (Save, Start Over and hooks from another
+    host).
+  - Every config it writes sets `port`.
+  - takectl, `takectl doctor` and start.command run from its own copy.
+  - It waits for `ownUp()` after every start.
+  - A thrown error is now a FAIL line with its reason. Five suites had no `catch`, so the reason never reached
+    their results file.
+- `TAKECTL_DIR` still works: the copy is made from that folder.
+
+**Tested.**
+- **All seven suites,** run one at a time while Jourdan's takectl was up on :8991 (pid 69367), with 18989 and
+  18991 checked free just before each. Every suite passed as many checks as before: mock-smoke 8, round1 12,
+  amend 10, round2 34, round3 23, round4 37, safe 21.
+  - After each suite, lsof showed his takectl still the only process listening on :8991.
+  - Throughout, every process with a connection to :8991 was logged every 200 ms. Only two appeared: a WebKit
+    page (his panel) and his takectl itself. None was from a suite. This was sampled, so a connection shorter
+    than 200 ms could be missed; the static check S2 covers every line.
+- round1's start.command test now opens `http://localhost:18991/`, from its own copy.
+- **`test/offline-ports-check.mjs`, 35 of 35.** It runs nothing until every static check passes, so a broken
+  copy can never put a takectl on :8991.
+  - S (static): the ports, then each suite (guards imported, refusal before the first start, takectl's port named
+    nowhere, takectl and start.command started only from the copy), then the copy itself.
+  - O: `ownUp()` against its own listener, another process's, one that never listens and one that exits, and
+    takectl in setup mode from the copy.
+  - R: every suite with :18991, then :18989, held by a decoy that answers like a ready takectl.
+  - U: every suite again, with the refusal switched off. Each stops at its first takectl start, and the decoy
+    gets no request.
+- **`--falsify`, 14 mutants, every one caught** (`test/offline-ports-falsify.txt`), each by the check meant for it:
+  - by R: the refusal refusing nothing, or looking only at :18991;
+  - by O2: `ownUp()` trusting at once, or taking any listener for its own;
+  - by S, before any process started: the copy keeping port 8991, the copy taking `takectl.config.json` along,
+    the suites' port set to 8991, a suite talking to :8991, takectl or start.command started from the real
+    folder, a suite without the refusal;
+  - by U, the decoy getting a request: a suite, mock-smoke, or a takectl start that sends before `ownUp()`.
+  - Afterwards nothing was left running, and :18989 and :18991 were free again.
+
+**Found, not changed (outside the ruling):** 17 real-app checks also start their own takectl on :8991 and check
+nothing, among them `round1-check.mjs` and `panic-check.mjs`. While an operator's takectl is up, theirs could not
+start, and they would drive the operator's takectl against the real mimoLive. Today the bench takectl has to be
+stopped first. For a ruling.
+
 ## Next
 
 **v0.2.1:** when a key's hooks text does not fit whole beside the count, show a small hook marker instead of

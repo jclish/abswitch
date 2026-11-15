@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// round3-offline-check: round 3's controller side, against test/mock-mimolive.mjs (nothing else on :8991
-// or :18989), plus the panel in headless Chrome (STALE, keys 1–8, view-only).
+// round3-offline-check: round 3's controller side, against test/mock-mimolive.mjs (its own ports:
+// :18989, :18991), plus the panel in headless Chrome (STALE, keys 1–8, view-only).
 //   node test/round3-offline-check.mjs
 // C  CUT is a bare cut with STINGER selected (no STINGER layer touched), its post-hooks still run; UNDO of
 //    a CUT is bare too.
@@ -23,12 +23,15 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFil
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { MP, TP, ownCopy, ownUp, refuseIfTaken } from "./offline-ports.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = process.env.TAKECTL_DIR || dirname(HERE);
 const OUT = process.env.TAKECTL_DIR ? join(ROOT, "out") : HERE;
 mkdirSync(OUT, { recursive: true });
-const MP = 18989, MOCK = `http://localhost:${MP}`, MB = `${MOCK}/api/v1`, T = "http://localhost:8991";
+const MOCK = `http://localhost:${MP}`, MB = `${MOCK}/api/v1`, T = `http://localhost:${TP}`;
+await refuseIfTaken("round3-offline-check");
+const RUN = ownCopy(ROOT); // takectl runs from here, on :18991: offline-ports.mjs
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const json = async (u, o = {}) => { try { const r = await fetch(u, { ...o, signal: AbortSignal.timeout(o.timeout ?? 15000) }); const t = await r.text(); try { return { status: r.status, ...JSON.parse(t) }; } catch { return { status: r.status, raw: t }; } } catch (e) { return { status: 0, error: String(e) }; } };
 const g = (p) => json(T + p);
@@ -41,22 +44,25 @@ const dir = mkdtempSync(join(tmpdir(), "abswitch-r3-"));
 const procs = [];
 const stop = async (p) => { if (p && p.exitCode === null && p.signalCode === null) { const w = new Promise((r) => p.once("exit", r)); p.kill(); await w; } };
 const stopAll = async () => { for (const p of procs.splice(0).reverse()) await stop(p); };
+const startMock = async (...flags) => { const p = spawn("node", [join(HERE, "mock-mimolive.mjs"), String(MP), ...flags], { stdio: "ignore" }); procs.push(p); return ownUp(p, MP, "mock"); };
 const baseCfg = (o = {}) => {
   const c = JSON.parse(readFileSync(join(ROOT, "takectl.config.example.json"), "utf8"));
   for (const k of ["a", "b", "master"]) c[k].host = MOCK;
   c.a.documentName = "PH-A"; c.b.documentName = "PH-B"; c.master.documentName = "PH-MASTER"; c.master.sourceNameSafe = "SAFE Test Pattern";
-  c.companion = { host: null };
+  c.companion = { host: null }; c.port = TP;
   return Object.assign(c, o);
 };
 let cfgFile = null;
 const phase = async (cfg = baseCfg(), ...flags) => {
   await stopAll();
-  procs.push(spawn("node", [join(HERE, "mock-mimolive.mjs"), String(MP), ...flags], { stdio: "ignore" }));
+  await startMock(...flags);
   await sleep(500);
   const sub = mkdtempSync(join(dir, "p-")); // its own folder, so thumbs/ is fresh
   cfgFile = join(sub, "takectl.config.json");
   writeFileSync(cfgFile, JSON.stringify(cfg, null, 2));
-  procs.push(spawn("node", [join(ROOT, "takectl.mjs")], { env: { ...process.env, TAKECTL_CONFIG: cfgFile }, stdio: "ignore" }));
+  const tk = spawn("node", [join(RUN, "takectl.mjs")], { env: { ...process.env, TAKECTL_CONFIG: cfgFile }, stdio: "ignore" });
+  procs.push(tk);
+  await ownUp(tk, TP);
   return until(async () => { const s = await g("/state"); return s.ready !== false && s.pgm ? s : null; }, 9000);
 };
 const now = async () => (await json(`${MB}/mock/log`)).now;
@@ -239,6 +245,8 @@ try {
   L = await log(t0);
   check(vb === 0 && !all(L, /MASTER (cut|dissolve)|recall/).length, `P3. /?view=monitor: ${vb} buttons; Space and "2" sent nothing: ${fmt(L, t0) || "(no commands)"}`);
   ws.close();
+} catch (e) {
+  check(false, `the run stopped: ${e.message}`);
 } finally {
   await stopAll();
   say(fails ? `${fails} FAIL(S)` : "ALL PASS");

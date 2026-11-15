@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// round2-offline-check: v0.2 round 2 against test/mock-mimolive.mjs (nothing else on :8991 or :18989).
+// round2-offline-check: v0.2 round 2 against test/mock-mimolive.mjs (its own ports: :18989, :18991).
 //   node test/round2-offline-check.mjs
 // The mock logs every signal, layer switch and Layer Set recall with its time (/mock/log), so order
 // and spacing are read from what reached "mimoLive", not from takectl's own account.
@@ -28,12 +28,15 @@ import { networkInterfaces, tmpdir } from "node:os";
 import { mkdtempSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { MP, TP, ownCopy, ownUp, refuseIfTaken } from "./offline-ports.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = process.env.TAKECTL_DIR || dirname(HERE);
 const OUT = process.env.TAKECTL_DIR ? join(ROOT, "out") : HERE;
 mkdirSync(OUT, { recursive: true });
-const MP = 18989, MOCK = `http://localhost:${MP}`, MB = `${MOCK}/api/v1`, T = "http://localhost:8991";
+const MOCK = `http://localhost:${MP}`, MB = `${MOCK}/api/v1`, T = `http://localhost:${TP}`;
+await refuseIfTaken("round2-offline-check");
+const RUN = ownCopy(ROOT); // takectl runs from here, on :18991: offline-ports.mjs
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const json = async (u, o = {}) => { try { const r = await fetch(u, { ...o, signal: AbortSignal.timeout(o.timeout ?? 15000) }); const t = await r.text(); try { return { status: r.status, ...JSON.parse(t) }; } catch { return { status: r.status, raw: t }; } } catch (e) { return { status: 0, error: String(e) }; } };
 const g = (path) => json(T + path);
@@ -47,25 +50,27 @@ const dir = mkdtempSync(join(tmpdir(), "abswitch-r2-"));
 const procs = [];
 const stop = async (p) => { if (p && p.exitCode === null && p.signalCode === null) { const w = new Promise((r) => p.once("exit", r)); p.kill(); await w; } };
 const stopAll = async () => { for (const p of procs.splice(0).reverse()) await stop(p); };
+const startMock = async (...flags) => { const p = spawn("node", [join(HERE, "mock-mimolive.mjs"), String(MP), ...flags], { stdio: "ignore" }); procs.push(p); return ownUp(p, MP, "mock"); };
 let tk = null;
 const baseCfg = () => {
   const c = JSON.parse(readFileSync(join(ROOT, "takectl.config.example.json"), "utf8"));
   for (const k of ["a", "b", "master"]) c[k].host = MOCK;
   c.a.documentName = "PH-A"; c.b.documentName = "PH-B"; c.master.documentName = "PH-MASTER";
-  c.companion = { host: null };
+  c.companion = { host: null }; c.port = TP;
   return c;
 };
 const startTk = async (cfg) => {
   const f = join(dir, `c${procs.length}.json`);
   writeFileSync(f, JSON.stringify(cfg, null, 2));
-  tk = spawn("node", [join(ROOT, "takectl.mjs")], { env: { ...process.env, TAKECTL_CONFIG: f }, stdio: "ignore" });
+  tk = spawn("node", [join(RUN, "takectl.mjs")], { env: { ...process.env, TAKECTL_CONFIG: f }, stdio: "ignore" });
   procs.push(tk);
+  await ownUp(tk, TP);
   return until(async () => { const s = await g("/state"); return s.ready !== false && s.pgm ? s : null; }, 9000);
 };
 // A fresh mock (A on air, A "Speaker Wide", B "Slides PiP", Lower Third off in both) and takectl.
 const phase = async (cfgOver = {}, ...mockFlags) => {
   await stopAll();
-  procs.push(spawn("node", [join(HERE, "mock-mimolive.mjs"), String(MP), ...mockFlags], { stdio: "ignore" }));
+  await startMock(...mockFlags);
   await sleep(500);
   return startTk(Object.assign(baseCfg(), cfgOver));
 };
@@ -212,7 +217,7 @@ try {
   await json(`${MB}/mock/set-layer?doc=333&name=STINGER&live=off`);
   // POST /hooks: loopback only, validated; the datastore wins over the config, key by key
   const bad = await json(`${T}/hooks`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ "Speaker Wide": { post: [{ layer: 7 }] } }) });
-  const remote = lan ? await json(`http://${lan}:8991/hooks`, { method: "POST", body: "{}" }) : { status: "no LAN address" };
+  const remote = lan ? await json(`http://${lan}:${TP}/hooks`, { method: "POST", body: "{}" }) : { status: "no LAN address" };
   const good = await json(`${T}/hooks`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ "Speaker Wide": { post: [{ layer: "TALLY", set: "off" }] } }) });
   const stored = await json(`${MB}/documents/333/datastores/abswitch-hooks`);
   const view = await g("/hooks");
@@ -365,6 +370,8 @@ try {
   await g("/take"); await sleep(1100);
   const uPre = (await g("/state")).undo;
   check(uPre && !uPre.available && /pre-hooks changed it/.test(uPre.why), `U3. pre-hooks on the outgoing document: ${JSON.stringify(uPre?.why)}`);
+} catch (e) {
+  check(false, `the run stopped: ${e.message}`);
 } finally {
   await stopAll();
   say(fails ? `${fails} FAIL(S)` : "ALL PASS");

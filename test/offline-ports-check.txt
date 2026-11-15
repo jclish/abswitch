@@ -1,0 +1,37 @@
+offline-ports-check, 2026-11-15T03:51:25.469Z: 7 suites [amend-offline-check.mjs, mock-smoke.mjs, round1-offline-check.mjs, round2-offline-check.mjs, round3-offline-check.mjs, round4-offline-check.mjs, safe-offline-check.mjs]
+PASS  S1. the suites' ports: mock :18989, takectl :18991; takectl's own :8991 and mimoLive's :8989 (from takectl.config.example.json) are neither
+PASS  S2. amend-offline-check.mjs: guards imported true; refuses before its first spawn true; takectl's port named on lines []; takectl/start.command started from [RUN]
+PASS  S2. mock-smoke.mjs: guards imported true; refuses before its first spawn true; takectl's port named on lines []; takectl/start.command started from [RUN]
+PASS  S2. round1-offline-check.mjs: guards imported true; refuses before its first spawn true; takectl's port named on lines []; takectl/start.command started from [RUN]
+PASS  S2. round2-offline-check.mjs: guards imported true; refuses before its first spawn true; takectl's port named on lines []; takectl/start.command started from [RUN]
+PASS  S2. round3-offline-check.mjs: guards imported true; refuses before its first spawn true; takectl's port named on lines []; takectl/start.command started from [RUN]
+PASS  S2. round4-offline-check.mjs: guards imported true; refuses before its first spawn true; takectl's port named on lines []; takectl/start.command started from [RUN]
+PASS  S2. safe-offline-check.mjs: guards imported true; refuses before its first spawn true; takectl's port named on lines []; takectl/start.command started from [RUN]
+PASS  S3. ownCopy(): 6 files [doctor.html, operator.html, setup.html, start.command, takectl.config.example.json, takectl.mjs], takectl's byte for byte true; the example's port 18991, the rest unchanged true; no takectl.config.json true
+PASS  O1. the process listening on :18991 is its own: resolved
+PASS  O2. :18991 held by another process: rejected: :18991 is held by pid 80878, not by the listener this check started (pid 80911); nothing was sent to :18991; requests to that process 0
+PASS  O3. a process that never listens: rejected: the idler this check started (pid 80922) is not listening on :18991 after 1.5 s; nothing was sent to it
+PASS  O4. a process that exits: rejected: the quitter this check started exited before it listened on :18991; nothing was sent to :18991
+PASS  O5. takectl from the copy, with no config (setup mode), listens on :18991: resolved
+PASS  R. amend-offline-check.mjs, :18991 taken: exit 2, REFUSED; requests to the decoy 0; last results unchanged true
+PASS  R. mock-smoke.mjs, :18991 taken: exit 2, REFUSED; requests to the decoy 0; last results unchanged true
+PASS  R. round1-offline-check.mjs, :18991 taken: exit 2, REFUSED; requests to the decoy 0; last results unchanged true
+PASS  R. round2-offline-check.mjs, :18991 taken: exit 2, REFUSED; requests to the decoy 0; last results unchanged true
+PASS  R. round3-offline-check.mjs, :18991 taken: exit 2, REFUSED; requests to the decoy 0; last results unchanged true
+PASS  R. round4-offline-check.mjs, :18991 taken: exit 2, REFUSED; requests to the decoy 0; last results unchanged true
+PASS  R. safe-offline-check.mjs, :18991 taken: exit 2, REFUSED; requests to the decoy 0; last results unchanged true
+PASS  R. amend-offline-check.mjs, :18989 taken: exit 2, REFUSED; requests to the decoy 0; last results unchanged true
+PASS  R. mock-smoke.mjs, :18989 taken: exit 2, REFUSED; requests to the decoy 0; last results unchanged true
+PASS  R. round1-offline-check.mjs, :18989 taken: exit 2, REFUSED; requests to the decoy 0; last results unchanged true
+PASS  R. round2-offline-check.mjs, :18989 taken: exit 2, REFUSED; requests to the decoy 0; last results unchanged true
+PASS  R. round3-offline-check.mjs, :18989 taken: exit 2, REFUSED; requests to the decoy 0; last results unchanged true
+PASS  R. round4-offline-check.mjs, :18989 taken: exit 2, REFUSED; requests to the decoy 0; last results unchanged true
+PASS  R. safe-offline-check.mjs, :18989 taken: exit 2, REFUSED; requests to the decoy 0; last results unchanged true
+PASS  U. amend-offline-check.mjs, refusal off, :18991 held: exit 1; stopped at its first takectl start; requests to the decoy 0
+PASS  U. mock-smoke.mjs, refusal off, :18991 held: exit 1; stopped at its first takectl start; requests to the decoy 0
+PASS  U. round1-offline-check.mjs, refusal off, :18991 held: exit 1; stopped at its first takectl start; requests to the decoy 0
+PASS  U. round2-offline-check.mjs, refusal off, :18991 held: exit 1; stopped at its first takectl start; requests to the decoy 0
+PASS  U. round3-offline-check.mjs, refusal off, :18991 held: exit 1; stopped at its first takectl start; requests to the decoy 0
+PASS  U. round4-offline-check.mjs, refusal off, :18991 held: exit 1; stopped at its first takectl start; requests to the decoy 0
+PASS  U. safe-offline-check.mjs, refusal off, :18991 held: exit 1; stopped at its first takectl start; requests to the decoy 0
+ALL PASS
