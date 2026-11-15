@@ -1476,6 +1476,28 @@ No code changes.
   satisfy a switching command, from the Surface or anywhere else.
 - The outside-dissolve HOLD stands unchanged. No merge or push.
 
+## After v0.2.0, 2026-11-14: the Wingman Surface, tally recovery (branch wingman, unreleased)
+
+No code changes: the hardware record. Run on the bench documents with all three shows running, PH-MASTER's File
+Recording off and no streaming output (takectl's `outputs`). PH-A and PH-B now carry an NDI camera in Cam Wide
+and Two Shot's left side; the lamps follow looks, not pictures, so the adapter did not change for it.
+
+**Hardware, presses armed and tally on: 9 of 9** (`surfaces/wingman/hardware-check.txt`). Jourdan's report for
+the lamps: "all as expected"; the times are from the logs.
+- **Power cycle.** R1 connect, red and amber as `/state`. R2 Surface off: disconnect logged, scan again. R3 a
+  Preview pick on the panel while the Surface was going: the PREVIEW write in that gap failed ("disconnected") and
+  was not counted as shown, the failed-write path on hardware for the first time. R4 Surface on: full refresh,
+  amber on the look picked in R3. R5 PREVIEW 2 from the Surface, amber 123 ms after the press.
+- **takectl restart.** R6 takectl stopped: the lamps stayed, logged once. R7 a press with takectl down: nothing
+  sent, not retried. R8 takectl started: not ready for about 0.2 s, both banks dark, then the panel's state; the
+  R7 press was never sent. R9 Ctrl-C, both banks dark.
+
+**Seen (not changed):** a takectl restart blinks both banks dark for about 0.3 s, because takectl's first answer
+is "not ready" and the lamps follow it, as the panel's buses do. The ruled outage rule (keep the lamps) is for
+takectl not answering. README, Known limits.
+
+**Next, as ruled:** rapid presses, then all six positions.
+
 ## Next
 
 **v0.2.1:** when a key's hooks text does not fit whole beside the count, show a small hook marker instead of

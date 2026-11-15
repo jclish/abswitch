@@ -11,8 +11,8 @@ from takectl's `/state`. The only thing ever written to the Surface is those two
 panel's TAKE, CUT its CUT. Every other control is shown in the log and does nothing yet. The three
 controls passed the hardware check on the real Surface (2026-11-13, 14 of 14). Tally passed 4 of 4 with
 presses not armed and then the first limited armed test, 5 of 5, PREVIEW, CUT and AUTO from the Surface
-(2026-11-14, `hardware-check.txt`). Power cycles, a takectl restart, rapid presses and all six positions
-are not checked with tally yet.
+(2026-11-14, `hardware-check.txt`), then a power cycle and a takectl restart, 9 of 9. Rapid presses and all
+six positions are not checked with tally yet.
 
 The Surface's protocol was decoded by Production Engineering on 2026-11-13 (`wingman_monitor.py` is
 their known-good monitor, kept as it was). This folder is optional: takectl never loads it, and it
@@ -177,8 +177,20 @@ from the Surface and from the browser alike, and the log shows its reason. That 
 2026-11-14): nothing starts a show to satisfy a press. To keep recording off for a test, switch off only
 PH-MASTER's File Recording output, not its show.
 
-Not checked on the Surface yet: power off and on, takectl stopped and started, rapid presses, and all six
-positions of each bank.
+**Tally recovery** (`--arm --tally`), passed 9 of 9 on 2026-11-14, same conditions as the armed test:
+
+- R1. **Start.** Red on Program's key, amber on Preview's.
+- R2. **Surface off.** The log says it disconnected.
+- R3. **A Preview change while it is off.** Pick another look on the panel's Preview bus.
+- R4. **Surface on.** It reconnects and both banks are written: amber on the look picked in R3, not the old one.
+- R5. **PREVIEW 2.** Amber moves to PREVIEW 2; red stays.
+- R6. **takectl stopped.** The lamps stay as they are; the log says so once.
+- R7. **A press while takectl is down.** `not reachable; nothing sent, not retried`.
+- R8. **takectl started again.** The lamps go dark while takectl is not ready, then show the panel's state.
+  The press from R7 is never sent.
+- R9. **Stop.** Ctrl-C: both banks go dark.
+
+Not checked on the Surface yet: rapid presses, and all six positions of each bank.
 
 ## Known limits
 
@@ -192,6 +204,9 @@ positions of each bank.
   format. Of those, PROGRAM 1, PREVIEW 1, 2 and both dark banks have been written to the Surface (T2–T4,
   A1–A5); buttons 5 and 6 of either bank, and PROGRAM 3 and 4, have not.
 - Tally lags takectl by up to a quarter second (the poll), as the panel does.
+- A takectl restart blinks both banks dark for about 0.3 s: takectl's first answer is "not ready", and the
+  lamps show it, as the panel's buses do. Keeping the lamps covers takectl not answering, not takectl
+  answering "not ready".
 - **PROGRAM's red means the document assigned to Program, not that only its picture is on air.** On a TAKE
   the lamps move when takectl's state does, at the start of the dissolve, as the panel's buses do; during
   the dissolve both pictures are on screen. Ruled 2026-11-14: keep it, with no delay and no
@@ -208,5 +223,5 @@ positions of each bank.
 - `tally_captures.txt`: tally writes captured from the iPad Wingman app and seen to light the Surface
 - `test_wingman.py`, `offline_check.py`, `falsify.py`: the checks; `offline_check.txt`, `falsify.txt`: their last results
 - `echo_check.py`: the echo check (one tally write, FFE1 listened to); `echo_check.txt`: its last result
-- `hardware-check.txt`: the hardware check on the real Surface, 2026-11-13
+- `hardware-check.txt`: the hardware checks on the real Surface, 2026-11-13 and 14
 - `requirements.txt`: Bleak, pinned

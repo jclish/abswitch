@@ -356,3 +356,82 @@ Stopped.
 10:35:06.775 ready=True PGM B PVW A looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last cut->B cut 0ms | outputs {"rec": false, "stream": null}
 10:35:14.229 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s busy | last take->A dissolve 1060ms | outputs {"rec": false, "stream": null}
 10:35:15.475 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last take->A dissolve 1060ms | outputs {"rec": false, "stream": null}
+
+=== Tally recovery: power cycle and takectl restart, 2026-11-14 (armed, --arm --tally) ===
+Bench documents PH-A, PH-B, PH-MASTER, all three shows live. PH-A and PH-B now each have an NDI camera source
+(one camera on the LAN, the same in both) in Cam Wide and Two Shot's left side; Cam PiP and Two Shot's right
+side are still placeholders. The lamps follow looks, not pictures, so nothing in the adapter changed for it.
+Recording and streaming off by takectl's own outputs: rec false and stream null from the watcher's start
+(17:32:49) to the end, except rec null for a second while the restarted takectl had not read its outputs yet.
+Jourdan's report for the lamps at R1, R4, R5, R6, R8 and R9: "all as expected". The times below are from the
+logs; R2, R3 and R7 are his actions, read from the logs.
+
+R1 PASS  Connect: PROGRAM 1 and PREVIEW 2 written 47 and 62 ms after connecting (A on air "Speaker Wide", key 1;
+         B in Preview "Two Shot", key 2).
+R2 PASS  Surface switched off: "The Surface disconnected." logged 17:33:52.355, and the adapter scanned again.
+R3 PASS  Slides PiP picked on the panel's Preview bus: /state had "Slides PiP" in B at 17:33:51.445, 0.9 s
+         before the Mac heard the Surface go (a powered-off Surface is noticed only when Bluetooth's link times
+         out; the log cannot say when the power went). The adapter's PREVIEW 3 write in that gap failed,
+         "BleakError: disconnected; trying again", and was not counted as shown: the failed-write path, on
+         hardware for the first time.
+R4 PASS  Surface switched on: connected again 19.6 s after the new scan began (that includes the Surface's own
+         start-up; the log cannot separate them). Full refresh: PROGRAM 1 and PREVIEW 3 written 19 and 48 ms
+         after connecting, the state as it was then, not as it was before the power went.
+R5 PASS  PREVIEW 2 from the Surface: /pvw/layer-set?name=Two%20Shot sent 16 ms after the press; amber on
+         PREVIEW 2 123 ms after the press; PROGRAM not rewritten.
+R6 PASS  takectl stopped (Ctrl-C in its window): the watcher lost it at 17:34:48.872; the adapter logged once
+         "takectl not reachable ...; the lamps stay as they are", and wrote nothing.
+R7 PASS  PREVIEW 3 from the Surface with takectl down: "key 3: takectl not reachable ...; nothing sent, not
+         retried", 1 ms after the press.
+R8 PASS  takectl started again (start.command): its first answer, 17:35:05.114, was not ready (no Program, no
+         Preview, no looks) for about 0.2 s, and the adapter darkened both banks, as the panel's bus lamps do
+         from the same /state. Then ready, Program A "Speaker Wide", Preview B "Two Shot": PROGRAM 1 and PREVIEW 2
+         written, each bank dark for 285 ms by the adapter's log. The press from R7 was never sent.
+R9 PASS  Ctrl-C: "tally: both banks dark", logged 17:35:23.594, and "Stopped." (tee -i kept both lines).
+         The Surface sent only the presses made (each DOWN and UP), no other packet.
+
+Seen (not changed): a takectl restart blinks both banks dark for about 0.3 s, because takectl's first answer is
+not ready. The panel's buses show the same, and the ruled outage rule (keep the lamps) covers takectl not
+answering, not takectl answering "not ready".
+
+--- the adapter's log ---
+17:33:29.140 Mode: ARMED: presses go to http://127.0.0.1:8991
+17:33:29.140 Tally: ON: PROGRAM and PREVIEW light as the panel buses do
+17:33:29.140 Scanning for BirdDogSwitcher (25 s)...
+17:33:31.446 Connected to BirdDogSwitcher; presses count in 1 s. Ctrl-C to stop.
+17:33:31.493   tally: PROGRAM 1
+17:33:31.508   tally: PREVIEW 2
+17:33:52.355   tally: PREVIEW lamp not written (BleakError: disconnected); trying again
+17:33:52.355 The Surface disconnected.
+17:33:54.356 Scanning for BirdDogSwitcher (25 s)...
+17:34:14.002 Connected to BirdDogSwitcher; presses count in 1 s. Ctrl-C to stop.
+17:34:14.021   tally: PROGRAM 1
+17:34:14.050   tally: PREVIEW 3
+17:34:14.050   tally: back to normal
+17:34:23.302 BUTTON PREVIEW 2 DOWN
+17:34:23.318   sent /pvw/layer-set?name=Two%20Shot: "Two Shot" in Preview (B)
+17:34:23.425   tally: PREVIEW 2
+17:34:23.662 BUTTON PREVIEW 2 UP
+17:34:48.977   tally: takectl not reachable (<urlopen error [Errno 61] Connection refused>); the lamps stay as they are
+17:34:56.860 BUTTON PREVIEW 3 DOWN
+17:34:56.861   key 3: takectl not reachable (<urlopen error [Errno 61] Connection refused>); nothing sent, not retried
+17:34:57.339 BUTTON PREVIEW 3 UP
+17:35:05.113   tally: PROGRAM dark
+17:35:05.128   tally: PREVIEW dark
+17:35:05.128   tally: back to normal
+17:35:05.398   tally: PROGRAM 1
+17:35:05.413   tally: PREVIEW 2
+17:35:23.594   tally: both banks dark
+
+Stopped.
+
+--- takectl's /state, changes only (read every 100 ms), to the adapter's stop; later panel use left out ---
+17:32:49.977 takectl answers
+17:32:49.977 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last None->None None Nonems | outputs {"rec": false, "stream": null}
+17:33:51.445 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Slides PiP"} | mix 1s idle | last None->None None Nonems | outputs {"rec": false, "stream": null}
+17:34:23.390 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last None->None None Nonems | outputs {"rec": false, "stream": null}
+17:34:48.872 takectl not answering (URLError)
+17:35:05.114 takectl answers
+17:35:05.114 ready=False PGM None PVW None looks null | None Nones idle | last None->None None Nonems | outputs null
+17:35:05.326 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last None->None None Nonems | outputs {"rec": null, "stream": null}
+17:35:06.269 ready=True PGM A PVW B looks {"A": "Speaker Wide", "B": "Two Shot"} | mix 1s idle | last None->None None Nonems | outputs {"rec": false, "stream": null}
