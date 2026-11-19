@@ -524,8 +524,9 @@ by convention; or better, route them through takectl so they only hit PVW: GET `
 - `operator-panel.png`, `operator-panel-ipad.png`, `operator-panel-changed.png` — the screenshots above
 - `test/panel-chrome.mjs` — the panel in headless Chrome: one screen, 44 px targets, live pictures, keys
   never move, look keys and monitors exactly 16:9 with nothing cropped; `test/demo-run.mjs` plays the main moves in order for a screen recording
-- `surfaces/wingman/` — optional: the BirdDog Wingman Surface as a hardware panel (PREVIEW 1–6 so far), in
-  Python with Bleak, outside takectl; see its README
+- `surfaces/wingman/` — optional: the BirdDog Wingman Surface as a hardware panel (so far PREVIEW 1–6, AUTO,
+  CUT, tally on PROGRAM and PREVIEW, and the four graphics buttons as downstream keys), in Python with Bleak,
+  outside takectl; see its README
 - `takectl.config.example.json` — copy to `takectl.config.json`
 - `test/mock-mimolive.mjs` — fake mimoLive 7 API + WebSocket for working offline. Its Video Switcher
   and source tally follow 7.0b3 (live slot, per-slot codes, in-flight window, cut overridden

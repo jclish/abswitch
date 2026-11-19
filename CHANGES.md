@@ -1725,6 +1725,65 @@ takectl stopped.
 **For the pen:** the refusal looks only at :8991, as ruled. An operator's takectl configured on another port would
 not be seen; the bench config's own port is 8991, so here the two are the same.
 
+## After v0.2.0, 2026-11-19: the Wingman Surface, stage 1, the graphics buttons (branch wingman, unreleased)
+
+**Briefed (the pen, 2026-11-19, the corrected brief, which replaces its two earlier Surface briefs).** The rulings
+of 13, 14 and 19 November stand, press rules included. PROGRAM 1–6 stay unmapped, the T-bar lever stays inert,
+and ON AIR stays unmapped: with no lamp, the Surface could not show you are in black, so FTB stays on the panel.
+No lamp is written beyond the two tally banks, so no button below has lamp feedback, and a refused press is
+logged only. Stage 1: LOGO ON, TITLE ON, U.N-TITLE ON and SUPER FG ON each send `/dsk?label=` for a label set in
+the adapter's settings, defaulting to Logo, Title, Up Next and SuperFG. A button whose `DSK` layer doesn't exist
+sends nothing, and the adapter says so at start.
+
+**Changed** (`surfaces/wingman/wingman_abswitch.py`; takectl is unchanged):
+- **The four buttons toggle downstream keys.** `/dsk?label=…`, the panel's own route, with the label as takectl
+  lists it in `/state`'s `dsk`. The label is matched without regard to case, as takectl's `setDsk()` matches it.
+  The answer is logged as `DSK Bug on` or `off`, and a refusal with takectl's reason.
+- **Greyed as the panel's downstream keys are, and no more** (`dsk_greyed()`, held by a test to `operator.html`):
+  not sent while takectl is not ready or Program is not known. Sent mid-transition, in SAFE or OTHER, while steps
+  are pushed or hooks rehearsed. The press rules stand: DOWN only, one command per press, a press while a
+  command is in flight dropped, never retried.
+- **A button whose layer MASTER lacks sends nothing** and says so, naming the keys MASTER has. Each press reads
+  `/state` again, so a layer added after start is found.
+- **Settings** (`load_settings()`): `wingman.config.json` beside the adapter (gitignored), or `--config <file>`,
+  as `{"dsk": {"LOGO ON": "Bug"}}`. Buttons not named keep their defaults. A button name that is not one of the
+  four, a label that is not text, any other key, or a `--config` file that is not there stops the adapter
+  before it starts.
+- **At start**, before scanning (`dsk_at_start()`, `/state` only), the log lists MASTER's downstream keys and,
+  for each button, its layer or `this button sends nothing`. If takectl is not reachable or not ready, it says
+  so, and that each press looks again.
+- `dsk_walk_1.json`, `dsk_walk_2.json`: settings for the hardware walk, which puts the four buttons on the
+  bench's two keys, two at a time.
+
+**Tested, offline** (mimoLive not running; the ports all free):
+- `test_wingman.py`: 92 tests, 19 of them new.
+  - Each button's default label, sent on DOWN only; a label with a space sent whole.
+  - The settings' label, and takectl's spelling sent.
+  - A missing layer sends nothing; a layer added after start is found.
+  - Sent busy, in flight, in SAFE, in OTHER, while steps run or hooks are rehearsed. Not sent while not ready
+    or with no Program.
+  - Dropped behind an AUTO in flight; dry run reads only; on, off and refusal logged.
+  - The panel's DSK lines held to `operator.html`.
+  - The report at start: before scanning, `/state` only, not reachable and not ready.
+  - The settings reach the presses.
+  - The settings file: missing means the defaults, a partial file keeps the rest; every malformed case refused.
+- `offline_check.py`: 16 of 16, against the real takectl on the mock (its MASTER has `DSK Bug` and
+  `DSK Clock`). Settings LOGO ON on Bug and TITLE ON on "clock".
+  - **P10a:** the report at start is right for all four buttons.
+  - **P10b:** LOGO ON twice turned the mock's `DSK Bug` live, then off. Clock, Program and the looks were
+    untouched.
+  - **P10c:** U.N-TITLE ON and SUPER FG ON sent nothing.
+  - **P10d:** TITLE ON during a 2 s MIX, with takectl busy before and after the press, turned `DSK Clock` live,
+    and the TAKE still landed.
+  - **P10e:** in SAFE, TITLE ON and LOGO ON toggled, and Program stayed SAFE.
+  - **P3:** now also checks that the downstream keys don't move. TITLE ON is out of its list and AFV 1 in.
+- `falsify.py`: 67 mutants. Every one is caught. The 13 new ones (M55–M67) break the label a button toggles, the defaults, the missing-layer rule, the greying in both directions, takectl's spelling and the encoding, the settings checks, the report at start, and the settings reaching the presses. Five of them, M55, M57, M58, M64 and M66, are also caught by the offline check, against the real takectl.
+
+**Not yet:** the hardware walk (`surfaces/wingman/README.md`, D1–D8) has not been run on the real Surface.
+
+**Not covered:** `main()` passing `--config` to `load_settings()`. A test would have to run the adapter, which
+then scans for the Surface. The walk uses `--config` in D1 and D7.
+
 ## Next
 
 **v0.2.1:** when a key's hooks text does not fit whole beside the count, show a small hook marker instead of

@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""Wingman Surface -> abswitch: PREVIEW 1-6 recall look keys 1-6 in Preview; AUTO is TAKE, CUT is CUT.
-With --tally, the Surface's PROGRAM and PREVIEW buttons light as the panel's buses do.
+"""Wingman Surface -> abswitch: PREVIEW 1-6 recall look keys 1-6 in Preview; AUTO is TAKE, CUT is CUT;
+LOGO ON, U.N-TITLE ON, TITLE ON and SUPER FG ON toggle downstream keys. With --tally, the Surface's
+PROGRAM and PREVIEW buttons light as the panel's buses do.
 
     .venv/bin/python wingman_abswitch.py                  dry run: prints what each press would send
     .venv/bin/python wingman_abswitch.py --arm            sends it to takectl
     .venv/bin/python wingman_abswitch.py --arm --tally    and lights the Surface's tally
-    options: --takectl http://127.0.0.1:8991   --raw (every packet in hex)   --settle 1.0
+    options: --takectl http://127.0.0.1:8991   --raw (every packet in hex)   --settle 1.0   --config <file>
 
 abswitch is the switcher; the Surface is an input device and, with --tally, a display. A press calls
-the same takectl route the panel's key calls (/pvw/layer-set?name=..., /take, /cut), so takectl's own
+the same takectl route the panel's key calls (/pvw/layer-set?name=..., /take, /cut, /dsk?label=...), so takectl's own
 checks apply and the panel follows. The tally only reads /state, as the panel does, and never sends a
 command. The one thing ever written to the Surface is its two tally banks (FFE2, tally_bank()'s bytes;
 ruled 2026-11-14). Nothing goes to mimoLive except through takectl, and there is no state here beyond
@@ -25,13 +26,22 @@ What a press does, and does not:
   sends nothing.
 - AUTO and CUT are sent only when the panel's own TAKE and CUT would be pressable (see greyed()).
   AUTO is TAKE: the panel's MIX or STINGER, at its RATE. CUT is always a bare cut.
+- LOGO ON, U.N-TITLE ON, TITLE ON and SUPER FG ON each toggle a downstream key, the MASTER layer
+  named "DSK <label>" (/dsk?label=...), as the panel's DSK keys do. The labels are the adapter's
+  settings: wingman.config.json beside this file, or --config <file>, as {"dsk": {"LOGO ON": "Bug"}};
+  a button not named keeps its default (Logo, Up Next, Title, SuperFG). At start the adapter says
+  which buttons have a layer; a button whose layer MASTER does not have sends nothing. Like the
+  panel's DSK keys they act mid-transition and in SAFE, and are not sent while takectl is not ready
+  or Program is not known (see dsk_greyed()). No lamp shows a DSK's state; only the panel does.
 - Every other control is logged only: PROGRAM and the T-bar as ruled 2026-11-13, ON AIR because
-  PANIC has no key on the panel either.
+  PANIC has no key on the panel either, and no FTB while the Surface has no lamp to show it.
 """
 
 import argparse
 import asyncio
 import json
+import os
+import sys
 import time
 from datetime import datetime
 from urllib.error import HTTPError, URLError
@@ -40,7 +50,13 @@ from urllib.request import urlopen
 
 from wingman_protocol import DEVICE_NAME, NOTIFY_UUID, TALLY_BUTTONS, TALLY_UUID, Bad, Button, decode_notification, describe, tally_bank
 
-ACTIONS = {**{f"PREVIEW {n}": ("preview", n) for n in range(1, 7)}, "AUTO": ("take", None), "CUT": ("cut", None)}
+# The four graphics buttons, in the Surface's order (0x19-0x1C): each toggles a downstream key, the MASTER
+# layer named "DSK <label>". The labels are the adapter's settings (load_settings()); these are the defaults.
+DSK_BUTTONS = ("LOGO ON", "U.N-TITLE ON", "TITLE ON", "SUPER FG ON")
+DSK_DEFAULTS = {"LOGO ON": "Logo", "U.N-TITLE ON": "Up Next", "TITLE ON": "Title", "SUPER FG ON": "SuperFG"}
+SETTINGS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "wingman.config.json")
+ACTIONS = {**{f"PREVIEW {n}": ("preview", n) for n in range(1, 7)}, "AUTO": ("take", None), "CUT": ("cut", None),
+           **{button: ("dsk", button) for button in DSK_BUTTONS}}
 READ_TIMEOUT_S = 2.0  # /state
 COMMAND_TIMEOUT_S = 10.0  # a TAKE answers once its signal is sent, after any pre-hooks and stinger cover
 TALLY_POLL_S = 0.25  # as often as the panel reads /state
@@ -130,6 +146,99 @@ def lamps(s: dict) -> tuple[int | None, int | None]:
     return key(looks.get(s["pgm"]) if s.get("pgm") in ("A", "B") else None), key(looks.get(s["pvw"]) if s.get("pvw") else None)
 
 
+class SettingsError(ValueError):
+    """The settings file cannot be used as it is: the adapter says why and does not start."""
+
+
+def load_settings(path: str | None = None) -> dict:
+    """The adapter's settings: {"dsk": {button: label} for all four DSK buttons, "from": the file or None}.
+    With no path, wingman.config.json beside this file, and no file there means the defaults. A path given
+    must exist. A button that is not a DSK button, a label that is not text, or anything else in the file
+    is refused, so a typo never leaves a button quietly on its default."""
+    file = path or SETTINGS_FILE
+    labels = dict(DSK_DEFAULTS)
+    try:
+        with open(file, encoding="utf-8") as f:
+            raw = json.load(f)
+    except FileNotFoundError:
+        if path:
+            raise SettingsError(f"{file}: no such file") from None
+        return {"dsk": labels, "from": None}
+    except (OSError, ValueError) as e:
+        raise SettingsError(f"{file}: {e}") from None
+    shape = '{"dsk": {"LOGO ON": "<label>", "TITLE ON": "<label>", ...}}'
+    if not isinstance(raw, dict) or set(raw) - {"dsk"} or not isinstance(raw.get("dsk", {}), dict):
+        raise SettingsError(f"{file}: expected {shape}")
+    for button, label in raw.get("dsk", {}).items():
+        if button not in DSK_DEFAULTS:
+            raise SettingsError(f'{file}: "{button}" is not a DSK button ({", ".join(DSK_BUTTONS)})')
+        if not isinstance(label, str) or not label.strip():
+            raise SettingsError(f'{file}: the label for "{button}" must be text, as in "DSK <label>"')
+        labels[button] = label.strip()
+    return {"dsk": labels, "from": file}
+
+
+# The panel's lines for its downstream keys, as dsk_greyed() and dsk_key() mirror them: one key per DSK
+# takectl lists, sent as takectl spells it, greyed only when not ready (Program not known, or takectl not
+# reachable) or a request is pending. Not when busy, in flight or in SAFE: a DSK toggles then too.
+# test_wingman.py holds them to operator.html.
+PANEL_DSK = (
+    "const ready = !!(s && s.pgm) && !offline;",
+    "const dsk = (s && s.dsk) || [], dk = JSON.stringify(dsk.map((x) => x.label));",
+    'for (const x of dsk) { const b = document.createElement("button"); b.textContent = x.label; b.dataset.label = x.label; '
+    'b.addEventListener("click", () => act("/dsk?label=" + encodeURIComponent(x.label), x.label)); $("dskRow").append(b); }',
+    '$("dskRow").querySelectorAll("button").forEach((b) => { const x = dsk.find((y) => y.label === b.dataset.label); '
+    'b.dataset.on = x && x.on ? "1" : ""; b.disabled = !ready || pending; });',
+)
+
+
+def dsk_greyed(s: dict) -> str | None:
+    """Why the panel's downstream keys would be greyed now, or None. Only when not ready; the panel's
+    "pending" is the adapter's own in-flight rule."""
+    if s.get("ready") is False:
+        return f"takectl is not ready ({s.get('mode') or 'starting'})"
+    if not s.get("pgm"):
+        return "Program is not known yet"
+    return None
+
+
+def dsk_key(s: dict, label: str) -> str | None:
+    """The downstream key takectl lists for label, spelt as takectl spells it, or None. takectl matches a
+    label without regard to case (setDsk), and so does this."""
+    for k in s.get("dsk") or []:
+        if str(k.get("label", "")).lower() == label.lower():
+            return k["label"]
+    return None
+
+
+def dsk_list(s: dict) -> str:
+    return ", ".join(str(k.get("label", "?")) for k in s.get("dsk") or []) or "none"
+
+
+def dsk_report(s, labels: dict) -> list[str]:
+    """What the adapter says at start: MASTER's downstream keys, and for each DSK button its layer, or
+    that it sends nothing. Each press reads /state again, so a layer added later is found then."""
+    if not isinstance(s, dict) or s.get("ok") is False or s.get("ready") is False:
+        mode = s.get("mode") if isinstance(s, dict) else None
+        return [f"DSK buttons: takectl is not ready ({mode or 'starting'}), so its layers are not known yet; each press looks again"]
+    lines = [f"DSK buttons: MASTER's downstream keys are {dsk_list(s)}"]
+    for button in DSK_BUTTONS:
+        key = dsk_key(s, labels[button])
+        lines.append(f"  {button}: DSK {key}" if key else f'  {button}: no "DSK {labels[button]}" layer in MASTER; this button sends nothing')
+    return lines
+
+
+def dsk_at_start(takectl, labels: dict, log=say) -> None:
+    """Say, before scanning, which DSK buttons have a layer. Reads /state only."""
+    try:
+        s = takectl.get("/state")
+    except (URLError, TimeoutError, OSError, ValueError) as e:
+        log(f"DSK buttons: takectl not reachable ({e}), so its layers are not known yet; each press looks again")
+        return
+    for line in dsk_report(s, labels):
+        log(line)
+
+
 def tally_writer(client):
     """The one write the adapter makes to the Surface: a tally bank, to FFE2, with a write response."""
     return lambda data: client.write_gatt_char(TALLY_UUID, data, response=True)
@@ -201,8 +310,9 @@ class Tally:
 class Surface:
     """Decoded Surface events in, takectl commands out: at most one per press."""
 
-    def __init__(self, takectl, armed: bool, settle_s: float = 1.0, raw: bool = False, log=say, clock=time.monotonic):
+    def __init__(self, takectl, armed: bool, settle_s: float = 1.0, raw: bool = False, log=say, clock=time.monotonic, dsk_labels=None):
         self.takectl, self.armed, self.settle_s, self.raw, self.log, self.clock = takectl, armed, settle_s, raw, log, clock
+        self.dsk_labels = dict(DSK_DEFAULTS if dsk_labels is None else dsk_labels)  # button -> label, from the settings
         self.ready_at = None  # None: not connected, nothing acts
         self.busy = False
         self.tasks = set()
@@ -248,8 +358,8 @@ class Surface:
             self.tasks.add(task)
             task.add_done_callback(self.tasks.discard)
 
-    async def _run(self, kind: str, n: int | None) -> None:
-        what = f"key {n}" if kind == "preview" else kind.upper()
+    async def _run(self, kind: str, n) -> None:
+        what = f"key {n}" if kind == "preview" else n if kind == "dsk" else kind.upper()
         try:
             state = await asyncio.to_thread(self.takectl.get, "/state")
             if kind == "preview":
@@ -262,6 +372,17 @@ class Surface:
                     return
                 name = looks[n - 1]["name"]
                 route, note = "/pvw/layer-set?name=" + quote(name, safe=""), f"{what}, \"{name}\""
+            elif kind == "dsk":
+                label = self.dsk_labels[n]
+                why = dsk_greyed(state)
+                if why:
+                    self.log(f"  {what}: not sent, {why} (the panel's downstream keys are greyed too)")
+                    return
+                key = dsk_key(state, label)
+                if key is None:
+                    self.log(f'  {what}: no "DSK {label}" layer in MASTER (its downstream keys: {dsk_list(state)}); nothing sent')
+                    return
+                route, note = "/dsk?label=" + quote(key, safe=""), f"DSK {key}"
             else:
                 why = greyed(state)
                 if why:
@@ -291,19 +412,23 @@ class Surface:
             self.log(f"  sent {route}: takectl refused: {r.get('error', 'no reason given')}")
         elif route.startswith("/pvw/"):
             self.log(f"  sent {route}: \"{r.get('layerSet', '?')}\" in Preview ({r.get('pvw', '?')})")
+        elif route.startswith("/dsk"):
+            self.log(f"  sent {route}: DSK {r.get('label', '?')} {'on' if r.get('on') else 'off'}")
         else:
             ms = f" {r['ms']} ms" if r.get("ms") else ""
             self.log(f"  sent {route}: {what} to {r.get('pgm', '?')} ({r.get('transition', '?')}{ms}); Preview is now {r.get('pvw', '?')}")
 
 
-async def run(args) -> None:
+async def run(args, settings: dict) -> None:
     # Imported here, so the tests and a machine without Bleak can still load this file.
     from bleak import BleakClient, BleakScanner
 
-    surface = Surface(Takectl(args.takectl), armed=args.arm, settle_s=args.settle, raw=args.raw)
+    surface = Surface(Takectl(args.takectl), armed=args.arm, settle_s=args.settle, raw=args.raw, dsk_labels=settings["dsk"])
     tally = Tally(Takectl(args.takectl), write=None) if args.tally else None
     say(f"Mode: {'ARMED: presses go to ' + args.takectl if args.arm else 'DRY RUN: nothing is sent (add --arm)'}")
     say(f"Tally: {'ON: PROGRAM and PREVIEW light as the panel buses do' if tally else 'off (add --tally to light PROGRAM and PREVIEW)'}")
+    say(f"Settings: {settings['from'] or 'the defaults (no wingman.config.json beside the adapter)'}")
+    await asyncio.to_thread(dsk_at_start, Takectl(args.takectl), settings["dsk"])
     while True:
         say(f"Scanning for {DEVICE_NAME} (25 s)...")
         device = await BleakScanner.find_device_by_filter(
@@ -349,15 +474,21 @@ async def run(args) -> None:
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(description="Wingman Surface -> abswitch (PREVIEW 1-6, AUTO, CUT). Dry run unless --arm.")
+    p = argparse.ArgumentParser(description="Wingman Surface -> abswitch (PREVIEW 1-6, AUTO, CUT, the four DSK buttons). Dry run unless --arm.")
     p.add_argument("--arm", action="store_true", help="send commands to takectl (default: print them only)")
     p.add_argument("--tally", action="store_true", help="light the Surface's PROGRAM and PREVIEW buttons from takectl's state")
     p.add_argument("--takectl", default="http://127.0.0.1:8991", help="takectl's address")
     p.add_argument("--settle", type=float, default=1.0, help="seconds after connecting before presses count")
     p.add_argument("--raw", action="store_true", help="log every packet in hex")
+    p.add_argument("--config", help="the adapter's settings (default: wingman.config.json beside the adapter, if it is there)")
     args = p.parse_args()
     try:
-        asyncio.run(run(args))
+        settings = load_settings(args.config)
+    except SettingsError as e:
+        print(f"Settings refused: {e}. Nothing started.", file=sys.stderr)
+        sys.exit(2)
+    try:
+        asyncio.run(run(args, settings))
     except KeyboardInterrupt:
         print("\nStopped.")
 

@@ -95,6 +95,22 @@ MUTANTS = [
      "    finally:\n        for bank in ():\n", False),
     ("M53 any answer but n passes", L, 'all(answer == "y" for', 'all(answer != "n" for', False),
     ("M54 a walk stopped early can pass", L, "    return len(answers) == len(steps()) and", "    return len(answers) >= 0 and", False),
+    # Downstream keys (the pen's brief of 2026-11-19, stage 1): the four graphics buttons toggle "DSK <label>".
+    ("M55 a DSK button toggles its neighbour's label", A, "                label = self.dsk_labels[n]\n",
+     "                label = self.dsk_labels[DSK_BUTTONS[(DSK_BUTTONS.index(n) + 1) % len(DSK_BUTTONS)]]\n", True),
+    ("M56 TITLE ON and U.N-TITLE ON defaults swapped", A, '"U.N-TITLE ON": "Up Next", "TITLE ON": "Title"', '"U.N-TITLE ON": "Title", "TITLE ON": "Up Next"', False),
+    ("M57 a layer MASTER lacks is sent anyway", A, "            return k[\"label\"]\n    return None\n", "            return k[\"label\"]\n    return label\n", True),
+    ("M58 a DSK is greyed mid-transition as TAKE is", A, "                why = dsk_greyed(state)\n", "                why = greyed(state)\n", True),
+    ("M59 a DSK is sent while not ready", A, "                why = dsk_greyed(state)\n", "                why = None\n", False),
+    ("M60 the settings' spelling is sent, not takectl's", A, '"/dsk?label=" + quote(key, safe="")', '"/dsk?label=" + quote(label, safe="")', False),
+    ("M61 a DSK label is not encoded", A, '"/dsk?label=" + quote(key, safe="")', '"/dsk?label=" + key', False),
+    ("M62 a settings typo falls back to the default", A, "        if button not in DSK_DEFAULTS:\n            raise SettingsError(",
+     "        if button not in DSK_DEFAULTS:\n            continue\n            raise SettingsError(", False),
+    ("M63 a settings file named but missing means the defaults", A, "        if path:\n            raise SettingsError(", "        if False:\n            raise SettingsError(", False),
+    ("M64 the start report finds every layer", A, "        key = dsk_key(s, labels[button])\n", "        key = labels[button]\n", True),
+    ("M65 no report at start", A, '    await asyncio.to_thread(dsk_at_start, Takectl(args.takectl), settings["dsk"])\n', "", False),
+    ("M66 a DSK label must match takectl's case", A, 'if str(k.get("label", "")).lower() == label.lower():', 'if str(k.get("label", "")) == label:', True),
+    ("M67 the presses ignore the settings", A, 'raw=args.raw, dsk_labels=settings["dsk"])', "raw=args.raw)", False),
 ]
 
 

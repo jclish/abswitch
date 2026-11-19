@@ -6,7 +6,8 @@
 
 Surface packets are fed to the adapter exactly as the Bluetooth callback would, armed, so what is
 checked is what takectl did with them: the off-air document's look, and that Program never moved.
-The mock's A and B both hold two Layer Sets, "Speaker Wide" and "Slides PiP". Output: offline_check.txt.
+The mock's A and B both hold two Layer Sets, "Speaker Wide" and "Slides PiP"; its MASTER has two
+downstream keys, "DSK Bug" and "DSK Clock". Output: offline_check.txt.
 """
 
 import asyncio
@@ -70,6 +71,12 @@ def until(fn, seconds):
 def looks():
     s = get("/state")
     return s["pgm"], s["pvw"], dict(s.get("looks") or {})
+
+
+def dsk_live():
+    """MASTER's downstream key layers on the mock, name -> live-state: what mimoLive itself would show."""
+    with urlopen(f"http://127.0.0.1:{MP}/api/v1/documents/333/layers", timeout=5) as r:
+        return {x["attributes"]["name"]: x["attributes"]["live-state"] for x in json.loads(r.read())["data"] if x["attributes"]["name"].startswith("DSK ")}
 
 
 def listening(port):
@@ -145,10 +152,11 @@ def main():
         check(looks() == before and "empty" in log[-1], f"P2 UP and empty key {len(keys) + 1}: nothing changed ({log[-1].strip()})")
 
         # P3  The rest of the Surface sends nothing (PROGRAM and the T-bar as ruled; ON AIR is not PANIC).
-        for name in ("PROGRAM 1", "PROGRAM 2", "ON AIR", "TITLE ON", "PIP T-BAR", "PLUS"):
+        dsk0 = dsk_live()
+        for name in ("PROGRAM 1", "PROGRAM 2", "ON AIR", "PIP T-BAR", "PLUS", "AFV 1"):
             feed(press(name))
         time.sleep(0.5)
-        check(looks() == before, "P3 PROGRAM 1-2, ON AIR, TITLE ON, PIP T-BAR, PLUS: nothing changed")
+        check(looks() == before and dsk_live() == dsk0, "P3 PROGRAM 1-2, ON AIR, PIP T-BAR, PLUS, AFV 1: nothing changed, looks or downstream keys")
 
         # P4  A press during a TAKE: takectl refuses it, the adapter says so, and nothing lands late.
         get("/rate?s=2")
@@ -264,6 +272,73 @@ def main():
         check(landed is not None and after[:2] == (pgm, pvw) and after[2].get(pgm) == lk.get(pgm) and any("PREVIEW 3 DOWN" in x and "dropped" in x for x in lines),
               f"P9 PREVIEW 1 and 3 in one notification: {after[1]} shows \"{after[2].get(after[1])}\" (key 1 is \"{keys[0]}\"); "
               f"PGM still {after[0]}; the adapter: {lines}")
+
+        # P10 The graphics buttons toggle MASTER's downstream keys (the pen's brief, 2026-11-19, stage 1). The
+        #     settings put LOGO ON on "Bug" and TITLE ON on "clock" (takectl's own spelling is what is sent);
+        #     U.N-TITLE ON and SUPER FG ON keep their defaults, Up Next and SuperFG, which MASTER does not have.
+        labels = {**W.DSK_DEFAULTS, "LOGO ON": "Bug", "TITLE ON": "clock"}
+        report = []
+        W.dsk_at_start(W.Takectl(T), labels, log=report.append)
+        rep = {b: next((x.strip() for x in report if x.strip().startswith(b + ":")), "") for b in W.DSK_BUTTONS}
+        check(rep["LOGO ON"] == "LOGO ON: DSK Bug" and rep["TITLE ON"] == "TITLE ON: DSK Clock"
+              and all("sends nothing" in rep[b] for b in ("U.N-TITLE ON", "SUPER FG ON")),
+              f"P10a at start: {[x.strip() for x in report]}")
+        surface.dsk_labels = labels
+
+        def toggled(layer, want):
+            return until(lambda: dsk_live().get(layer) == want, 3)
+
+        settled()
+        start = looks()
+        d0 = dsk_live()
+        mark = len(log)
+        feed(press("LOGO ON"))
+        on = toggled("DSK Bug", "live")
+        others_on = dsk_live()
+        feed(press("LOGO ON"))
+        off = toggled("DSK Bug", "off")
+        lines = [x.strip() for x in log[mark:]]
+        check(d0 == {"DSK Bug": "off", "DSK Clock": "off"} and on and off and others_on.get("DSK Clock") == "off" and looks() == start
+              and any("sent /dsk?label=Bug: DSK Bug on" in x for x in lines) and any("sent /dsk?label=Bug: DSK Bug off" in x for x in lines),
+              f"P10b LOGO ON twice: DSK Bug on, then off; DSK Clock left {others_on.get('DSK Clock')}; Program and looks untouched; the adapter: {lines}")
+
+        mark = len(log)
+        feed(press("U.N-TITLE ON"))
+        feed(press("SUPER FG ON"))
+        time.sleep(0.5)
+        lines = [x.strip() for x in log[mark:]]
+        check(dsk_live() == d0 and sum("nothing sent" in x and 'layer in MASTER' in x for x in lines) == 2,
+              f"P10c U.N-TITLE ON and SUPER FG ON, whose layers MASTER lacks: nothing changed; the adapter: {lines}")
+
+        # Mid-transition: a 2 s MIX started from the panel's side; TITLE ON while takectl is still busy with it.
+        get("/rate?s=2")
+        pgm, pvw, _ = looks()
+        take = threading.Thread(target=lambda: get("/take", timeout=15))
+        take.start()
+        busy = until(lambda: (lambda s: s if s.get("busy") or (s.get("switcher") or {}).get("inFlight") else None)(get("/state")), 2)
+        mark = len(log)
+        feed(press("TITLE ON"))
+        still_busy = (lambda s: bool(s.get("busy") or (s.get("switcher") or {}).get("inFlight")))(get("/state"))
+        clock_on = toggled("DSK Clock", "live")
+        take.join()
+        landed = settled()
+        lines = [x.strip() for x in log[mark:]]
+        check(busy is not None and still_busy and clock_on and landed and landed["pgm"] == pvw and any("sent /dsk?label=Clock: DSK Clock on" in x for x in lines),
+              f"P10d TITLE ON mid-transition (busy at the press: {busy is not None}, after: {still_busy}): DSK Clock {dsk_live().get('DSK Clock')}; "
+              f"the TAKE still landed, PGM {pgm} -> {landed and landed['pgm']}; the adapter: {lines}")
+
+        # In SAFE: PANIC, then TITLE ON (Clock off again) and LOGO ON (Bug on); Program stays SAFE.
+        get("/panic")
+        in_safe = until(lambda: get("/state").get("pgm") == "SAFE", 3)
+        mark = len(log)
+        feed(press("TITLE ON"))
+        clock_off = toggled("DSK Clock", "off")
+        feed(press("LOGO ON"))
+        bug_on = toggled("DSK Bug", "live")
+        lines = [x.strip() for x in log[mark:]]
+        check(in_safe and clock_off and bug_on and get("/state").get("pgm") == "SAFE",
+              f"P10e in SAFE: TITLE ON -> DSK Clock {dsk_live().get('DSK Clock')}, LOGO ON -> DSK Bug {dsk_live().get('DSK Bug')}; "
+              f"PGM {get('/state').get('pgm')}; the adapter: {lines}")
     finally:
         for p in reversed(procs):
             p.terminate()
