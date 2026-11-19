@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // round1-offline-check: v0.2 round 1 against test/mock-mimolive.mjs, offline (no mimoLive needed).
-//   node test/round1-offline-check.mjs          (nothing else on :8991 or :18989)
+//   node test/round1-offline-check.mjs          (its own ports: :18989, :18991)
 // S. setup mode: no config → / redirects to /setup, /state says not ready, actions refused; /setup
 //    lists the mock's documents and suggests the sources and switcher; Save refuses bad choices,
 //    writes the config for good ones, and takectl starts running; a second Save is refused.
@@ -18,12 +18,15 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileS
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { MP, TP, ownCopy, ownUp, refuseIfTaken } from "./offline-ports.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = process.env.TAKECTL_DIR || dirname(HERE);
 const OUT = process.env.TAKECTL_DIR ? join(ROOT, "out") : HERE;
 mkdirSync(OUT, { recursive: true });
-const MP = 18989, MOCK = `http://localhost:${MP}`, T = "http://localhost:8991";
+const MOCK = `http://localhost:${MP}`, T = `http://localhost:${TP}`;
+await refuseIfTaken("round1-offline-check");
+const RUN = ownCopy(ROOT); // takectl and start.command run from here, on :18991: offline-ports.mjs
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const get = (u, o) => fetch(u, o).then(async (r) => ({ status: r.status, headers: r.headers, body: await r.text() })).catch((e) => ({ status: 0, body: String(e) }));
 const json = async (u, o) => { const r = await get(u, o); try { return { status: r.status, ...JSON.parse(r.body) }; } catch { return { status: r.status, raw: r.body }; } };
@@ -36,15 +39,15 @@ const until = async (fn, ms) => { const t = Date.now(); while (Date.now() - t < 
 const dir = mkdtempSync(join(tmpdir(), "abswitch-r1-"));
 const cfgFile = join(dir, "takectl.config.json");
 const procs = [];
-const startMock = (...flags) => { const p = spawn("node", [join(HERE, "mock-mimolive.mjs"), String(MP), ...flags], { stdio: "ignore" }); procs.push(p); return p; };
-const startTk = () => { const p = spawn("node", [join(ROOT, "takectl.mjs")], { env: { ...process.env, TAKECTL_CONFIG: cfgFile }, stdio: ["ignore", "pipe", "pipe"] }); let log = ""; p.stdout.on("data", (d) => (log += d)); p.stderr.on("data", (d) => (log += d)); p.log = () => log; procs.push(p); return p; };
+const startMock = async (...flags) => { const p = spawn("node", [join(HERE, "mock-mimolive.mjs"), String(MP), ...flags], { stdio: "ignore" }); procs.push(p); return ownUp(p, MP, "mock"); };
+const startTk = async () => { const p = spawn("node", [join(RUN, "takectl.mjs")], { env: { ...process.env, TAKECTL_CONFIG: cfgFile }, stdio: ["ignore", "pipe", "pipe"] }); let log = ""; p.stdout.on("data", (d) => (log += d)); p.stderr.on("data", (d) => (log += d)); p.log = () => log; procs.push(p); return ownUp(p, TP); };
 const stop = async (p) => { if (p && p.exitCode === null && p.signalCode === null) { const gone = new Promise((r) => p.once("exit", r)); p.kill(); await gone; } };
 
 try {
   // ---- S: setup mode
-  let mock = startMock();
+  let mock = await startMock();
   await sleep(500);
-  let tk = startTk();
+  let tk = await startTk();
   await until(async () => (await get(`${T}/state`)).status, 6000);
   const root = await get(`${T}/`, { redirect: "manual" });
   const st0 = await json(`${T}/state`), take0 = await json(`${T}/take`);
@@ -83,15 +86,15 @@ try {
   d = await json(`${T}/doctor.json`);
   const red = d.checks?.filter((c) => !c.ok) ?? [];
   const st1 = await json(`${T}/state`);
-  const cli = spawnSync("node", [join(ROOT, "takectl.mjs"), "doctor"], { env: { ...process.env, TAKECTL_CONFIG: cfgFile }, encoding: "utf8" });
+  const cli = spawnSync("node", [join(RUN, "takectl.mjs"), "doctor"], { env: { ...process.env, TAKECTL_CONFIG: cfgFile }, encoding: "utf8" });
   check(dpage.status === 200 && red.length >= 1 && red.every((c) => c.fix) && /mimoLive answers at/.test(red[0]?.label) && st1.doctor?.ok === false && cli.status === 1 && /✗ mimoLive answers at/.test(cli.stdout),
     `D2. mock stopped: ${red.length} red, first "${red[0]?.label}" → "${red[0]?.fix}"; /state.doctor.ok=${st1.doctor?.ok}; CLI exit ${cli.status}`);
   await stop(tk);
 
   // ---- F: hidden-key fallback
-  mock = startMock("--no-slot-keys");
+  mock = await startMock("--no-slot-keys");
   await sleep(500);
-  tk = startTk();
+  tk = await startTk();
   const fs = await until(async () => { const s = await json(`${T}/state`); return s.ready !== false && s.pgm ? s : null; }, 8000);
   d = await json(`${T}/doctor.json`);
   const keysRed = ["liveslot", "slotcodes"].every((k) => d.checks?.find((c) => c.id === k)?.ok === false);
@@ -108,7 +111,7 @@ try {
   await stop(mock);
 
   // ---- L: start.command
-  const sc = join(ROOT, "start.command");
+  const sc = join(RUN, "start.command");
   const stub = join(dir, "bin"); mkdirSync(stub);
   writeFileSync(join(stub, "open"), `#!/bin/bash\necho "$@" >> "${join(dir, "opened.txt")}"\n`); chmodSync(join(stub, "open"), 0o755);
   const old = join(dir, "old"); mkdirSync(old);
@@ -117,17 +120,20 @@ try {
   const none = run("/usr/bin:/bin"), v20 = run(`${old}:/usr/bin:/bin`);
   check(existsSync(sc) && none.status === 1 && /needs Node\.js 22 or later/.test(none.stdout) && /nodejs\.org/.test(none.stdout) && v20.status === 1 && /this Mac has v20\.11\.0/.test(v20.stdout),
     `L1. no Node → exit ${none.status}: ${JSON.stringify(none.stdout.trim().slice(0, 80))}; Node 20 → exit ${v20.status}: ${JSON.stringify(v20.stdout.trim().slice(0, 70))}`);
-  mock = startMock();
+  mock = await startMock();
   await sleep(400);
   const nodeDir = dirname(process.execPath);
   const launched = spawn("bash", [sc], { env: { ...process.env, PATH: `${stub}:${nodeDir}:/usr/bin:/bin`, ABSWITCH_NO_DIALOG: "1", ABSWITCH_EXTRA_PATH: "", TAKECTL_CONFIG: cfgFile }, stdio: "ignore" });
   procs.push(launched);
   const opened = await until(async () => existsSync(join(dir, "opened.txt")) && readFileSync(join(dir, "opened.txt"), "utf8"), 12000);
+  await ownUp(launched, TP, "takectl that start.command started");
   const up = await json(`${T}/state`);
   const second = spawnSync("bash", [sc], { env: { ...process.env, PATH: `${stub}:${nodeDir}:/usr/bin:/bin`, ABSWITCH_NO_DIALOG: "1", ABSWITCH_EXTRA_PATH: "", TAKECTL_CONFIG: cfgFile }, encoding: "utf8", timeout: 10000 });
   const openedNow = readFileSync(join(dir, "opened.txt"), "utf8").trim().split("\n");
-  check(/^http:\/\/localhost:8991\/$/m.test(opened || "") && up.ready !== false && second.status === 0 && /already running/.test(second.stdout) && openedNow.length === 2,
+  check(new RegExp(`^http://localhost:${TP}/$`, "m").test(opened || "") && up.ready !== false && second.status === 0 && /already running/.test(second.stdout) && openedNow.length === 2,
     `L2. real Node: takectl started (ready=${up.ready !== false}), page opened at ${JSON.stringify((opened || "").trim())}; second double-click → exit ${second.status} "${second.stdout.trim()}", opens: ${openedNow.length}`);
+} catch (e) {
+  check(false, `the run stopped: ${e.message}`);
 } finally {
   for (const p of procs.reverse()) await stop(p);
   say(fails ? `${fails} FAIL(S)` : "ALL PASS");

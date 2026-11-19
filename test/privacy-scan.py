@@ -86,7 +86,8 @@ def scan(root):
     ids = identifiers()
     hits = []
     for dirpath, dirnames, files in os.walk(root):
-        dirnames[:] = [d for d in dirnames if d != ".git"]  # git's own metadata is not part of the package
+        # git's metadata and a local Python venv or bytecode cache (surfaces/wingman) are not part of the package
+        dirnames[:] = [d for d in dirnames if d not in (".git", ".venv", "__pycache__")]
         for f in files:
             if f in SKIP:
                 continue

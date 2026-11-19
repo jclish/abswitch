@@ -1,0 +1,16 @@
+offline-ports-check --falsify, 2026-11-15T03:51:41.538Z: each mutant on a copy, the check with fail-fast
+M1 the refusal refuses nothing: caught (R. amend-offline-check.mjs, :18991 taken: exit 1, "FAIL  the run stopped: :18991 is held by pid 81534, not by the takectl this chec"; requests t)
+M2 the refusal looks only at the takectl port: caught (R. amend-offline-check.mjs, :18989 taken: exit 1, "FAIL  the run stopped: :18989 is held by pid 81785, not by the mock this check s"; requests t)
+M3 ownUp() trusts at once: caught (O2. :18991 held by another process: resolved; requests to that process 0)
+M4 ownUp() takes any listener for its own: caught (O2. :18991 held by another process: resolved; requests to that process 0)
+M5 ownCopy() keeps the example's port: caught (S3. ownCopy(): 6 files [doctor.html, operator.html, setup.html, start.command, takectl.config.example.json, takectl.mjs], takectl's byte for byt)
+M6 ownCopy() takes the operator's takectl.config.json along: caught (S3. ownCopy(): 7 files [doctor.html, operator.html, setup.html, start.command, takectl.config.example.json, takectl.config.json, takectl.mjs], t)
+M7 the suites' takectl port is takectl's own: caught (S1. the suites' ports: mock :18989, takectl :8991; takectl's own :8991 and mimoLive's :8989 (from takectl.config.example.json) are neither)
+M8 a suite talks to takectl's own port again: caught (S2. round4-offline-check.mjs: guards imported true; refuses before its first spawn true; takectl's port named on lines [33]; takectl/start.comma)
+M9 a suite starts takectl from the real folder: caught (S2. round2-offline-check.mjs: guards imported true; refuses before its first spawn true; takectl's port named on lines []; takectl/start.command)
+M10 a suite runs start.command from the real folder: caught (S2. round1-offline-check.mjs: guards imported true; refuses before its first spawn true; takectl's port named on lines []; takectl/start.command)
+M11 a suite without the refusal: caught (S2. safe-offline-check.mjs: guards imported true; refuses before its first spawn false; takectl's port named on lines []; takectl/start.command )
+M12 a suite asks takectl before ownUp(): caught (U. round3-offline-check.mjs, refusal off, :18991 held: exit null; "[a request reached the decoy: stopped by the check]"; requests to the decoy 1)
+M13 mock-smoke asks takectl before ownUp(): caught (U. mock-smoke.mjs, refusal off, :18991 held: exit null; "[a request reached the decoy: stopped by the check]"; requests to the decoy 1 (GET /sta)
+M14 a suite's takectl start that does not wait for ownUp(): caught (U. amend-offline-check.mjs, refusal off, :18991 held: exit null; "[a request reached the decoy: stopped by the check]"; requests to the decoy 1 )
+every mutant caught

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // safe-offline-check: the safe source for PANIC (ruling 2026-11-11), against test/mock-mimolive.mjs
 // (slot 3 = "SAFE Test Pattern", slot 4 empty: cutting to it reads live slot 9, as on 7.0b3).
-//   node test/safe-offline-check.mjs        (nothing else on :8991 or :18989)
+//   node test/safe-offline-check.mjs        (its own ports: :18989, :18991)
 // P  PANIC to SAFE 0, 200 and 600 ms after TAKE is pressed, under the stinger, during an outside dissolve:
 //    slot 3 confirmed, pgm "SAFE", both TALLYs off, the TAKE target = the document Preview when pressed.
 // T  TAKE and CUT out of SAFE to each document; no UNDO after; history marks them.
@@ -23,12 +23,15 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { MP, TP, ownCopy, ownUp, refuseIfTaken } from "./offline-ports.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = process.env.TAKECTL_DIR || dirname(HERE);
 const OUT = process.env.TAKECTL_DIR ? join(ROOT, "out") : HERE;
 mkdirSync(OUT, { recursive: true });
-const MP = 18989, MOCK = `http://localhost:${MP}`, MB = `${MOCK}/api/v1`, T = "http://localhost:8991";
+const MOCK = `http://localhost:${MP}`, MB = `${MOCK}/api/v1`, T = `http://localhost:${TP}`;
+await refuseIfTaken("safe-offline-check");
+const RUN = ownCopy(ROOT); // takectl runs from here, on :18991: offline-ports.mjs
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const json = async (u, o = {}) => { try { const r = await fetch(u, { ...o, signal: AbortSignal.timeout(o.timeout ?? 15000) }); const t = await r.text(); try { return { status: r.status, ...JSON.parse(t) }; } catch { return { status: r.status, raw: t }; } } catch (e) { return { status: 0, error: String(e) }; } };
 const g = (p) => json(T + p);
@@ -42,25 +45,28 @@ const dir = mkdtempSync(join(tmpdir(), "abswitch-safe-"));
 const procs = [];
 const stop = async (p) => { if (p && p.exitCode === null && p.signalCode === null) { const w = new Promise((r) => p.once("exit", r)); p.kill(); await w; } };
 const stopAll = async () => { for (const p of procs.splice(0).reverse()) await stop(p); };
+const startMock = async (...flags) => { const p = spawn("node", [join(HERE, "mock-mimolive.mjs"), String(MP), ...flags], { stdio: "ignore" }); procs.push(p); return ownUp(p, MP, "mock"); };
 const baseCfg = (safe = "SAFE Test Pattern") => {
   const c = JSON.parse(readFileSync(join(ROOT, "takectl.config.example.json"), "utf8"));
   for (const k of ["a", "b", "master"]) c[k].host = MOCK;
   c.a.documentName = "PH-A"; c.b.documentName = "PH-B"; c.master.documentName = "PH-MASTER";
   c.master.sourceNameSafe = safe;
-  c.companion = { host: null };
+  c.companion = { host: null }; c.port = TP;
   return c;
 };
 let n = 0;
 const startTk = async (cfg, file) => {
   const f = file ?? join(dir, `c${n++}.json`);
   if (cfg) writeFileSync(f, JSON.stringify(cfg, null, 2));
-  procs.push(spawn("node", [join(ROOT, "takectl.mjs")], { env: { ...process.env, TAKECTL_CONFIG: f }, stdio: "ignore" }));
+  const tk = spawn("node", [join(RUN, "takectl.mjs")], { env: { ...process.env, TAKECTL_CONFIG: f }, stdio: "ignore" });
+  procs.push(tk);
+  await ownUp(tk, TP);
   return f;
 };
 const ready = () => until(async () => { const s = await g("/state"); return s.ready !== false && s.pgm ? s : null; }, 9000);
 const phase = async (cfg = baseCfg(), ...flags) => {
   await stopAll();
-  procs.push(spawn("node", [join(HERE, "mock-mimolive.mjs"), String(MP), ...flags], { stdio: "ignore" }));
+  await startMock(...flags);
   await sleep(500);
   await startTk(cfg);
   return ready();
@@ -200,7 +206,7 @@ try {
   check(p.ok && p.pgm === "A" && (await slot()) === 1 && (await st()).safe?.panicTo === "A" && (dj.warnings ?? []).some((w) => /No safe source: PANIC cuts to document A/.test(w)),
     `N1. no safe source: PANIC → ${JSON.stringify({ ok: p.ok, pgm: p.pgm })}, slot ${await slot()}; doctor warning ${JSON.stringify((dj.warnings ?? []).find((w) => /safe/i.test(w)))}`);
   await stopAll();
-  procs.push(spawn("node", [join(HERE, "mock-mimolive.mjs"), String(MP)], { stdio: "ignore" }));
+  await startMock();
   await sleep(500);
   await startTk({ ...baseCfg(), a: { host: MOCK, documentName: "PH-A-missing" } });
   const nr = await until(async () => { const x = await st(); return x.ready === false && x.panicArmed ? x : null; }, 9000);
@@ -231,7 +237,7 @@ try {
 
   // ================================================================ S: setup and doctor
   await stopAll();
-  procs.push(spawn("node", [join(HERE, "mock-mimolive.mjs"), String(MP)], { stdio: "ignore" }));
+  await startMock();
   await sleep(500);
   const sf = join(dir, "setup.json");
   await startTk(null, sf);
@@ -249,6 +255,8 @@ try {
   const safeChecks = (dk.checks ?? []).filter((c) => /SAFE/.test(c.id));
   check(sm.suggest?.sourceNameSafe === "SAFE Test Pattern" && sm.sources?.find((x) => x.name === "SAFE Test Pattern")?.slot === "3" && bad1.status === 400 && bad2.status === 400 && good.ok && saved.master?.sourceNameSafe === "SAFE Test Pattern" && safeChecks.length === 3 && safeChecks.every((c) => c.ok) && !(dk.warnings ?? []).some((w) => /No safe source/.test(w)),
     `S. setup suggests ${JSON.stringify(sm.suggest?.sourceNameSafe)} (slot ${sm.sources?.find((x) => x.name === "SAFE Test Pattern")?.slot}); A's source as safe → ${bad1.status} ${JSON.stringify(bad1.error)}; unknown → ${bad2.status}; saved ${JSON.stringify(saved.master?.sourceNameSafe)}; doctor ${safeChecks.map((c) => `${c.id} ${c.ok ? "✓" : "✗"}`).join(", ")}`);
+} catch (e) {
+  check(false, `the run stopped: ${e.message}`);
 } finally {
   await stopAll();
   say(fails ? `${fails} FAIL(S)` : "ALL PASS");

@@ -9,5 +9,5 @@ PASS  D2. mock stopped: 1 red, first "mimoLive answers at http://localhost:18989
 PASS  F1. keys absent: started (pgm=A), truth="source tally", warning="running on source tally: this mimoLive does not expose the switcher's live slot (see /doctor)", doctor live-slot/codes red=true
 PASS  F2. on source tally: /take → pgm B, lastError null; /panic → {"ok":true,"rounds":1}, pgm A
 PASS  L1. no Node → exit 1: "abswitch needs Node.js 22 or later, and this Mac does not have it. Install the L"; Node 20 → exit 1: "abswitch needs Node.js 22 or later; this Mac has v20.11.0. Install the"
-PASS  L2. real Node: takectl started (ready=true), page opened at "http://localhost:8991/"; second double-click → exit 0 "takectl is already running: opening http://localhost:8991/", opens: 2
+PASS  L2. real Node: takectl started (ready=true), page opened at "http://localhost:18991/"; second double-click → exit 0 "takectl is already running: opening http://localhost:18991/", opens: 2
 ALL PASS

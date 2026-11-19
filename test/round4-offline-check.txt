@@ -24,7 +24,7 @@ PASS  C5. PANIC clears it ("Cam Wide off"; PANIC ok; gone as PANIC returned: sho
 PASS  P0. after a TAKE, UNDO is offered (PVW A, look "Speaker Wide")
 PASS  P1. Slides switched on by hand in Preview A: UNDO off ("Preview changed since the TAKE: Slides on, by hand in mimoLive", key "Preview changed"); no Program warning
 PASS  P2. /undo refused: UNDO not available: Preview changed since the TAKE: Slides on, by hand in mimoLive
-PASS  P3. ~1 s after Preview settles, "Speaker Wide"'s thumbnail is taken again (2601 ms newer)
+PASS  P3. ~1 s after Preview settles, "Speaker Wide"'s thumbnail is taken again (2586 ms newer)
 PASS  P4. REHEARSE HOOKS (takectl's own Lower Third in Preview): ok; UNDO says "Preview changed since the TAKE: rehearse hooks", not "by hand"; no Program warning
 PASS  G1. WATCH PGM off: a hand change in Program does not warn
 PASS  G2. WATCH PGM on again: nothing from while it was off is kept

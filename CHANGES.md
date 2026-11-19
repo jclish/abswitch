@@ -1284,6 +1284,379 @@ was ruled, the chip on the picture at its corner.
 matched); only page reads ran in that time, after the state runs and the screenshots. The bench is back as
 Jourdan left it: A on air with Speaker Wide, B on Full Slides, takectl stopped.
 
+## After v0.2.0, 2026-11-12: the user's guide link (unreleased)
+
+The pen drafted a TD user's guide; it is built as `abswitch-guide.html` for clish.com and linked from the
+panel's header, the site page and the tools entry. Only the panel's part lives in this repository.
+
+**Decisions made at the keyboard, flagged:**
+- **[ROUTE]** None. **[CONFIG]** None. **[AIR]** None.
+- **A "?" key in the header**, between the status line and ⛶, opens `https://clish.com/abswitch-guide.html`
+  in a new tab (`target="_blank"`), so the panel itself never navigates away mid-show. On the iPad's Home
+  Screen it opens in Safari.
+- **"?" alone, at every size.** With a "GUIDE" label at 1440 it cut the status line to "READY · tally witness
+  ag…"; without it the status line is whole again.
+- **Left out at 1150 px wide and below** (an iPad mini, a 1024 iPad): the header has no room. With it there,
+  ⛶ was pushed 44 px off the right edge at 1133 and 1024. The guide is a desk read, not a show control.
+- **Left out in view-only mode**, like ⛶ and WATCH PGM.
+- **It needs internet** on the device that opens it; nothing about the guide is served by takectl.
+
+**Tested** (real app): `panel-chrome --states` at 1440×900, 1180×820, 1133×744 and 1024×768, and view-only:
+all pass, no key moved, nothing cut off, the status line whole at 1440. `mock-smoke`, `round3-offline-check`
+and `round4-offline-check`: 8, 23 and 37, all pass.
+
+**Fixed in the test:** the look-key check measured the steps strip even in view-only mode, where it is hidden
+(a false "look keys run into the steps strip"); it now skips hidden rows.
+
+## After v0.2.0, 2026-11-13: the Wingman Surface, PREVIEW 1–6 (branch wingman, unreleased)
+
+Production Engineering decoded the BirdDog Wingman Surface's Bluetooth messages (2026-11-13) and asked for it
+as a hardware panel for abswitch. `surfaces/wingman/` is that adapter: optional, outside takectl, in Python with
+Bleak, which abswitch itself does not need. The Surface is an input device; abswitch stays the switcher.
+
+**Ruled (Jourdan, 2026-11-13):**
+- **PROGRAM 1–6 do nothing:** the PGM row is lamps only. Once the Surface's lights are decoded they become
+  Program tally lamps.
+- **The T-bar is shown, never acted on:** a take is one step in abswitch; a T-bar parked halfway is a state it
+  has no name for.
+- **The adapter lives in an optional folder** that takectl never loads.
+
+**Decisions made at the keyboard, flagged:**
+- **[ROUTE]** None: PREVIEW n calls the panel's own `/pvw/layer-set?name=…`, naming key n from `/state`'s
+  `layerSetsAll` as the panel does. **[CONFIG]** None in `takectl.config.json`. **[AIR]** Preview only, and
+  only through takectl's own checks.
+- **Dry run unless `--arm`.** DOWN acts, UP never; one command at a time, and a press while one is in flight is
+  dropped, not queued; nothing counts for `--settle` (1 s) after connecting; a failure is logged, not retried.
+  ON AIR is not PANIC.
+- **`pack.sh` and `test/privacy-scan.py` skip `.venv` and `__pycache__`:** a venv's `pyvenv.cfg` names the
+  home folder, so the scan would refuse the package (checked), and neither belongs in it.
+- **Any error inside a command is caught and logged:** mutant M7 (an unencoded look name) crashed the offline
+  check instead of failing a step, which showed an exception could escape the adapter.
+
+**Tested offline:** `test_wingman.py` 18/18, reading `captures.txt` and the known-good monitor's button map at run
+time; `offline_check.py` against the real takectl on the mock, 6/6 (PREVIEW 1 and 2 change only Preview; UP, an
+empty key, PROGRAM, AUTO, CUT and ON AIR change nothing; a press during a TAKE is refused by takectl and nothing
+lands late); `falsify.py`, 11 mutants, every one caught, and the three that change what reaches takectl caught end
+to end as well.
+
+**Hardware check, the real Surface on the bench (Jourdan pressing): 9 of 9** (`surfaces/wingman/hardware-check.txt`,
+the adapter's log and takectl's own `/state` record merged by time). PREVIEW n named the panel's key n; armed,
+PREVIEW 2 reached Preview 42 ms after the press with Program unmoved; a press during a 3 s TAKE was refused and
+nothing landed after it; PROGRAM, AUTO, CUT and ON AIR changed nothing; switched off and on, the Surface reconnected
+by itself and a press 0.57 s after connecting was ignored; with takectl stopped a press was dropped and never sent
+later. Not shown on hardware: the in-flight guard dropping a press (the Surface sends presses one at a time and each
+command landed in 15–20 ms, before the next arrived). The 16 button packets from the check are now in `captures.txt`.
+Found: Bluetooth from a process started by the Claude app is killed by macOS ("Fatal Python error: Aborted", no
+prompt); it runs from Terminal.app, and the folder's README says so.
+
+## After v0.2.0, 2026-11-13: the Wingman Surface, AUTO and CUT (branch wingman, unreleased)
+
+AUTO is the panel's TAKE (`/take`) and CUT its CUT (`/cut`), as the brief asked, on the same terms as PREVIEW:
+DOWN only, one command at a time, nothing for a second after connecting, dry run unless `--arm`.
+
+**Decisions made at the keyboard, flagged:**
+- **[ROUTE]** None. **[CONFIG]** None. **[AIR]** TAKE and CUT, only through takectl's own `/take` and `/cut`.
+- **AUTO and CUT are sent only when the panel's TAKE and CUT would be pressable** (`greyed()`): takectl ready,
+  Program known, nothing busy or in flight on the switcher, no steps running, no rehearsal. takectl refuses most
+  of these itself, but not a TAKE while a transition started in mimoLive's own window is in flight: only the
+  panel's greying guards that, so the Surface mirrors it rather than going around it. The panel's lines are kept
+  in `PANEL_GREYING`, and a test reads `operator.html` and fails if they change.
+- **A TAKE or CUT that gets no answer (10 s) is reported as sent, not as "nothing sent", and is not sent again:**
+  takectl answers a TAKE once its signal has gone, after any pre-hooks and stinger cover, so silence does not
+  mean it did not happen.
+
+**Found, for a ruling (not changed here):**
+- **takectl does not refuse a TAKE or CUT while the switcher is mid-transition from outside it.** Only the panel's
+  greying does, and the panel reads takectl's switcher view, refreshed on the poll (5 s), so even the panel can
+  miss it. Companion presses go straight through today.
+- **The repo's other offline suites (`test/round4-offline-check.mjs` and the rest) start their own takectl on
+  :8991 and do not check that the port is free.** With an operator's takectl running they would drive it.
+
+**My mistake, 2026-11-13, on the bench (not a show):** `offline_check.py` was run while the takectl from the
+hardware check was still on :8991. Its own takectl could not start, so its presses went to the bench: Preview
+recalls, RATE 2.0 s (it had been 3.0 s), a TAKE, AUTO (TAKE), CUT, AUTO (TAKE), while PH-MASTER's File Recording
+was live. It now refuses to start if :8991 or the mock's port already answers, and before any press it checks
+that MASTER is the mock; run with the bench takectl up, it refused and sent nothing.
+
+**Tested offline:** `test_wingman.py` 24/24; `offline_check.py` 9/9 on the mock (AUTO dissolves to the off-air
+document, CUT cuts to it, and a second AUTO during the dissolve is not sent: the switcher saw one TAKE);
+`falsify.py` 16 mutants, every one caught, AUTO-sends-CUT also end to end.
+
+**Hardware check, steps 10–14 on the real Surface: 5 of 5** (`surfaces/wingman/hardware-check.txt`). AUTO with MIX
+1.0 s: a 1060 ms dissolve, `/take` sent 110 ms after the press; CUT: a bare cut (68 ms), with STINGER selected on
+the panel as Jourdan set it, which neither record shows; AUTO with STINGER: the stinger's 500 ms cover, takectl
+answering after it (606 ms); AUTO twice at 3.0 s: one TAKE, the presses at 375 ms and 1.7 s "not sent, a transition
+is in progress"; after PANIC, AUTO took out of SAFE to the TAKE GOES TO document. RATE is back at 3.0 s.
+
+## After v0.2.0, 2026-11-14: the Wingman Surface, tally (branch wingman, unreleased)
+
+Production Engineering's tally brief. **Ruled 2026-11-14: the adapter may write the Surface's two tally banks to
+FFE2, and nothing else** (this lifts, for those writes only, the 2026-11-13 ruling that nothing is written to the
+Surface). Also ruled: AUTO stays the panel's TAKE (the brief asked for a dissolve; no new path), the lamps follow
+`/state` on the panel's 250 ms poll with change-only writes, a reconnect is a full refresh, and lamps kept through
+a takectl outage are last-known state. With `--tally`:
+
+- PROGRAM n is red when key n's look is on air, PREVIEW n amber when it is in Preview, as the panel's buses light
+  them (`lamps()`; `PANEL_LAMPS`, held to `operator.html`). No PROGRAM button in SAFE or OTHER, none for keys 7–8.
+- `tally_bank(bank, lit)` builds a bank's write: twelve records `AA 00 07 4D 00 ID STATE CHECK`, STATE 00 lit, 01
+  off. It rebuilds the three writes the iPad app sent (`tally_captures.txt`: PROGRAM 2, PREVIEW 3, PREVIEW 4, copied
+  out of the experimental team's scripts by program, not retyped) byte for byte. The traces they came from
+  (`pcap1.pklg`, `3to4.pklg`) are not on this Mac.
+- The tally only reads `/state` and never sends a command, so a refresh or a reconnect can never TAKE.
+
+**Decisions made at the keyboard, flagged:**
+- **[CONFIG]** `--tally` is off unless given, so the adapter as committed before behaves as it did.
+- **When takectl is up but not ready, both banks go dark**, as the panel's lamps do; when it does not answer at all,
+  they keep their last state, as the panel keeps its last `/state`.
+- **Ctrl-C darkens both banks** before disconnecting, so the Surface never shows lamps nobody is keeping true.
+- **A failed or unanswered tally write (2 s) is written again on the next poll**: it is a state, not a command.
+  PREVIEW is never written ahead of a PROGRAM that failed.
+- **`offline_check.py` now runs its own takectl on :18991** (takectl's `port` setting), never :8991, so it cannot
+  reach an operator's takectl at all; it still refuses if its ports are taken.
+
+**Found and fixed:**
+- **A lit tally record is byte for byte its button's DOWN** (PREVIEW 3 lit is the captured PREVIEW 3 DOWN), and the
+  decoder read an off record as a DOWN too, because it never looked at byte 6. It now drops any packet whose byte 6
+  is not 00; every capture has 00 there. Whether the Surface sends writes back was then measured: it does not (T1).
+- **A log with nowhere to go could stop the lamps.** On the bench, Ctrl-C killed the `tee` the log was piped to;
+  a failed `print` raises, and mid-follow it would have stopped the lamps following. The log now ignores a dead
+  output. Use `tee -i`.
+
+**Tested offline:** `test_wingman.py` 48/48 (Bluetooth a fake that records each write); `offline_check.py` 10/10 on
+the mock, the new P8 following a Preview recall and a TAKE through the real takectl (Program first, then nothing
+more on an unchanged poll); `falsify.py` 36 mutants (20 new), every one caught, write-order and change-only also
+end to end. `echo_check.py`'s verdicts checked against a fake Bluetooth (quiet, a full echo, a stray packet, a void
+run, a cancel).
+
+**Hardware, presses not armed: 4 of 4** (`surfaces/wingman/hardware-check.txt`). T1 the echo check: one captured
+PREVIEW 3 write, answered in 15 ms, PREVIEW 3 amber, nothing on FFE1 for 3 s before or 5 s after. T2 connect: PROGRAM
+1 and PREVIEW 4 written 57 and 74 ms after connecting, as `/state` had them. T3 three panel Preview clicks: the
+PREVIEW bank followed in 48, 189 and 234 ms, PROGRAM untouched. T4 Ctrl-C: both banks dark (Jourdan). With `--raw`,
+the Surface sent no packet from T2 to T4. T2 and T3 are from the logs; Jourdan reported the run done without fault,
+not each lamp.
+
+**Not checked on the Surface yet:** tally with presses armed (PREVIEW, AUTO and CUT from the Surface), a TAKE from
+the panel, power off and on, takectl stopped and started, rapid changes, buttons 5 and 6.
+
+## After v0.2.0, 2026-11-14: the Wingman Surface, first armed tally test (branch wingman, unreleased)
+
+No code changes: the hardware record, and two rulings on the AUTO/CUT findings.
+
+**Ruled (the pen, 2026-11-14):**
+- **A TAKE during a dissolve started in mimoLive's own window: HOLD.** Documented, existing semantics kept.
+  abswitch does not own every way into a transition; no lock, cancel, queue or override, and no guard until
+  mimoLive's API is shown to report a transition in progress reliably (otherwise it would be another inferred
+  state machine). Overlapping transitions are left out of the armed tests.
+- **The other offline suites on :8991 with no free-port check: FIX, in a separate maintenance commit,** not with
+  the Wingman work and not before its hardware checks. The pattern is the Wingman check's: an isolated port, and a
+  test that owns the process it starts and never talks to, or stops, an operator's takectl.
+
+**Hardware, presses armed and tally on: 5 of 5** (`surfaces/wingman/hardware-check.txt`), on the bench documents
+with all three shows running, PH-MASTER's File Recording off and no streaming output (takectl's `outputs`). A1
+connect, red and amber as `/state`; A2 PREVIEW 2 from the Surface, amber 168 ms after the press; A3 CUT, a bare cut
+(62 ms), red and amber swapped, Program first; A4 AUTO with MIX at 1.0 s, takectl's own TAKE (`dissolve 1060 ms`),
+red and amber swapped; A5 Ctrl-C, both banks dark. The Surface sent nothing but the presses made. A first run had
+stopped at CUT: two of the shows were off, and takectl refused ("B document is not live"), as it should. All from
+the logs; Jourdan reported each run done, not each lamp.
+
+**Seen, for a ruling (not changed):** on a TAKE the lamps move when takectl's `/state` does, at the start of the
+dissolve (Program flips while busy), not at its end: in A4 red moved to PROGRAM 1 about 1 s before the dissolve
+finished. The panel's buses move at the same moment. The brief said tally updates "after the transition completes";
+the rulings say confirmed abswitch state drives tally, which this is.
+
+**Next, as ruled, only after these:** power-cycle recovery, a takectl restart, rapid presses, all six positions.
+
+## After v0.2.0, 2026-11-14: rulings on the first armed tally test (branch wingman, unreleased)
+
+No code changes.
+- **TAKE timing: KEEP.** Tally follows takectl's bus assignments when they change at the start of a dissolve, as
+  the panel does; no delay and no transition-completion state. PROGRAM's red means the document assigned to
+  Program, not that only its picture is visible: during a dissolve both are on screen. (README, Known limits.)
+- **takectl's refusal to switch into a document whose show is not running stays.** Nothing starts a show to
+  satisfy a switching command, from the Surface or anywhere else.
+- The outside-dissolve HOLD stands unchanged. No merge or push.
+
+## After v0.2.0, 2026-11-14: the Wingman Surface, tally recovery (branch wingman, unreleased)
+
+No code changes: the hardware record. Run on the bench documents with all three shows running, PH-MASTER's File
+Recording off and no streaming output (takectl's `outputs`). PH-A and PH-B now carry an NDI camera in Cam Wide
+and Two Shot's left side; the lamps follow looks, not pictures, so the adapter did not change for it.
+
+**Hardware, presses armed and tally on: 9 of 9** (`surfaces/wingman/hardware-check.txt`). Jourdan's report for
+the lamps: "all as expected"; the times are from the logs.
+- **Power cycle.** R1 connect, red and amber as `/state`. R2 Surface off: disconnect logged, scan again. R3 a
+  Preview pick on the panel while the Surface was going: the PREVIEW write in that gap failed ("disconnected") and
+  was not counted as shown, the failed-write path on hardware for the first time. R4 Surface on: full refresh,
+  amber on the look picked in R3. R5 PREVIEW 2 from the Surface, amber 123 ms after the press.
+- **takectl restart.** R6 takectl stopped: the lamps stayed, logged once. R7 a press with takectl down: nothing
+  sent, not retried. R8 takectl started: not ready for about 0.2 s, both banks dark, then the panel's state; the
+  R7 press was never sent. R9 Ctrl-C, both banks dark.
+
+**Seen (not changed):** a takectl restart blinks both banks dark for about 0.3 s, because takectl's first answer
+is "not ready" and the lamps follow it, as the panel's buses do. The ruled outage rule (keep the lamps) is for
+takectl not answering. README, Known limits.
+
+**Next, as ruled:** rapid presses, then all six positions.
+
+## After v0.2.0, 2026-11-14: the Wingman Surface, fast presses (branch wingman, unreleased)
+
+No code changes: the hardware record. Same bench and conditions as the recovery run; PREVIEW 1–4 only (keys 5
+and 6 are empty on the bench), no TAKE or CUT, `--arm --tally --raw`. Jourdan reported the run done; every
+result is from the logs.
+
+**Hardware: 5 of 5** (`surfaces/wingman/hardware-check.txt`). F1 connect. F2 38 presses of PREVIEW 1–4, 211–974 ms
+apart: each sent once, 13–33 ms after the press, none dropped or late; amber followed all 36 changes of look,
+33–302 ms after the press. F3 PREVIEW 1 and 3 together, five times: amber ended on the panel's Preview each time.
+F4 PREVIEW 2 eleven times: one lamp write. F5 Ctrl-C, both dark. Nothing read back.
+
+**Found, for a ruling (not changed):** two buttons pressed at the same instant can arrive as two valid packets in
+one 16-byte Bluetooth notification (twice in F3, plus three pairs of UPs). The adapter drops such a notification
+whole, as Production Engineering's known-good monitor and the prototype do, so neither press counts and nothing is
+sent. A lone press sharing a notification with another packet would be lost the same way; not seen. The choice:
+keep it, or split a notification whose length is a multiple of 8 into packets, each checked on its own and handled
+in order (two pressed together would then send the first; the in-flight rule drops the second). The in-flight
+guard itself has still never fired on hardware: every command finished before the next packet arrived.
+
+**Next, as ruled:** all six positions (the bench has four looks; keys 5 and 6 need a decision).
+
+## After v0.2.0, 2026-11-14: the Wingman Surface, notifications of several records (branch wingman, unreleased)
+
+**Ruled (the pen, 2026-11-14), on the fast-press finding:** process a notification as a sequence of whole
+eight-byte records, not as exactly eight bytes. The decoder is responsible for framing, the adapter for whether
+an event is actionable; event order and command dispatch stay as they were; no button combinations or macros;
+no streaming buffer (no record has been seen split across notifications).
+
+**Changed.**
+- `wingman_protocol.decode_notification()`: a notification as (record, event) pairs in the order received. Each
+  record is checked on its own by `decode()` (header, check byte, byte 6), and must be of a known type with,
+  for a button, a known state. Anything but whole records is one Bad. Of two or more records, if any fails, the
+  whole notification is one Bad, naming each record that failed: a tally write read back holds one lit record,
+  byte for byte a DOWN, among eleven off ones, so trusting the good records alone would let it act as a press.
+  A lone record decodes exactly as before.
+- `Surface.handle()` judges each record in order as if it had come alone and returns a list of commands;
+  `feed()` runs them. Of two DOWNs in one notification, the first acts and the in-flight rule drops the second.
+- `captures.txt`: the two real 16-byte notifications from the fast-press run, labelled record by record.
+
+**Tested.** test_wingman 65 (17 new: two presses, two releases, a release and a press in both orders, every
+wrong length, every bit flip in a pair, an unknown type or state beside a good record, every run of two or more
+records from each captured tally write, and the adapter's handling of each). offline_check 11 (P9: the captured
+pair through the real takectl; PREVIEW 1 acts, PREVIEW 3 is dropped). falsify 46, every mutant caught; M37 is
+the old exact-eight-byte assumption, caught by the unit tests and by P9.
+
+**Hardware: 4 of 4** (`surfaces/wingman/hardware-check.txt`), from the logs (Jourdan reported the run done):
+PREVIEW 1 and 3 together ten times. Six times both DOWNs were handled in one pass (inferred: logged within 1 ms,
+the second dropped before the first was sent); once they came 31 ms apart while the first command was still in
+flight, and the in-flight rule dropped the second, the first time that guard has fired on hardware; three times
+the first had landed, both were sent and the second won. Amber ended on the panel's Preview key every time, and
+no notification was dropped.
+
+**Next, as ruled:** all six positions.
+
+## After v0.2.0, 2026-11-14: the Wingman Surface, the lamp walk (branch wingman, unreleased)
+
+**Asked (Jourdan, 2026-11-14):** check lamps 5 and 6 with a lamp walk that doesn't use takectl. This is the
+ruled last hardware step, all six positions. Through the adapter a lamp lights only for a look on its key, and
+the bench has four looks.
+
+**Added.**
+- `surfaces/wingman/lamp_walk.py`. It connects to the Surface, writes each bank with `tally_bank()` to FFE2
+  (with a response; nothing else is written, anywhere), and asks after each step what the Surface shows.
+  - The order is: both dark; PROGRAM 1–6, one at a time; PROGRAM dark; PREVIEW 1–6; PREVIEW dark.
+  - It listens on FFE1 throughout and logs every packet.
+  - However it ends (q, Ctrl-C, a failed write), it darkens both banks.
+  - It writes `lamp_walk.txt` with the answers as typed. It never contacts takectl and does not import the
+    adapter.
+- `test_wingman.py`, 73 (8 new):
+  - A model of the Surface reads which buttons are lit from the bytes actually written.
+  - At every question, the button asked about is the only one lit, and every position of both banks is asked
+    about.
+  - Only `tally_bank()` bytes are written, the walk ends dark, and the writer is FFE2 with a response.
+  - q, Ctrl-C and a failed write all still darken both banks.
+  - Only a full walk of y passes.
+  - No HTTP or socket imports.
+- `falsify.py`, 54, every mutant caught. M47–M54 are the walk's:
+  - it stops at button 5;
+  - it lights one button and asks about another;
+  - it leaves a bank lit going into the next;
+  - it writes with no response;
+  - it writes to FFE1;
+  - a stopped walk leaves the lamps lit;
+  - any answer but n passes;
+  - a walk stopped early can pass.
+
+**Hardware: 15 of 15** (`surfaces/wingman/hardware-check.txt`, L1–L5). Jourdan ran it in Terminal.app and
+answered every question y, by eye. This was the first time PROGRAM 3–6 and PREVIEW 5 and 6 were lit on the
+Surface. The 18 writes were each answered in 7–21 ms, and FFE1 heard nothing (from the log): no position's lit
+record was read back. Still not seen on hardware: the adapter lighting 5 or 6 from a look on that key. The tests
+cover it.
+
+## After v0.2.0, 2026-11-14: the offline suites on their own ports (maintenance, its own commit; branch wingman, unreleased)
+
+**Ruled 2026-11-14,** on the Wingman finding of 2026-11-13: fix the other offline suites, which started their own
+takectl on :8991 and checked nothing, in a separate maintenance commit. The pattern is the Wingman check's: an
+isolated port, and a test that owns the process it starts and never talks to, or stops, an operator's takectl.
+
+**Found while fixing it:** setting the port in each suite's config was not enough, for two reasons.
+- **Setup mode.** takectl with no config takes its port from the example config next to it, which is 8991, and
+  Save copies the example into the config it writes. Three suites test setup mode: round1 S, amend W and safe S.
+- **start.command.** It reads the port from `takectl.config.json` in its own folder and ignores
+  `TAKECTL_CONFIG`. In a working folder that file is the operator's real config. So round1's start.command test,
+  run while an operator's takectl was up, would have found it "already running" and read its `/state`.
+
+**Changed.**
+- **New `test/offline-ports.mjs`,** shared by the seven offline suites (`mock-smoke` and the six
+  `*-offline-check`):
+  - `MP` 18989 and `TP` 18991 are the suites' own mock and takectl ports.
+  - `refuseIfTaken()` runs before anything starts. If anything is listening on either port (127.0.0.1 or ::1),
+    the suite prints "REFUSED" and exits 2, with nothing sent and its last results kept.
+  - `ownCopy()` copies `takectl.mjs`, its pages and `start.command` to a folder of the suite's own. The copy's
+    example config has port 18991, and there is no `takectl.config.json`. Setup mode, Save and start.command
+    all land on 18991, and nothing reads the operator's config.
+  - `ownUp()` runs after every mock and takectl start. Before a single request, it waits until the process the
+    suite started is the one listening on its port, read from lsof, which sends nothing. Another listener, an
+    exit, or no listener within 9 s stops the suite, with nothing sent.
+- **Each suite:**
+  - It talks to :18991, including the requests from the LAN address (Save, Start Over and hooks from another
+    host).
+  - Every config it writes sets `port`.
+  - takectl, `takectl doctor` and start.command run from its own copy.
+  - It waits for `ownUp()` after every start.
+  - A thrown error is now a FAIL line with its reason. Five suites had no `catch`, so the reason never reached
+    their results file.
+- `TAKECTL_DIR` still works: the copy is made from that folder.
+
+**Tested.**
+- **All seven suites,** run one at a time while Jourdan's takectl was up on :8991 (pid 69367), with 18989 and
+  18991 checked free just before each. Every suite passed as many checks as before: mock-smoke 8, round1 12,
+  amend 10, round2 34, round3 23, round4 37, safe 21.
+  - After each suite, lsof showed his takectl still the only process listening on :8991.
+  - Throughout, every process with a connection to :8991 was logged every 200 ms. Only two appeared: a WebKit
+    page (his panel) and his takectl itself. None was from a suite. This was sampled, so a connection shorter
+    than 200 ms could be missed; the static check S2 covers every line.
+- round1's start.command test now opens `http://localhost:18991/`, from its own copy.
+- **`test/offline-ports-check.mjs`, 35 of 35.** It runs nothing until every static check passes, so a broken
+  copy can never put a takectl on :8991.
+  - S (static): the ports, then each suite (guards imported, refusal before the first start, takectl's port named
+    nowhere, takectl and start.command started only from the copy), then the copy itself.
+  - O: `ownUp()` against its own listener, another process's, one that never listens and one that exits, and
+    takectl in setup mode from the copy.
+  - R: every suite with :18991, then :18989, held by a decoy that answers like a ready takectl.
+  - U: every suite again, with the refusal switched off. Each stops at its first takectl start, and the decoy
+    gets no request.
+- **`--falsify`, 14 mutants, every one caught** (`test/offline-ports-falsify.txt`), each by the check meant for it:
+  - by R: the refusal refusing nothing, or looking only at :18991;
+  - by O2: `ownUp()` trusting at once, or taking any listener for its own;
+  - by S, before any process started: the copy keeping port 8991, the copy taking `takectl.config.json` along,
+    the suites' port set to 8991, a suite talking to :8991, takectl or start.command started from the real
+    folder, a suite without the refusal;
+  - by U, the decoy getting a request: a suite, mock-smoke, or a takectl start that sends before `ownUp()`.
+  - Afterwards nothing was left running, and :18989 and :18991 were free again.
+
+**Found, not changed (outside the ruling):** 17 real-app checks also start their own takectl on :8991 and check
+nothing, among them `round1-check.mjs` and `panic-check.mjs`. While an operator's takectl is up, theirs could not
+start, and they would drive the operator's takectl against the real mimoLive. Today the bench takectl has to be
+stopped first. For a ruling.
+
 ## Next
 
 **v0.2.1:** when a key's hooks text does not fit whole beside the count, show a small hook marker instead of

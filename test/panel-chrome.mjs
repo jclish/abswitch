@@ -153,7 +153,8 @@ const KEYS = `(async () => {
     if (bars !== null && bars > 1) bad.push(m + " monitor: bars of " + bars.toFixed(1) + " px beside the picture");
     return m + " " + Math.round(r.width) + "x" + Math.round(r.height) + (bars === null ? " (frame not measured)" : " bars " + bars.toFixed(1));
   });
-  const steps = document.querySelector(".steps")?.getBoundingClientRect(), util = document.querySelector(".util > button")?.getBoundingClientRect();
+  const shown = (sel) => { const e = document.querySelector(sel); return e && e.offsetParent ? e.getBoundingClientRect() : null; }; // view-only hides the steps and utility rows
+  const steps = shown(".steps"), util = shown(".util > button");
   const lastKey = keys[keys.length - 1]?.getBoundingClientRect();
   if (steps && lastKey && lastKey.bottom > steps.top + 0.5) bad.push("look keys run into the steps strip");
   return { bad, note, thumbs, nexts, keys: keys.length, size: sizes.join(" "), pic: picWH, keyH, mons,

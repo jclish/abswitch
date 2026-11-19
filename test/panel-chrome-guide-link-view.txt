@@ -1,0 +1,15 @@
+page http://localhost:8993/?view=monitor at 1180×820 @2x in Chrome/157.0.8103.51
+{"conn":"ok","view":"monitor","scroll":[1180,820,1180,820],"small":[],"buttons":0,"outside":[],"pics":[{"mon":"pgm","picture":"800x450","stale":""},{"mon":"pvw","picture":"800x450","stale":""}],"headers":["PROGRAM · DOCUMENT B","PREVIEW · DOCUMENT A"],"status":"READY · tally witness agrees"}
+PASS  takectl answered (conn ok)
+PASS  one screen: page 1180×820 in a 1180×820 viewport
+PASS  nothing is cut off at the edges
+PASS  every visible control ≥ 44 px (0 buttons)
+PASS  reasons whole on their keys, subtitle whole or hidden
+PASS  look-key labels ≥ 4.5:1 over any thumbnail: worst 11.9:1 (Speaker Wide .num over white)
+PASS  both monitors show a live picture: pgm 800x450, pvw 800x450
+PASS  look keys: 8 keys, all 126x131, picture 122x69 (16:9, 4 with a thumbnail, fitted, never cropped), name band underneath, slot number on the picture, keys not stretched
+PASS  monitors exactly 16:9, no bars beside the picture: pgm 424x238 bars 0.0, pvw 424x238 bars 0.0
+   rows below the keys: null px left free above the steps strip; steps strip / utility key heights  px
+PASS  the NEXT key ("Two Shot") has its white ring all the way round; Two Shot (ring; the word dropped: no room)
+screenshot: gview.png
+ALL PASS
