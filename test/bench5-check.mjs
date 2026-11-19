@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // bench5-check: bench protocol test 5, desync recovery, scripted (rerun 2026-11-09 on the
 // switcher-truth takectl).
-//   node test/bench5-check.mjs            (takectl must NOT already be running; MASTER on slot 1)
+//   node test/bench5-check.mjs            (refuses if a takectl answers on takectl's own port; --beside-takectl runs it anyway, logged; MASTER on slot 1)
 // Part 1, takectl running and idle: Cut_2, Dis_1, Dis_2, Cut_1 fired straight at MASTER's switcher
 // (the same signals its UI buttons drive). After each, /state.pgm and both TALLY layers must follow
 // within 500 ms of the switcher's live slot changing.
@@ -12,9 +12,12 @@ import { spawn } from "node:child_process";
 import { openSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { RP, benchConfig, benchConfigFile, benchCopy, refuseUnlessClear, startBenchTakectl } from "./bench-guard.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url)), ROOT = dirname(HERE);
-const B = "http://localhost:8989/api/v1", T = "http://localhost:8991";
+const B = "http://localhost:8989/api/v1", T = `http://localhost:${RP}`;
+await refuseUnlessClear("bench5-check");
+const RUN = benchCopy(ROOT), OWN_CFG = benchConfigFile(join(ROOT, "takectl.config.json")); // its own takectl and config, on :18992: bench-guard.mjs
 const j = (u) => fetch(u).then((r) => (r.status === 204 ? null : r.json()));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const out = [];
@@ -36,7 +39,7 @@ const was = { slot: await slot(), A: await tally("A"), B: await tally("B") };
 if (was.slot !== 1) { console.error("needs MASTER on slot 1"); process.exit(2); }
 
 const startTk = async (log) => {
-  const tk = spawn("node", ["takectl.mjs"], { cwd: ROOT, stdio: ["ignore", openSync(join(HERE, log), "w"), openSync(join(HERE, log), "a")] });
+  const tk = await startBenchTakectl(RUN, OWN_CFG, { stdio: ["ignore", openSync(join(HERE, log), "w"), openSync(join(HERE, log), "a")] });
   let st = null;
   for (let i = 0; i < 40 && !st; i++) { await sleep(250); st = await j(`${T}/state`).catch(() => null); }
   return tk;

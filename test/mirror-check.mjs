@@ -1,13 +1,19 @@
 // mirror-check: start takectl, recall a set on the PGM document, call /mirror, and confirm the
 // PVW document now has the same set active. Restores Speaker Wide in both and the TALLY states.
-// Use: node test/mirror-check.mjs test/takectl-mirror.log   (takectl must NOT already be running)
+// Use: node test/mirror-check.mjs test/takectl-mirror.log   (refuses if a takectl answers on takectl's own port; --beside-takectl runs it anyway, logged)
 import { spawn } from "node:child_process";
 import { openSync } from "node:fs";
 import { homedir } from "node:os";
-const B = "http://localhost:8989/api/v1", T = "http://localhost:8991";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { RP, benchConfig, benchConfigFile, benchCopy, refuseUnlessClear, startBenchTakectl } from "./bench-guard.mjs";
+const HERE = dirname(fileURLToPath(import.meta.url)), ROOT = dirname(HERE);
+const B = "http://localhost:8989/api/v1", T = `http://localhost:${RP}`;
+await refuseUnlessClear("mirror-check");
+const RUN = benchCopy(ROOT), OWN_CFG = benchConfigFile(join(ROOT, "takectl.config.json")); // its own takectl and config, on :18992: bench-guard.mjs
 const j = (u) => fetch(u).then((r) => r.json());
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const LOG = process.argv[2];
+const LOG = process.argv.slice(2).find((a) => !a.startsWith("--"));
 
 const docs = (await j(`${B}/documents`)).data;
 const id = { A: docs.find((d) => d.attributes.name.startsWith("PH-A")).id, B: docs.find((d) => d.attributes.name.startsWith("PH-B")).id };
@@ -18,7 +24,7 @@ const recall = async (r, n) => { const s = (await sets(r)).find((x) => x.attribu
 const active = async (r) => (await sets(r)).filter((x) => x.attributes.active).map((x) => x.attributes.name);
 
 const out = openSync(LOG, "w");
-const tk = spawn("node", ["takectl.mjs"], { cwd: `${homedir()}/abswitch`, stdio: ["ignore", out, out] });
+const tk = await startBenchTakectl(RUN, OWN_CFG, { stdio: ["ignore", out, out] });
 let st = null;
 for (let i = 0; i < 40 && !st; i++) { await sleep(250); st = await j(`${T}/state`).catch(() => null); }
 if (!st) { console.log("takectl did not come up"); tk.kill(); process.exit(1); }

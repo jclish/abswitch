@@ -15,12 +15,15 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { RP, benchConfig, benchConfigFile, benchCopy, refuseUnlessClear, startBenchTakectl } from "./bench-guard.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = process.env.TAKECTL_DIR || dirname(HERE);
 const OUT = process.env.TAKECTL_DIR ? join(ROOT, "out") : HERE;
 mkdirSync(OUT, { recursive: true });
-const H = "http://localhost:8989", B = `${H}/api/v1`, T = "http://localhost:8991";
+const H = "http://localhost:8989", B = `${H}/api/v1`, T = `http://localhost:${RP}`;
+await refuseUnlessClear("round1-check");
+const RUN = benchCopy(ROOT), OWN_CFG = benchConfigFile(join(dirname(HERE), "takectl.config.json")); // its own takectl and config, on :18992: bench-guard.mjs
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const req = async (method, u, body) => { const r = await fetch(u, { method, headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined }).catch(() => null); if (!r) return { status: 0 }; const t = await r.text(); try { return { status: r.status, ...JSON.parse(t) }; } catch { return { status: r.status, raw: t }; } };
 const j = (u) => req("GET", u);
@@ -41,7 +44,7 @@ const shows = async (on) => {
   if (on) { const rec = (await j(`${B}/documents/${D.M}/output-destinations`)).data.find((o) => o.attributes.title === "Recording"); await j(`${B}/documents/${D.M}/output-destinations/${rec.id}/setOff`); }
 };
 const procs = [];
-const startTk = (cfg) => { const p = spawn("node", [join(ROOT, "takectl.mjs")], { env: { ...process.env, ...(cfg ? { TAKECTL_CONFIG: cfg } : {}) }, stdio: "ignore" }); procs.push(p); return p; };
+const startTk = async (cfg) => { const p = await startBenchTakectl(RUN, cfg, { stdio: "ignore" }); procs.push(p); return p; };
 const stop = async (p) => { if (p && p.exitCode === null && p.signalCode === null) { const g = new Promise((r) => p.once("exit", r)); p.kill(); await g; } };
 const dir = mkdtempSync(join(tmpdir(), "abswitch-r1real-"));
 let tempSet = null;
@@ -49,7 +52,7 @@ let tempSet = null;
 try {
   // ---- R1 setup on the real documents
   const cfgFile = join(dir, "takectl.config.json");
-  let tk = startTk(cfgFile);
+  let tk = await startTk(cfgFile);
   await until(async () => (await j(`${T}/state`)).status, 6000);
   const list = await j(`${T}/setup/documents?host=${encodeURIComponent(H)}`);
   const pick = (n) => list.documents?.find((d) => d.name.replace(/\.tvshow$/, "") === n);
@@ -72,7 +75,7 @@ try {
 
   // ---- R2 doctor, red then green (the real config)
   await shows(false);
-  tk = startTk();
+  tk = await startTk(OWN_CFG);
   await until(async () => (await j(`${T}/state`)).status, 6000);
   let d = await j(`${T}/doctor.json`);
   const red = d.checks?.filter((c) => !c.ok) ?? [];
@@ -82,7 +85,7 @@ try {
     `R2a. shows stopped: ${red.length} red — ${red.map((c) => `${c.label} → "${c.fix}"`).join(" | ")}; /state.doctor.ok=${st?.doctor?.ok}`);
   await shows(true);
   const green = await until(async () => { const x = await j(`${T}/doctor.json`); return x.ok ? x : null; }, 12000);
-  const cli = spawnSync("node", [join(ROOT, "takectl.mjs"), "doctor"], { encoding: "utf8" });
+  const cli = spawnSync("node", [join(RUN, "takectl.mjs"), "doctor"], { env: { ...process.env, TAKECTL_CONFIG: OWN_CFG }, encoding: "utf8" });
   writeFileSync(join(OUT, "doctor-round1.txt"), cli.stdout + cli.stderr);
   check(green?.checks?.length >= 20 && cli.status === 0 && /All checks pass/.test(cli.stdout),
     `R2b. shows running: ${green?.checks?.length ?? 0} checks, all green; \`takectl doctor\` exit ${cli.status} (doctor-round1.txt)`);

@@ -19,12 +19,15 @@ import { createConnection, createServer } from "node:net";
 import { networkInterfaces, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { RP, benchConfig, benchConfigFile, benchCopy, refuseUnlessClear, startBenchTakectl } from "./bench-guard.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = process.env.TAKECTL_DIR || dirname(HERE);
 const OUT = process.env.TAKECTL_DIR ? join(ROOT, "out") : HERE;
 mkdirSync(OUT, { recursive: true });
-const H = "http://localhost:8989", B = `${H}/api/v1`, T = "http://localhost:8991", RELAY = 18990;
+const H = "http://localhost:8989", B = `${H}/api/v1`, T = `http://localhost:${RP}`, RELAY = 18990;
+await refuseUnlessClear("amend-check");
+const RUN = benchCopy(ROOT); // its own takectl, from its own copy, on :18992: bench-guard.mjs
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const req = async (method, u, body, timeout = 8000) => { try { const r = await fetch(u, { method, headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(timeout) }); const t = await r.text(); try { return { status: r.status, ...JSON.parse(t) }; } catch { return { status: r.status, raw: t }; } } catch (e) { return { status: 0, error: String(e) }; } };
 const j = (u) => req("GET", u);
@@ -52,10 +55,10 @@ const shows = async (on) => {
   if (on) { const rec = (await j(`${B}/documents/${D.M}/output-destinations`)).data.find((o) => o.attributes.title === "Recording"); await j(`${B}/documents/${D.M}/output-destinations/${rec.id}/setOff`); }
 };
 const dir = mkdtempSync(join(tmpdir(), "abswitch-amend-real-"));
-const real = JSON.parse(readFileSync(join(dirname(HERE), "takectl.config.json"), "utf8"));
+const real = benchConfig(join(dirname(HERE), "takectl.config.json")); // the bench's config, on this check's own port
 const writeCfg = (name, c) => { const f = join(dir, name); writeFileSync(f, JSON.stringify(c, null, 2)); return f; };
 const procs = [];
-const startTk = (cfgFile) => { const p = spawn("node", [join(ROOT, "takectl.mjs")], { env: { ...process.env, TAKECTL_CONFIG: cfgFile }, stdio: "ignore" }); procs.push(p); return p; };
+const startTk = async (cfgFile) => { const p = await startBenchTakectl(RUN, cfgFile, { stdio: "ignore" }); procs.push(p); return p; };
 const stop = async (p) => { if (p && p.exitCode === null && p.signalCode === null) { const g = new Promise((r) => p.once("exit", r)); p.kill(); await g; } };
 const ready = (ms = 10000) => until(async () => { const s = await j(`${T}/state`); return s.ready !== false && s.pgm ? s : null; }, ms);
 // A relay that looks like mimoLive to takectl: TCP straight through to :8989, HTTP and WebSocket alike.
@@ -68,7 +71,7 @@ try {
   if ((await slot()) !== 1) { await cut(1); await sleep(800); }
 
   // ---- N: PANIC while not ready
-  let tk = startTk(writeCfg("n.json", { ...real, a: { ...real.a, documentName: "PH-A-missing" } }));
+  let tk = await startTk(writeCfg("n.json", { ...real, a: { ...real.a, documentName: "PH-A-missing" } }));
   const nr = await until(async () => { const s = await j(`${T}/state`); return s.ready === false && s.panicArmed ? s : null; }, 10000);
   await cut(2); await sleep(800);
   const s2 = await slot();
@@ -82,7 +85,7 @@ try {
   // ---- X: lost and back, through the relay
   await relayUp();
   const via = `http://localhost:${RELAY}`;
-  tk = startTk(writeCfg("x.json", { ...real, a: { ...real.a, host: via }, b: { ...real.b, host: via }, master: { ...real.master, host: via } }));
+  tk = await startTk(writeCfg("x.json", { ...real, a: { ...real.a, host: via }, b: { ...real.b, host: via }, master: { ...real.master, host: via } }));
   const x0 = await ready();
   await relayDown();
   const t0 = Date.now();
@@ -102,7 +105,7 @@ try {
   // title, and on 2026-11-11 that crashed mimoLive 7.0b3 (SIGSEGV in its NDI writer; amend-check-run1-crash.txt).
   // The preflight logic itself is tested offline (amend-offline-check, D).
   if (process.env.AMEND_NDI_LINK === "1") {
-  tk = startTk(writeCfg("l.json", real));
+  tk = await startTk(writeCfg("l.json", real));
   await ready();
   const oB = await ndiOut("B");
   await rename("B", oB.id, was.titles.B); // same title: 7.0b3 stops B's sender while the output reports live
@@ -130,12 +133,12 @@ try {
   } else say("SKIP  L. NDI link staging is opt-in (AMEND_NDI_LINK=1): it crashed mimoLive 7.0b3 once");
 
   // ---- W: loopback-only Save and Start Over, on a copy of the config
-  const copy = join(dir, "w.json"); copyFileSync(join(dirname(HERE), "takectl.config.json"), copy);
-  tk = startTk(copy);
+  const copy = join(dir, "w.json"); writeFileSync(copy, JSON.stringify(real, null, 2));
+  tk = await startTk(copy);
   await ready();
-  const rSave = lan ? await req("POST", `http://${lan}:8991/setup/save`, {}) : { status: "no LAN" };
-  const rOver = lan ? await req("POST", `http://${lan}:8991/setup/start-over`) : { status: "no LAN" };
-  const info = lan ? await j(`http://${lan}:8991/setup/info`) : {};
+  const rSave = lan ? await req("POST", `http://${lan}:${RP}/setup/save`, {}) : { status: "no LAN" };
+  const rOver = lan ? await req("POST", `http://${lan}:${RP}/setup/start-over`) : { status: "no LAN" };
+  const info = lan ? await j(`http://${lan}:${RP}/setup/info`) : {};
   const refusedOver = await req("POST", `${T}/setup/start-over`);
   await j(`${B}/documents/${D.M}/setOff`); await sleep(1200);
   const over = await req("POST", `${T}/setup/start-over`);

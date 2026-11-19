@@ -1657,6 +1657,74 @@ nothing, among them `round1-check.mjs` and `panic-check.mjs`. While an operator'
 start, and they would drive the operator's takectl against the real mimoLive. Today the bench takectl has to be
 stopped first. For a ruling.
 
+## After v0.2.0, 2026-11-19: no check drives a takectl it didn't start (branch wingman, unreleased)
+
+**Ruled (the pen, 2026-11-19):** no check may ever drive a takectl it didn't start. The real-app checks start
+their own takectl on a separate port, never :8991, with their own config. Before starting, each refuses if
+anything is listening on its port, and also if a takectl answers on :8991, because two controllers on the same
+three documents is the real hazard. The refusal names what it found and how to proceed. One override flag for a
+deliberate run, logged when used. Proven with a takectl up on :8991: every one exits without sending a command
+to it.
+
+**There are 18, not 17.** `round4-check.mjs` also starts its own takectl, on :8991 unless `R4_PORT` was set; my
+count of 2026-11-14 missed it. Three other scripts touch :8991 and are not checks, so they are unchanged, for the
+pen:
+- `demo-run.mjs` drives a running takectl on purpose, to play moves for a screen recording;
+- `safe-hand-watch.mjs` and `watch-state.mjs` only read `/state`.
+
+**Changed.**
+- **New `test/bench-guard.mjs`:**
+  - `RP`, 18992: the real-app checks' own takectl port, apart from the offline suites' :18991, so the two kinds
+    can run side by side.
+  - `refuseUnlessClear()`, before a check awaits anything else (some change mimoLive, COUNTER or the transition
+    length, before they start takectl). It refuses if anything is listening on :18992. It also refuses if a
+    takectl answers on takectl's own port, read from the example config. One read of `/state` recognises a
+    takectl; nothing else is ever sent there. The refusal names the pid and command (from lsof and ps) and the
+    takectl's mode, and says how to proceed.
+  - `--beside-takectl` overrides only the second refusal. Each use is appended to `test/override-log.txt` and
+    printed.
+  - `benchConfig()` and `benchConfigFile()` give a copy of the bench's `takectl.config.json` with port 18992,
+    whatever else is asked. `benchCopy()` is `ownCopy()` with that port.
+  - `startBenchTakectl()` starts takectl from the copy with that config, and waits for `ownUp()` before a
+    single request. If ownership fails it stops what it started.
+- **The 18 checks:**
+  - Ten ran `node takectl.mjs` in the repo folder, which meant your real config, its port and its thumbnails.
+    They now run their own copy with a copy of that config.
+  - Seven already copied the config, but kept its port. They now get port 18992 through `benchConfig()`.
+  - `round1-check` also starts takectl with no config (setup mode). In the copy that lands on 18992, and its
+    "real config" run gets a copy too.
+  - The LAN-address requests (amend W) go to :18992. `round4-check` loses `R4_PORT` and needs it no more.
+  - `mirror-check` finds its log path among its arguments, so the flag can come anywhere.
+  - Each header says how it refuses, in place of "takectl must NOT already be running".
+- `offline-ports.mjs`: `ownCopy(root, port)` takes the port, :18991 by default.
+
+**Tested** (`test/offline-ports-check.mjs`, now 95 of 95; mimoLive was not running, the ports all free):
+- **S4–S6, from the files:** the port is none of the others; config and copy carry it; every one of the 18 imports
+  the guard, refuses before anything else it awaits, never names :8991, and starts takectl only through
+  `startBenchTakectl()`.
+- **B1:** a real takectl, ready on the mock, behind a recording proxy on :8991. All 18 exited 2, REFUSED, naming
+  it and its pid. Each sent it one request, `GET /state` (the read that recognises it), and no command. Afterwards
+  its state was unchanged, and its mimoLive (the mock) had recorded no change. Run by hand beside a takectl on
+  :8991, `panic-check` printed the refusal with that takectl's pid and path, and how to proceed.
+- **B3:** a probe beside that takectl: refused without the flag, ran with it, and one line was logged.
+- **B2:** each of the 18 with :18992 held: REFUSED, naming the pid; no request reached the holder.
+- **B4:** `startBenchTakectl()` with :18992 held: rejected, nothing sent.
+- **`--falsify`, 24 mutants, every one caught.** The ten new ones:
+  - five by S5 and S6, before anything starts: the config or the copy keeping another port, a check without the
+    refusal, a check talking to :8991, a check starting takectl itself;
+  - four by B1–B3;
+  - one by B4.
+
+  M15–M17 (the guard blind to :8991 or to its own port, or the override needing no flag) run only while nothing
+  listens on mimoLive's port. A copy that does not refuse goes straight on to the real documents; with mimoLive
+  off, those copies failed at its port, as expected.
+
+**Not yet:** the 18 checks have not been run on the real app since the change. That needs the bench up, with your
+takectl stopped.
+
+**For the pen:** the refusal looks only at :8991, as ruled. An operator's takectl configured on another port would
+not be seen; the bench config's own port is 8991, so here the two are the same.
+
 ## Next
 
 **v0.2.1:** when a key's hooks text does not fit whole beside the count, show a small hook marker instead of

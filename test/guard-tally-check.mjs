@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // guard-tally-check: bench check for the COUNTER guard and the split TALLY (2026-11-09 brief).
-//   node test/guard-tally-check.mjs        (takectl must NOT already be running; needs the watcher)
+//   node test/guard-tally-check.mjs        (refuses if a takectl answers on takectl's own port; --beside-takectl runs it anyway, logged; needs the watcher)
 // 1. COUNTER live  -> doctor exits 1 naming COUNTER; /take refused; MASTER does not move.
 // 2. COUNTER off   -> doctor exits 0; then /take, /take, /cut, /cut traced by watch-state.mjs at
 //    40 ms (incoming TALLY lights at once, outgoing goes off only after verify), then the stale-
@@ -14,13 +14,16 @@ import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, openSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { RP, benchConfig, benchConfigFile, benchCopy, refuseUnlessClear, startBenchTakectl } from "./bench-guard.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = process.env.TAKECTL_DIR || dirname(HERE);
 const OUT = process.env.TAKECTL_DIR ? join(ROOT, "out") : HERE;
 mkdirSync(OUT, { recursive: true });
 const PANIC_AT = Number(process.env.PANIC_AT ?? 620);
-const B = "http://localhost:8989/api/v1", T = "http://localhost:8991";
+const B = "http://localhost:8989/api/v1", T = `http://localhost:${RP}`;
+await refuseUnlessClear("guard-tally-check");
+const RUN = benchCopy(ROOT), OWN_CFG = benchConfigFile(join(ROOT, "takectl.config.json")); // its own takectl and config, on :18992: bench-guard.mjs
 const j = (u) => fetch(u).then((r) => r.json());
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const out = [];
@@ -53,7 +56,7 @@ for (const r of ["A", "B"]) await setLayer(r, await layer(r, "COUNTER"), true);
 await sleep(500);
 
 const doctor = (file) => {
-  const p = spawnSync("node", ["takectl.mjs", "doctor"], { cwd: ROOT, encoding: "utf8" });
+  const p = spawnSync("node", ["takectl.mjs", "doctor"], { cwd: RUN, env: { ...process.env, TAKECTL_CONFIG: OWN_CFG }, encoding: "utf8" });
   writeFileSync(join(OUT, file), p.stdout + p.stderr);
   return { code: p.status, text: p.stdout + p.stderr };
 };
@@ -62,7 +65,7 @@ const doctor = (file) => {
 let d = doctor("doctor-counter-live.txt");
 check(d.code === 1 && /live "COUNTER" layer/.test(d.text), `doctor with COUNTER live exits ${d.code} and names COUNTER (doctor-counter-live.txt)`);
 const logFd = openSync(join(OUT, "takectl-guard.log"), "w");
-const tk = spawn("node", ["takectl.mjs"], { cwd: ROOT, stdio: ["ignore", logFd, logFd] });
+const tk = await startBenchTakectl(RUN, OWN_CFG, { stdio: ["ignore", logFd, logFd] });
 let st = null;
 for (let i = 0; i < 40 && !st; i++) { await sleep(250); st = await j(`${T}/state`).catch(() => null); }
 const s0 = await slot();

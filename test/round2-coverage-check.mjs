@@ -21,12 +21,15 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { RP, benchConfig, benchConfigFile, benchCopy, refuseUnlessClear, startBenchTakectl } from "./bench-guard.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = process.env.TAKECTL_DIR || dirname(HERE);
 const OUT = process.env.TAKECTL_DIR ? join(ROOT, "out") : HERE;
 mkdirSync(OUT, { recursive: true });
-const B = "http://localhost:8989/api/v1", T = "http://localhost:8991";
+const B = "http://localhost:8989/api/v1", T = `http://localhost:${RP}`;
+await refuseUnlessClear("round2-coverage-check");
+const RUN = benchCopy(ROOT); // its own takectl, from its own copy, on :18992: bench-guard.mjs
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const req = async (method, u, body, timeout = 15000) => { try { const r = await fetch(u, { method, headers: { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(timeout) }); const t = await r.text(); try { return { status: r.status, ...JSON.parse(t) }; } catch { return { status: r.status, raw: t }; } } catch (e) { return { status: 0, error: String(e) }; } };
 const j = (p) => req("GET", B + p);
@@ -53,12 +56,12 @@ if (!(await layer("A", "Lower Third")) || !(await layer("B", "Lower Third"))) { 
 const was = { A: await active("A"), B: await active("B") };
 
 const dir = mkdtempSync(join(tmpdir(), "abswitch-cov-"));
-const real = JSON.parse(readFileSync(join(dirname(HERE), "takectl.config.json"), "utf8"));
+const real = benchConfig(join(dirname(HERE), "takectl.config.json")); // the bench's config, on this check's own port
 let tk = null;
 const startTk = async (over = {}) => {
   const f = join(dir, `c${Date.now()}.json`);
   writeFileSync(f, JSON.stringify({ ...real, ...over }, null, 2));
-  tk = spawn("node", [join(ROOT, "takectl.mjs")], { env: { ...process.env, TAKECTL_CONFIG: f }, stdio: "ignore" });
+  tk = await startBenchTakectl(RUN, f, { stdio: "ignore" });
   return until(async () => { const s = await g("/state"); return s.ready !== false && s.pgm ? s : null; }, 12000, 250);
 };
 const stopTk = async () => { if (tk && tk.exitCode === null && tk.signalCode === null) { const w = new Promise((r) => tk.once("exit", r)); tk.kill(); await w; } tk = null; };

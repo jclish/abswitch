@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // pvw-layerset-check: GET /pvw/layer-set/<name> recalls only in the PVW (green) document (UI brief 2026-11-09).
-//   node test/pvw-layerset-check.mjs      (takectl must NOT already be running; MASTER on slot 1)
+//   node test/pvw-layerset-check.mjs      (refuses if a takectl answers on takectl's own port; --beside-takectl runs it anyway, logged; MASTER on slot 1)
 // 1. PGM A: /pvw/layer-set/Two Shot changes B's layers to Two Shot; A's layers are untouched.
 // 2. An unknown name is refused, naming the PVW document; nothing changes anywhere.
 // 3. Sent while a TAKE is busy: refused; nothing changes.
@@ -11,9 +11,12 @@ import { spawn } from "node:child_process";
 import { openSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { RP, benchConfig, benchConfigFile, benchCopy, refuseUnlessClear, startBenchTakectl } from "./bench-guard.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url)), ROOT = process.env.TAKECTL_DIR || dirname(HERE);
-const B = "http://localhost:8989/api/v1", T = "http://localhost:8991";
+const B = "http://localhost:8989/api/v1", T = `http://localhost:${RP}`;
+await refuseUnlessClear("pvw-layerset-check");
+const RUN = benchCopy(ROOT), OWN_CFG = benchConfigFile(join(ROOT, "takectl.config.json")); // its own takectl and config, on :18992: bench-guard.mjs
 const j = (u) => fetch(u).then((r) => (r.status === 204 ? null : r.json()));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const out = [];
@@ -38,7 +41,7 @@ const was = { A: await layers("A"), B: await layers("B"), slot: 1 };
 const setLayer = (r, lid, on) => j(`${B}/documents/${D[r]}/layers/${lid}/${on ? "setLive" : "setOff"}`);
 for (const r of ["A", "B"]) if (was[r].COUNTER) await setLayer(r, was[r].COUNTER.id, false);
 const logPath = join(HERE, "takectl-pvw-layerset.log");
-const tk = spawn("node", ["takectl.mjs"], { cwd: ROOT, stdio: ["ignore", openSync(logPath, "w"), openSync(logPath, "a")] });
+const tk = await startBenchTakectl(RUN, OWN_CFG, { stdio: ["ignore", openSync(logPath, "w"), openSync(logPath, "a")] });
 let st = null;
 for (let i = 0; i < 40 && !st; i++) { await sleep(250); st = await j(`${T}/state`).catch(() => null); }
 const recall = (name) => j(`${T}/pvw/layer-set/${encodeURIComponent(name)}`);

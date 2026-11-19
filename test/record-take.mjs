@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // record-take: record ONE real takectl TAKE (A → B) on MASTER with both COUNTERs live, for the
 // dissolve scrub (analyse-take.mjs). BENCH ONLY.
-//   node test/record-take.mjs        (takectl must NOT already be running)
+//   node test/record-take.mjs        (refuses if a takectl answers on takectl's own port; --beside-takectl runs it anyway, logged)
 // - COUNTER is live, so takectl's COUNTER guard would refuse the TAKE. This run uses a temporary
 //   config identical to takectl.config.json except "preflight": false (TAKECTL_CONFIG), as
 //   decided 2026-11-09. The guard itself is proven separately (guard-tally-check.mjs).
@@ -14,9 +14,12 @@ import { openSync, readdirSync, readFileSync, statSync, writeFileSync, mkdtempSy
 import { dirname, join } from "node:path";
 import { homedir, tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
+import { RP, benchConfig, benchConfigFile, benchCopy, refuseUnlessClear, startBenchTakectl } from "./bench-guard.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url)), ROOT = dirname(HERE);
-const B = "http://localhost:8989/api/v1", T = "http://localhost:8991";
+const B = "http://localhost:8989/api/v1", T = `http://localhost:${RP}`;
+await refuseUnlessClear("record-take");
+const RUN = benchCopy(ROOT); // its own takectl, from its own copy, on :18992: bench-guard.mjs
 const j = (u) => fetch(u).then((r) => r.json());
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const secs = (s) => s.split(":").reduce((a, x) => a * 60 + Number(x), 0); // "875:25.43" -> s
@@ -66,12 +69,12 @@ console.log(`stopwatches reset; A − B = ${offset} s (${offs.map((o) => o.aMinu
 if (offs.every((o) => o.aMinusB === offs[0].aMinusB && secs(o.a) === secs(offs[0].a))) console.log("WARNING: counters did not advance after Reset");
 
 // takectl with preflight off (temporary config; the real one is untouched).
-const cfg = JSON.parse(readFileSync(join(ROOT, "takectl.config.json"), "utf8"));
+const cfg = benchConfig(join(ROOT, "takectl.config.json"));
 cfg.preflight = false;
 const cfgPath = join(mkdtempSync(join(tmpdir(), "takectl-")), "takectl.config.json");
 writeFileSync(cfgPath, JSON.stringify(cfg, null, 2));
 const logFd = openSync(join(HERE, "takectl-take-recording.log"), "w");
-const tk = spawn("node", ["takectl.mjs"], { cwd: ROOT, env: { ...process.env, TAKECTL_CONFIG: cfgPath }, stdio: ["ignore", logFd, logFd] });
+const tk = await startBenchTakectl(RUN, cfgPath, { stdio: ["ignore", logFd, logFd] });
 let st = null;
 for (let i = 0; i < 40 && !st; i++) { await sleep(250); st = await j(`${T}/state`).catch(() => null); }
 if (!st) throw new Error("takectl did not come up");

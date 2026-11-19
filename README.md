@@ -543,4 +543,7 @@ by convention; or better, route them through takectl so they only hit PVW: GET `
 - `test/stinger-cover.mjs` — measures the stinger's cover on MASTER's program output (`--write` sets
   the config)
 - `test/*-check.mjs` — bench checks against the real mimoLive; each writes its evidence to `test/`
-  (see `test/BENCH-RESULTS.md`)
+  (see `test/BENCH-RESULTS.md`). Each runs its own takectl on :18992, from a copy of its own with a copy of
+  your config (`test/bench-guard.mjs`), and never drives a takectl it did not start. If a takectl answers on
+  :8991 it refuses, naming it, because two controllers on the same three documents is the hazard: stop yours
+  first. To run one beside it on purpose, add `--beside-takectl`; every use is logged in `test/override-log.txt`.

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // panic-check: /panic must leave A on air whenever it is pressed during a TAKE (ruling 2026-11-09).
-//   node test/panic-check.mjs            (takectl must NOT already be running)
+//   node test/panic-check.mjs            (refuses if a takectl answers on takectl's own port; --beside-takectl runs it anyway, logged)
 // From PGM=A, three rounds: /take (dissolve to B), then /panic 0, 200 and 600 ms after the /take
 // request was sent. Each must end with MASTER's live slot on A, takectl pgm=A, TALLY A lit and B
 // dark, no lastError. A 30 ms sampler logs the switcher slot, its per-slot codes and takectl's pgm.
@@ -15,12 +15,15 @@ import { spawn } from "node:child_process";
 import { mkdirSync, openSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { RP, benchConfig, benchConfigFile, benchCopy, refuseUnlessClear, startBenchTakectl } from "./bench-guard.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = process.env.TAKECTL_DIR || dirname(HERE);
 const OUT = process.env.TAKECTL_DIR ? join(ROOT, "out") : HERE;
 mkdirSync(OUT, { recursive: true });
-const B = "http://localhost:8989/api/v1", T = "http://localhost:8991";
+const B = "http://localhost:8989/api/v1", T = `http://localhost:${RP}`;
+await refuseUnlessClear("panic-check");
+const RUN = benchCopy(ROOT), OWN_CFG = benchConfigFile(join(ROOT, "takectl.config.json")); // its own takectl and config, on :18992: bench-guard.mjs
 const j = (u) => fetch(u).then((r) => r.json());
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const out = [];
@@ -48,7 +51,7 @@ for (const r of ["A", "B"]) await setLayer(r, await layer(r, "COUNTER"), false);
 await sleep(500);
 
 const logFd = openSync(join(OUT, "takectl-panic.log"), "w");
-const tk = spawn("node", ["takectl.mjs"], { cwd: ROOT, stdio: ["ignore", logFd, logFd] });
+const tk = await startBenchTakectl(RUN, OWN_CFG, { stdio: ["ignore", logFd, logFd] });
 let st = null;
 for (let i = 0; i < 40 && !st; i++) { await sleep(250); st = await j(`${T}/state`).catch(() => null); }
 await j(`${T}/panic`); await sleep(1500); // start every round from A

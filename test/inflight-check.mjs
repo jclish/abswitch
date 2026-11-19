@@ -6,18 +6,21 @@
 //      failed"); the next settled read must decide: pgm B, TALLY A dark / B lit, lastError null.
 //   D. doctor: 200 ms into a 4.0 s dissolve fired at MASTER directly, `takectl doctor` must decide
 //      no PGM and say the switcher was mid-transition.
-//   node test/inflight-check.mjs          (takectl must NOT already be running; MASTER on slot 1)
+//   node test/inflight-check.mjs          (refuses if a takectl answers on takectl's own port; --beside-takectl runs it anyway, logged; MASTER on slot 1)
 // Restores the transition duration, live slot, COUNTER and TALLY. TAKECTL_DIR as in panic-check.
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, openSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { RP, benchConfig, benchConfigFile, benchCopy, refuseUnlessClear, startBenchTakectl } from "./bench-guard.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = process.env.TAKECTL_DIR || dirname(HERE);
 const OUT = process.env.TAKECTL_DIR ? join(ROOT, "out") : HERE;
 mkdirSync(OUT, { recursive: true });
-const B = "http://localhost:8989/api/v1", T = "http://localhost:8991";
+const B = "http://localhost:8989/api/v1", T = `http://localhost:${RP}`;
+await refuseUnlessClear("inflight-check");
+const RUN = benchCopy(ROOT), OWN_CFG = benchConfigFile(join(ROOT, "takectl.config.json")); // its own takectl and config, on :18992: bench-guard.mjs
 const j = (u, o) => fetch(u, o).then((r) => (r.status === 204 ? null : r.json()));
 const put = (u, body) => j(u, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -41,7 +44,7 @@ if (iv0.tvGroup_Hidden_Inputs__currentLiveSource !== 1) { console.error("needs M
 const was = { dur: iv0.tvIn_TransitionDuration, counter: { A: await live("A", "COUNTER"), B: await live("B", "COUNTER") }, tally: { A: await live("A", "TALLY"), B: await live("B", "TALLY") } };
 for (const r of ["A", "B"]) await setLayer(r, "COUNTER", false);
 const logPath = join(OUT, "takectl-inflight.log");
-const tk = spawn("node", ["takectl.mjs"], { cwd: ROOT, stdio: ["ignore", openSync(logPath, "w"), openSync(logPath, "a")] });
+const tk = await startBenchTakectl(RUN, OWN_CFG, { stdio: ["ignore", openSync(logPath, "w"), openSync(logPath, "a")] });
 let st = null;
 for (let i = 0; i < 40 && !st; i++) { await sleep(250); st = await j(`${T}/state`).catch(() => null); }
 
@@ -69,7 +72,7 @@ try {
   await j(`${B}/documents/${D.M}/layers/${sw.id}/signals/tvGroup_Control__Dis_2_TypeSignal`);
   await sleep(200);
   const t0 = Date.now();
-  const d = spawnSync("node", ["takectl.mjs", "doctor"], { cwd: ROOT, encoding: "utf8" });
+  const d = spawnSync("node", ["takectl.mjs", "doctor"], { cwd: RUN, env: { ...process.env, TAKECTL_CONFIG: OWN_CFG }, encoding: "utf8" });
   const text = d.stdout + d.stderr;
   writeFileSync(join(OUT, "doctor-mid-transition.txt"), text);
   const pgm = text.match(/"pgm": (null|"[AB]")/)?.[1];
