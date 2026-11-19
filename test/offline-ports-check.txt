@@ -1,4 +1,4 @@
-offline-ports-check, 2026-11-15T03:51:25.469Z: 7 suites [amend-offline-check.mjs, mock-smoke.mjs, round1-offline-check.mjs, round2-offline-check.mjs, round3-offline-check.mjs, round4-offline-check.mjs, safe-offline-check.mjs]
+offline-ports-check, 2026-11-19T22:18:50.419Z: 7 suites [amend-offline-check.mjs, mock-smoke.mjs, round1-offline-check.mjs, round2-offline-check.mjs, round3-offline-check.mjs, round4-offline-check.mjs, safe-offline-check.mjs]
 PASS  S1. the suites' ports: mock :18989, takectl :18991; takectl's own :8991 and mimoLive's :8989 (from takectl.config.example.json) are neither
 PASS  S2. amend-offline-check.mjs: guards imported true; refuses before its first spawn true; takectl's port named on lines []; takectl/start.command started from [RUN]
 PASS  S2. mock-smoke.mjs: guards imported true; refuses before its first spawn true; takectl's port named on lines []; takectl/start.command started from [RUN]
@@ -8,9 +8,30 @@ PASS  S2. round3-offline-check.mjs: guards imported true; refuses before its fir
 PASS  S2. round4-offline-check.mjs: guards imported true; refuses before its first spawn true; takectl's port named on lines []; takectl/start.command started from [RUN]
 PASS  S2. safe-offline-check.mjs: guards imported true; refuses before its first spawn true; takectl's port named on lines []; takectl/start.command started from [RUN]
 PASS  S3. ownCopy(): 6 files [doctor.html, operator.html, setup.html, start.command, takectl.config.example.json, takectl.mjs], takectl's byte for byte true; the example's port 18991, the rest unchanged true; no takectl.config.json true
+real-app checks: 18 [amend-check.mjs, bench5-check.mjs, error-mirror-check.mjs, guard-tally-check.mjs, inflight-check.mjs, mirror-check.mjs, panic-check.mjs, pvw-layerset-check.mjs, record-take.mjs, round1-check.mjs, round2-check.mjs, round2-coverage-check.mjs, round3-check.mjs, round4-check.mjs, safe-check.mjs, stall-check.mjs, tally-repair-check.mjs, witness-check.mjs]
+PASS  S4. the real-app checks' takectl port :18992; the takectl port they refuse beside :8991 (the example's: :8991); not mimoLive's or the offline suites'
+PASS  S5. benchConfig(): port 18992, documents kept; benchConfigFile(): port 18992 though asked for 8991, other settings kept; benchCopy(): example port 18992, no takectl.config.json
+PASS  S6. amend-check.mjs: guard imported true; refuses before anything else it awaits true; takectl's port named on lines []; takectl started other than through startBenchTakectl() on lines []
+PASS  S6. bench5-check.mjs: guard imported true; refuses before anything else it awaits true; takectl's port named on lines []; takectl started other than through startBenchTakectl() on lines []
+PASS  S6. error-mirror-check.mjs: guard imported true; refuses before anything else it awaits true; takectl's port named on lines []; takectl started other than through startBenchTakectl() on lines []
+PASS  S6. guard-tally-check.mjs: guard imported true; refuses before anything else it awaits true; takectl's port named on lines []; takectl started other than through startBenchTakectl() on lines []
+PASS  S6. inflight-check.mjs: guard imported true; refuses before anything else it awaits true; takectl's port named on lines []; takectl started other than through startBenchTakectl() on lines []
+PASS  S6. mirror-check.mjs: guard imported true; refuses before anything else it awaits true; takectl's port named on lines []; takectl started other than through startBenchTakectl() on lines []
+PASS  S6. panic-check.mjs: guard imported true; refuses before anything else it awaits true; takectl's port named on lines []; takectl started other than through startBenchTakectl() on lines []
+PASS  S6. pvw-layerset-check.mjs: guard imported true; refuses before anything else it awaits true; takectl's port named on lines []; takectl started other than through startBenchTakectl() on lines []
+PASS  S6. record-take.mjs: guard imported true; refuses before anything else it awaits true; takectl's port named on lines []; takectl started other than through startBenchTakectl() on lines []
+PASS  S6. round1-check.mjs: guard imported true; refuses before anything else it awaits true; takectl's port named on lines []; takectl started other than through startBenchTakectl() on lines []
+PASS  S6. round2-check.mjs: guard imported true; refuses before anything else it awaits true; takectl's port named on lines []; takectl started other than through startBenchTakectl() on lines []
+PASS  S6. round2-coverage-check.mjs: guard imported true; refuses before anything else it awaits true; takectl's port named on lines []; takectl started other than through startBenchTakectl() on lines []
+PASS  S6. round3-check.mjs: guard imported true; refuses before anything else it awaits true; takectl's port named on lines []; takectl started other than through startBenchTakectl() on lines []
+PASS  S6. round4-check.mjs: guard imported true; refuses before anything else it awaits true; takectl's port named on lines []; takectl started other than through startBenchTakectl() on lines []
+PASS  S6. safe-check.mjs: guard imported true; refuses before anything else it awaits true; takectl's port named on lines []; takectl started other than through startBenchTakectl() on lines []
+PASS  S6. stall-check.mjs: guard imported true; refuses before anything else it awaits true; takectl's port named on lines []; takectl started other than through startBenchTakectl() on lines []
+PASS  S6. tally-repair-check.mjs: guard imported true; refuses before anything else it awaits true; takectl's port named on lines []; takectl started other than through startBenchTakectl() on lines []
+PASS  S6. witness-check.mjs: guard imported true; refuses before anything else it awaits true; takectl's port named on lines []; takectl started other than through startBenchTakectl() on lines []
 PASS  O1. the process listening on :18991 is its own: resolved
-PASS  O2. :18991 held by another process: rejected: :18991 is held by pid 80878, not by the listener this check started (pid 80911); nothing was sent to :18991; requests to that process 0
-PASS  O3. a process that never listens: rejected: the idler this check started (pid 80922) is not listening on :18991 after 1.5 s; nothing was sent to it
+PASS  O2. :18991 held by another process: rejected: :18991 is held by pid 51836, not by the listener this check started (pid 51861); nothing was sent to :18991; requests to that process 0
+PASS  O3. a process that never listens: rejected: the idler this check started (pid 51872) is not listening on :18991 after 1.5 s; nothing was sent to it
 PASS  O4. a process that exits: rejected: the quitter this check started exited before it listened on :18991; nothing was sent to :18991
 PASS  O5. takectl from the copy, with no config (setup mode), listens on :18991: resolved
 PASS  R. amend-offline-check.mjs, :18991 taken: exit 2, REFUSED; requests to the decoy 0; last results unchanged true
@@ -34,4 +55,44 @@ PASS  U. round2-offline-check.mjs, refusal off, :18991 held: exit 1; stopped at 
 PASS  U. round3-offline-check.mjs, refusal off, :18991 held: exit 1; stopped at its first takectl start; requests to the decoy 0
 PASS  U. round4-offline-check.mjs, refusal off, :18991 held: exit 1; stopped at its first takectl start; requests to the decoy 0
 PASS  U. safe-offline-check.mjs, refusal off, :18991 held: exit 1; stopped at its first takectl start; requests to the decoy 0
+PASS  B0. a real takectl on the mock, ready (pgm A), behind a recording proxy on :8991
+PASS  B1. amend-check.mjs: exit 2; REFUSED, naming the takectl and its pid; requests to it [GET /state]; :18992 never opened
+PASS  B1. bench5-check.mjs: exit 2; REFUSED, naming the takectl and its pid; requests to it [GET /state]; :18992 never opened
+PASS  B1. error-mirror-check.mjs: exit 2; REFUSED, naming the takectl and its pid; requests to it [GET /state]; :18992 never opened
+PASS  B1. guard-tally-check.mjs: exit 2; REFUSED, naming the takectl and its pid; requests to it [GET /state]; :18992 never opened
+PASS  B1. inflight-check.mjs: exit 2; REFUSED, naming the takectl and its pid; requests to it [GET /state]; :18992 never opened
+PASS  B1. mirror-check.mjs: exit 2; REFUSED, naming the takectl and its pid; requests to it [GET /state]; :18992 never opened
+PASS  B1. panic-check.mjs: exit 2; REFUSED, naming the takectl and its pid; requests to it [GET /state]; :18992 never opened
+PASS  B1. pvw-layerset-check.mjs: exit 2; REFUSED, naming the takectl and its pid; requests to it [GET /state]; :18992 never opened
+PASS  B1. record-take.mjs: exit 2; REFUSED, naming the takectl and its pid; requests to it [GET /state]; :18992 never opened
+PASS  B1. round1-check.mjs: exit 2; REFUSED, naming the takectl and its pid; requests to it [GET /state]; :18992 never opened
+PASS  B1. round2-check.mjs: exit 2; REFUSED, naming the takectl and its pid; requests to it [GET /state]; :18992 never opened
+PASS  B1. round2-coverage-check.mjs: exit 2; REFUSED, naming the takectl and its pid; requests to it [GET /state]; :18992 never opened
+PASS  B1. round3-check.mjs: exit 2; REFUSED, naming the takectl and its pid; requests to it [GET /state]; :18992 never opened
+PASS  B1. round4-check.mjs: exit 2; REFUSED, naming the takectl and its pid; requests to it [GET /state]; :18992 never opened
+PASS  B1. safe-check.mjs: exit 2; REFUSED, naming the takectl and its pid; requests to it [GET /state]; :18992 never opened
+PASS  B1. stall-check.mjs: exit 2; REFUSED, naming the takectl and its pid; requests to it [GET /state]; :18992 never opened
+PASS  B1. tally-repair-check.mjs: exit 2; REFUSED, naming the takectl and its pid; requests to it [GET /state]; :18992 never opened
+PASS  B1. witness-check.mjs: exit 2; REFUSED, naming the takectl and its pid; requests to it [GET /state]; :18992 never opened
+PASS  B1. after all 18: the takectl on :8991 unchanged (true), its mimoLive (the mock) saw no change (true)
+PASS  B3. without --beside-takectl: exit 2, REFUSED; with it: exit 0, ran, logged 1 line "override-probe --beside-takectl: ran beside a takectl answering on :8991 (pid 51836, node test/"; requests to the takectl [GET /state, GET /state]
+PASS  B2. amend-check.mjs, :18992 held: exit 2; REFUSED, naming the pid; requests to the holder 0
+PASS  B2. bench5-check.mjs, :18992 held: exit 2; REFUSED, naming the pid; requests to the holder 0
+PASS  B2. error-mirror-check.mjs, :18992 held: exit 2; REFUSED, naming the pid; requests to the holder 0
+PASS  B2. guard-tally-check.mjs, :18992 held: exit 2; REFUSED, naming the pid; requests to the holder 0
+PASS  B2. inflight-check.mjs, :18992 held: exit 2; REFUSED, naming the pid; requests to the holder 0
+PASS  B2. mirror-check.mjs, :18992 held: exit 2; REFUSED, naming the pid; requests to the holder 0
+PASS  B2. panic-check.mjs, :18992 held: exit 2; REFUSED, naming the pid; requests to the holder 0
+PASS  B2. pvw-layerset-check.mjs, :18992 held: exit 2; REFUSED, naming the pid; requests to the holder 0
+PASS  B2. record-take.mjs, :18992 held: exit 2; REFUSED, naming the pid; requests to the holder 0
+PASS  B2. round1-check.mjs, :18992 held: exit 2; REFUSED, naming the pid; requests to the holder 0
+PASS  B2. round2-check.mjs, :18992 held: exit 2; REFUSED, naming the pid; requests to the holder 0
+PASS  B2. round2-coverage-check.mjs, :18992 held: exit 2; REFUSED, naming the pid; requests to the holder 0
+PASS  B2. round3-check.mjs, :18992 held: exit 2; REFUSED, naming the pid; requests to the holder 0
+PASS  B2. round4-check.mjs, :18992 held: exit 2; REFUSED, naming the pid; requests to the holder 0
+PASS  B2. safe-check.mjs, :18992 held: exit 2; REFUSED, naming the pid; requests to the holder 0
+PASS  B2. stall-check.mjs, :18992 held: exit 2; REFUSED, naming the pid; requests to the holder 0
+PASS  B2. tally-repair-check.mjs, :18992 held: exit 2; REFUSED, naming the pid; requests to the holder 0
+PASS  B2. witness-check.mjs, :18992 held: exit 2; REFUSED, naming the pid; requests to the holder 0
+PASS  B4. startBenchTakectl() with :18992 held by another process: rejected: :18992 is held by pid 51836, not by the takectl this check started (pid 52991); nothing was sent to :18992; requests to it 0
 ALL PASS

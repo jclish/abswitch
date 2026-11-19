@@ -9,10 +9,16 @@ real Surface sent) and the button map in wingman_monitor.py (the known-good moni
 fake that records every route asked of it, so nothing here can reach a live show.
 """
 
+import argparse
 import ast
 import asyncio
+import contextlib
+import io
+import json
 import os
 import sys
+import tempfile
+import types
 import unittest
 from urllib.error import URLError
 
@@ -312,7 +318,7 @@ class Commands(unittest.TestCase):
         tk = FakeTakectl()
         s, _, _ = surface(tk)
         for name in BY_NAME:
-            if not name.startswith("PREVIEW ") and name not in ("AUTO", "CUT"):
+            if not name.startswith("PREVIEW ") and name not in ("AUTO", "CUT", "LOGO ON", "U.N-TITLE ON", "TITLE ON", "SUPER FG ON"):
                 self.assertEqual([], s.handle(press(name)), name)
         for data in (packet(0x80, 0x00, 60), packet(0x49, 0x00, 0x01), packet(0x55, 0x00, 0x0D), b"\x00" * 8):
             self.assertEqual([], s.handle(data))
@@ -523,6 +529,217 @@ class TakeAndCut(unittest.TestCase):
         s, log, _ = surface(tk)
         run(s.handle(press("AUTO")))
         self.assertIn("refused: busy: transition in progress", log[-1])
+
+
+# The pen's brief of 2026-11-19, stage 1: the four graphics buttons and the labels they default to.
+GRAPHICS = {"LOGO ON": "Logo", "TITLE ON": "Title", "U.N-TITLE ON": "Up Next", "SUPER FG ON": "SuperFG"}
+
+
+def keys(*labels, on=False):
+    return [{"label": x, "on": on} for x in labels]
+
+
+def dsk_tk(*labels, **kw):
+    return FakeTakectl(dsk=keys(*labels), answer=kw.pop("answer", {"ok": True, "label": labels[0] if labels else "?", "on": True}), **kw)
+
+
+class DownstreamKeys(unittest.TestCase):
+    def test_each_graphics_button_toggles_its_default_label_on_down_only(self):
+        for button, label in GRAPHICS.items():
+            tk = dsk_tk(*GRAPHICS.values())
+            s, _, _ = surface(tk)
+            run(s.handle(press(button)))
+            self.assertEqual(tk.calls, ["/state", "/dsk?label=" + W.quote(label, safe="")], button)
+            self.assertEqual([], s.handle(press(button, down=False)), button)
+            self.assertEqual(len(tk.calls), 2, button)
+
+    def test_a_label_with_a_space_is_sent_whole(self):
+        tk = dsk_tk("Up Next")
+        s, _, _ = surface(tk)
+        run(s.handle(press("U.N-TITLE ON")))
+        self.assertEqual(tk.calls[-1], "/dsk?label=Up%20Next")
+
+    def test_the_settings_choose_the_label_and_takectls_spelling_is_sent(self):
+        tk = dsk_tk("Bug", "Clock")
+        s, _, _ = surface(tk)
+        s.dsk_labels = {**s.dsk_labels, "LOGO ON": "bug", "SUPER FG ON": "CLOCK"}
+        run(s.handle(press("LOGO ON")))
+        s.busy = False
+        run(s.handle(press("SUPER FG ON")))
+        self.assertEqual([c for c in tk.calls if c != "/state"], ["/dsk?label=Bug", "/dsk?label=Clock"])
+
+    def test_a_button_whose_layer_master_does_not_have_sends_nothing(self):
+        tk = dsk_tk("Bug", "Clock")
+        s, log, _ = surface(tk)
+        for button, label in GRAPHICS.items():
+            run(s.handle(press(button)))
+            self.assertIn(f'no "DSK {label}" layer in MASTER', log[-1], button)
+            self.assertIn("Bug, Clock", log[-1], button)
+            self.assertIn("nothing sent", log[-1], button)
+        self.assertEqual(tk.calls, ["/state"] * 4)
+
+    def test_a_layer_added_after_start_is_found_on_the_next_press(self):
+        tk = dsk_tk("Bug")
+        s, log, _ = surface(tk)
+        report = []
+        W.dsk_at_start(tk, s.dsk_labels, log=report.append)
+        self.assertTrue(any("LOGO ON" in x and "sends nothing" in x for x in report), report)
+        tk.over["dsk"] = keys("Bug", "Logo")
+        run(s.handle(press("LOGO ON")))
+        self.assertEqual(tk.calls[-1], "/dsk?label=Logo")
+
+    def test_acts_mid_transition_in_safe_and_whenever_the_panels_keys_do(self):
+        for why, over in (("a transition in progress", {"busy": True}), ("the switcher in flight", {"switcher": {"inFlight": True}}),
+                          ("SAFE on air", {"pgm": "SAFE"}), ("OTHER on air", {"pgm": "OTHER"}), ("steps running", {"steps": {"running": True}}),
+                          ("a rehearsal", {"rehearsal": {"pvw": "B"}})):
+            tk = dsk_tk("Logo", **over)
+            s, log, _ = surface(tk)
+            run(s.handle(press("LOGO ON")))
+            self.assertEqual(tk.calls, ["/state", "/dsk?label=Logo"], why)
+
+    def test_not_sent_when_the_panel_greys_its_downstream_keys(self):
+        for why, state in (("takectl not ready", {"ready": False, "mode": "setup", "dsk": keys("Logo")}),
+                           ("Program not known", {"ready": True, "pgm": None, "pvw": "B", "dsk": keys("Logo")})):
+            tk = FakeTakectl(state=state)
+            s, log, _ = surface(tk)
+            run(s.handle(press("LOGO ON")))
+            self.assertEqual(tk.calls, ["/state"], why)
+            self.assertIn("not sent", log[-1], why)
+            self.assertIn("downstream keys are greyed too", log[-1], why)
+
+    def test_a_dsk_press_while_a_command_is_in_flight_is_dropped_not_queued(self):
+        tk = dsk_tk("Logo")
+        s, log, _ = surface(tk)
+
+        async def take_then_logo():
+            [take] = s.handle(press("AUTO"))
+            self.assertEqual(s.handle(press("LOGO ON")), [])
+            await take
+
+        asyncio.run(take_then_logo())
+        self.assertIn("dropped", log[-2])
+        self.assertNotIn("/dsk?label=Logo", tk.calls)
+
+    def test_the_answer_says_on_or_off_and_a_refusal_gives_takectls_reason(self):
+        for answer, want in (({"ok": True, "label": "Logo", "on": True}, "DSK Logo on"), ({"ok": True, "label": "Logo", "on": False}, "DSK Logo off"),
+                             ({"ok": False, "error": 'no downstream key "Logo"'}, 'takectl refused: no downstream key "Logo"')):
+            tk = dsk_tk("Logo", answer=answer)
+            s, log, _ = surface(tk)
+            run(s.handle(press("LOGO ON")))
+            self.assertIn(want, log[-1])
+
+    def test_dry_run_reads_but_never_toggles(self):
+        tk = dsk_tk("Logo")
+        s, log, _ = surface(tk, armed=False)
+        run(s.handle(press("LOGO ON")))
+        self.assertEqual(tk.calls, ["/state"])
+        self.assertIn("would send /dsk?label=Logo", log[-1])
+
+    def test_dsk_greying_mirrors_the_panels_lines_as_they_are(self):
+        panel = panel_lines()
+        for line in W.PANEL_DSK:
+            self.assertIn(line, panel, "the panel's downstream keys changed: revisit dsk_greyed() and dsk_key() in wingman_abswitch.py")
+
+
+class DskAtStart(unittest.TestCase):
+    def test_it_says_which_buttons_have_a_layer_and_reads_only_state(self):
+        tk = dsk_tk("Bug", "Clock")
+        log = []
+        W.dsk_at_start(tk, {**W.DSK_DEFAULTS, "LOGO ON": "bug", "TITLE ON": "Clock"}, log=log.append)
+        self.assertEqual(tk.calls, ["/state"])
+        self.assertIn("Bug, Clock", log[0])
+        lines = {b: next(x for x in log if x.strip().startswith(b + ":")) for b in GRAPHICS}
+        self.assertIn("DSK Bug", lines["LOGO ON"])
+        self.assertIn("DSK Clock", lines["TITLE ON"])
+        for button in ("U.N-TITLE ON", "SUPER FG ON"):
+            self.assertIn(f'no "DSK {GRAPHICS[button]}" layer in MASTER; this button sends nothing', lines[button])
+
+    def test_takectl_not_reachable_or_not_ready_is_said_and_nothing_fails(self):
+        for tk, want in ((FakeTakectl(fail=True), "not reachable"), (FakeTakectl(state={"ready": False, "mode": "setup"}), "not ready (setup)")):
+            log = []
+            W.dsk_at_start(tk, dict(W.DSK_DEFAULTS), log=log.append)
+            self.assertEqual(len(log), 1)
+            self.assertIn(want, log[0])
+            self.assertIn("each press looks again", log[0])
+
+    def test_the_report_comes_at_start_before_scanning(self):
+        class Stop(Exception):
+            pass
+
+        class Scanner:
+            @staticmethod
+            async def find_device_by_filter(*_a, **_k):
+                raise Stop
+
+        fake = types.ModuleType("bleak")
+        fake.BleakScanner, fake.BleakClient = Scanner, object
+        tk = dsk_tk("Bug")
+        made = []
+
+        class Recorded(W.Surface):
+            def __init__(self, *a, **k):
+                super().__init__(*a, **k)
+                made.append(self)
+
+        saved = sys.modules.get("bleak"), W.Takectl, W.Surface
+        sys.modules["bleak"], W.Takectl, W.Surface = fake, (lambda _base: tk), Recorded
+        out = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(out), self.assertRaises(Stop):
+                args = argparse.Namespace(takectl="http://fake", arm=False, settle=1.0, raw=False, tally=False)
+                asyncio.run(W.run(args, {"dsk": {**W.DSK_DEFAULTS, "LOGO ON": "Bug"}, "from": None}))
+        finally:
+            W.Takectl, W.Surface = saved[1], saved[2]
+            if saved[0] is None:
+                sys.modules.pop("bleak", None)
+            else:
+                sys.modules["bleak"] = saved[0]
+        text = out.getvalue()
+        self.assertIn("LOGO ON: DSK Bug", text)
+        self.assertIn('TITLE ON: no "DSK Title" layer in MASTER; this button sends nothing', text)
+        self.assertLess(text.index("LOGO ON: DSK Bug"), text.index("Scanning for"))
+        self.assertEqual(made[0].dsk_labels["LOGO ON"], "Bug", "the presses use the settings' labels")
+
+
+class Settings(unittest.TestCase):
+    def setUp(self):
+        self.dir = tempfile.mkdtemp(prefix="wingman-settings-")
+
+    def write(self, content):
+        path = os.path.join(self.dir, "wingman.config.json")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content if isinstance(content, str) else json.dumps(content))
+        return path
+
+    def test_no_settings_file_beside_the_adapter_means_the_defaults(self):
+        saved, W.SETTINGS_FILE = W.SETTINGS_FILE, os.path.join(self.dir, "not-there.json")
+        try:
+            got = W.load_settings()
+        finally:
+            W.SETTINGS_FILE = saved
+        self.assertEqual(got, {"dsk": GRAPHICS, "from": None})
+
+    def test_a_file_sets_some_labels_and_the_rest_keep_their_defaults(self):
+        got = W.load_settings(self.write({"dsk": {"LOGO ON": " Bug ", "TITLE ON": "Clock"}}))
+        self.assertEqual(got["dsk"], {**GRAPHICS, "LOGO ON": "Bug", "TITLE ON": "Clock"})
+
+    def test_the_file_beside_the_adapter_is_read_with_no_path(self):
+        saved, W.SETTINGS_FILE = W.SETTINGS_FILE, self.write({"dsk": {"SUPER FG ON": "Lower"}})
+        try:
+            got = W.load_settings()
+        finally:
+            W.SETTINGS_FILE = saved
+        self.assertEqual(got["dsk"]["SUPER FG ON"], "Lower")
+
+    def test_a_typo_or_a_label_that_is_not_text_is_refused(self):
+        for bad in ({"dsk": {"LOGO": "Bug"}}, {"dsk": {"LOGO ON": 3}}, {"dsk": {"LOGO ON": "  "}}, {"dsk": ["Bug"]}, ["Bug"],
+                    {"dsk": {}, "wheel": "up"}, "{not json"):
+            with self.assertRaises(W.SettingsError, msg=str(bad)):
+                W.load_settings(self.write(bad))
+
+    def test_a_settings_file_named_but_not_there_is_refused(self):
+        with self.assertRaises(W.SettingsError):
+            W.load_settings(os.path.join(self.dir, "missing.json"))
 
 
 class Tally(unittest.TestCase):

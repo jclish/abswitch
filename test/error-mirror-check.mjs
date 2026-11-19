@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // error-mirror-check: rulings 6 and 13 (2026-11-09), on the real mimoLive.
-//   node test/error-mirror-check.mjs      (takectl must NOT already be running; documents open)
+//   node test/error-mirror-check.mjs      (refuses if a takectl answers on takectl's own port; --beside-takectl runs it anyway, logged; documents open)
 // Ruling 6 — lastError is cleared by the next successful TAKE, CUT or PANIC, never by time:
 //   a. with the shows stopped, /take is refused: lastError is set, with lastErrorAt and an age
 //      that grows, and it is still there 3 s later;
@@ -17,12 +17,15 @@ import { spawn } from "node:child_process";
 import { mkdirSync, openSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { RP, benchConfig, benchConfigFile, benchCopy, refuseUnlessClear, startBenchTakectl } from "./bench-guard.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = process.env.TAKECTL_DIR || dirname(HERE);
 const OUT = process.env.TAKECTL_DIR ? join(ROOT, "out") : HERE;
 mkdirSync(OUT, { recursive: true });
-const B = "http://localhost:8989/api/v1", T = "http://localhost:8991";
+const B = "http://localhost:8989/api/v1", T = `http://localhost:${RP}`;
+await refuseUnlessClear("error-mirror-check");
+const RUN = benchCopy(ROOT), OWN_CFG = benchConfigFile(join(ROOT, "takectl.config.json")); // its own takectl and config, on :18992: bench-guard.mjs
 const j = (u, o) => fetch(u, o).then((r) => (r.status === 204 ? null : r.json()));
 const put = (u, body) => j(u, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -42,7 +45,7 @@ const ndiB = (await j(`${B}/documents/${D.B}/output-destinations`)).data.find((o
 const rec = (await j(`${B}/documents/${D.M}/output-destinations`)).data.find((o) => o.attributes.title === "Recording");
 const tallyId = async (r) => (await j(`${B}/documents/${D[r]}/layers`)).data.find((l) => l.attributes.name === "TALLY").id;
 const was = { shows: { A: await live("A"), B: await live("B"), M: await live("M") }, dur: (await iv()).tvIn_TransitionDuration, slot: (await iv()).tvGroup_Hidden_Inputs__currentLiveSource };
-const tk = spawn("node", ["takectl.mjs"], { cwd: ROOT, stdio: ["ignore", openSync(join(OUT, "takectl-error-mirror.log"), "w"), "ignore"] });
+const tk = await startBenchTakectl(RUN, OWN_CFG, { stdio: ["ignore", openSync(join(OUT, "takectl-error-mirror.log"), "w"), "ignore"] });
 let st = null;
 for (let i = 0; i < 40 && !st; i++) { await sleep(250); st = await j(`${T}/state`).catch(() => null); }
 const state = () => j(`${T}/state`);

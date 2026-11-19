@@ -1,6 +1,6 @@
-offline-ports-check --falsify, 2026-11-15T03:51:41.538Z: each mutant on a copy, the check with fail-fast
-M1 the refusal refuses nothing: caught (R. amend-offline-check.mjs, :18991 taken: exit 1, "FAIL  the run stopped: :18991 is held by pid 81534, not by the takectl this chec"; requests t)
-M2 the refusal looks only at the takectl port: caught (R. amend-offline-check.mjs, :18989 taken: exit 1, "FAIL  the run stopped: :18989 is held by pid 81785, not by the mock this check s"; requests t)
+offline-ports-check --falsify, 2026-11-19T20:27:01.639Z: each mutant on a copy, the check with fail-fast
+M1 the refusal refuses nothing: caught (R. amend-offline-check.mjs, :18991 taken: exit 1, "FAIL  the run stopped: :18991 is held by pid 45305, not by the takectl this chec"; requests t)
+M2 the refusal looks only at the takectl port: caught (R. amend-offline-check.mjs, :18989 taken: exit 1, "FAIL  the run stopped: :18989 is held by pid 45505, not by the mock this check s"; requests t)
 M3 ownUp() trusts at once: caught (O2. :18991 held by another process: resolved; requests to that process 0)
 M4 ownUp() takes any listener for its own: caught (O2. :18991 held by another process: resolved; requests to that process 0)
 M5 ownCopy() keeps the example's port: caught (S3. ownCopy(): 6 files [doctor.html, operator.html, setup.html, start.command, takectl.config.example.json, takectl.mjs], takectl's byte for byt)
@@ -13,4 +13,14 @@ M11 a suite without the refusal: caught (S2. safe-offline-check.mjs: guards impo
 M12 a suite asks takectl before ownUp(): caught (U. round3-offline-check.mjs, refusal off, :18991 held: exit null; "[a request reached the decoy: stopped by the check]"; requests to the decoy 1)
 M13 mock-smoke asks takectl before ownUp(): caught (U. mock-smoke.mjs, refusal off, :18991 held: exit null; "[a request reached the decoy: stopped by the check]"; requests to the decoy 1 (GET /sta)
 M14 a suite's takectl start that does not wait for ownUp(): caught (U. amend-offline-check.mjs, refusal off, :18991 held: exit null; "[a request reached the decoy: stopped by the check]"; requests to the decoy 1 )
+M15 the guard does not look for a takectl on takectl's own port: caught (B1. amend-check.mjs: exit 1; "file:///private/var/folders/lr/lxty4jx15d7byh2bkr0bng680000gn/T/abswitch-ports-6X5RTz/test"; requests to it []; :1)
+M16 the guard does not look at its own port: caught (B2. amend-check.mjs, :18992 held: exit 1; "file:///private/var/folders/lr/lxty4jx15d7byh2bkr0bng680000gn/T/abswitch-ports-9oa8Sj/test"; requests)
+M17 the override needs no flag: caught (B1. amend-check.mjs: exit 1; "OVERRIDE (--beside-takectl): running beside a takectl answering on :8991 (pid 47880, node "; requests to it [GET /)
+M18 the override is not logged: caught (B3. without --beside-takectl: exit 2, REFUSED; with it: exit 0, ran, logged 0 line ""; requests to the takectl [GET /state, GET /state])
+M19 a real-app check without the refusal: caught (S6. panic-check.mjs: guard imported true; refuses before anything else it awaits false (first await, line 33); takectl's port named on lines [];)
+M20 a real-app check talks to takectl's own port again: caught (S6. witness-check.mjs: guard imported true; refuses before anything else it awaits true; takectl's port named on lines [22]; takectl started oth)
+M21 a real-app check starts takectl itself, from the real folder: caught (S6. stall-check.mjs: guard imported true; refuses before anything else it awaits true; takectl's port named on lines []; takectl started other t)
+M22 benchConfigFile() lets the caller choose the port: caught (S5. benchConfig(): port 18992, documents kept; benchConfigFile(): port 8991 though asked for 8991, other settings kept; benchCopy(): example por)
+M23 startBenchTakectl() does not wait for ownUp(): caught (B4. startBenchTakectl() with :18992 held by another process: resolved; requests to it 0)
+M24 benchCopy() keeps the offline suites' port: caught (S5. benchConfig(): port 18992, documents kept; benchConfigFile(): port 18992 though asked for 8991, other settings kept; benchCopy(): example po)
 every mutant caught

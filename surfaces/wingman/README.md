@@ -7,8 +7,10 @@ the panel follows. With `--tally`, the PROGRAM and PREVIEW buttons light as the 
 from takectl's `/state`. The only thing ever written to the Surface is those two tally banks (ruled
 2026-11-14), and nothing reaches mimoLive except through takectl.
 
-**Status: PREVIEW 1–6, AUTO and CUT, and tally.** PREVIEW recalls look keys 1–6 in Preview; AUTO is the
-panel's TAKE, CUT its CUT. Every other control is shown in the log and does nothing yet. The three
+**Status: PREVIEW 1–6, AUTO and CUT, tally, and the four graphics buttons.** PREVIEW recalls look keys 1–6
+in Preview; AUTO is the panel's TAKE, CUT its CUT. LOGO ON, U.N-TITLE ON, TITLE ON and SUPER FG ON each toggle
+a downstream key (built 2026-11-19, the pen's brief, stage 1; **not yet checked on the real Surface**). Every
+other control is shown in the log and does nothing yet. The three
 controls passed the hardware check on the real Surface (2026-11-13, 14 of 14). Tally passed 4 of 4 with
 presses not armed and then the first limited armed test, 5 of 5, PREVIEW, CUT and AUTO from the Surface
 (2026-11-14, `hardware-check.txt`), then a power cycle and a takectl restart, 9 of 9, fast presses, 5 of 5,
@@ -58,7 +60,7 @@ And with the lamps:
 
 Options: `--tally` (light PROGRAM and PREVIEW from takectl), `--takectl http://127.0.0.1:8991`
 (takectl's address), `--raw` (every packet in hex), `--settle 1.0` (seconds after connecting before
-presses count). Ctrl-C stops it, and with `--tally` darkens both banks first. To keep a log, pipe it
+presses count), `--config <file>` (the settings, below). Ctrl-C stops it, and with `--tally` darkens both banks first. To keep a log, pipe it
 through `tee -i` (plain `tee` dies with the Ctrl-C and loses the last lines).
 
 **Tally:** PROGRAM n is red when key n's look is on air, PREVIEW n amber when it is in Preview, exactly
@@ -68,6 +70,26 @@ changes, PROGRAM first. Lamps follow takectl's state, never a press. After (re)c
 banks. If takectl stops answering, the lamps keep their last state (as the panel does) and the log says
 so; when takectl is up but not ready, both go dark, as the panel's do. A failed write is written again
 on the next poll. The tally only ever reads `/state`, so it can never send a command.
+
+**Settings:** the label each graphics button toggles. With no `--config`, the adapter reads
+`wingman.config.json` beside it, if it is there (it is never committed); with neither, the defaults. Name only
+the buttons you change; the rest keep their defaults:
+
+```json
+{ "dsk": { "LOGO ON": "Bug", "TITLE ON": "Clock" } }
+```
+
+The defaults are Logo, Up Next, Title and SuperFG, for LOGO ON, U.N-TITLE ON, TITLE ON and SUPER FG ON. A
+button name that is not one of the four, a label that is not text, or anything else in the file stops the
+adapter before it starts (`Settings refused: …`), so a typo never leaves a button quietly on its default.
+
+At start, before scanning, the adapter says which buttons have a layer:
+
+```
+DSK buttons: MASTER's downstream keys are Clock, Bug
+  LOGO ON: DSK Bug
+  U.N-TITLE ON: no "DSK Up Next" layer in MASTER; this button sends nothing
+```
 
 `wingman_monitor.py` is the standalone diagnostic: it shows every control and sends nothing.
 
@@ -81,8 +103,8 @@ on the next poll. The tally only ever reads `/state`, so it can never send a com
 | CUT | CUT (`/cut`): always a bare cut, as on the panel. Sent only when the panel's CUT is not greyed. |
 | T-bar | Shown in the log, never acted on. abswitch takes a look in one step; a T-bar parked halfway is a state it has no name for. (Ruled 2026-11-13.) |
 | Wheel | Shown in the log. Which way is +1 is not confirmed yet. |
-| ON AIR | Nothing, on purpose: PANIC has no key on the panel either. |
-| LOGO, U.N-TITLE, TITLE, SUPER FG ON | Nothing yet. Later: each set to a downstream key's label (`/dsk?label=…`), in this folder's own settings. |
+| ON AIR | Nothing, on purpose: PANIC has no key on the panel either. FTB stays on the panel: with no lamp, the Surface could not show you are in black. (2026-11-19.) |
+| LOGO ON, U.N-TITLE ON, TITLE ON, SUPER FG ON | Each toggles a downstream key, the MASTER layer named `DSK <label>` (`/dsk?label=…`, the panel's own route), with the label from the settings. A button whose layer MASTER does not have sends nothing. No lamp shows a key's state; only the panel does. |
 | SCHED, PGM RESET, PIP T-BAR, PIP TRANS, AFV 1–4, PLUS, MINUS | Nothing. |
 
 ## What a press does, and does not
@@ -96,6 +118,13 @@ on the next poll. The tally only ever reads `/state`, so it can never send a com
 - **AUTO and CUT go only when the panel's TAKE and CUT would be pressable:** takectl ready, Program known,
   no transition in progress or in flight on the switcher, no steps being pushed, no rehearsal. Otherwise
   the log says `not sent` and why. (`greyed()` mirrors the panel's lines; a test fails if they change.)
+- **The graphics buttons go whenever the panel's downstream keys are pressable:** takectl ready and Program
+  known. Mid-transition, in SAFE, while steps are pushed or hooks rehearsed, they toggle, as the panel's do.
+  (`dsk_greyed()` mirrors the panel's lines; a test fails if they change.) A press while the last command is
+  still being sent is dropped, as for every button: press a graphics button during a TAKE once the log says
+  `sent /take`.
+- **A graphics button toggles the key takectl lists,** matched without regard to case, as takectl matches it,
+  and sent as takectl spells it. Each press reads `/state` again, so a layer added after start is found.
 - **A TAKE that gets no answer is not called unsent:** the log says it was sent and had no answer, and it is
   not sent again. Look at the panel.
 - **Refusals are takectl's:** during a transition, for instance, takectl refuses the recall and the
@@ -106,9 +135,9 @@ on the next poll. The tally only ever reads `/state`, so it can never send a com
 ## Tests
 
 ```bash
-python3 test_wingman.py      # 73 offline tests, standard library only: no Bluetooth, no takectl
-python3 offline_check.py     # the adapter against the real takectl on test/mock-mimolive.mjs: 11 steps
-python3 falsify.py           # 54 mutants, each one mechanism broken: every one must fail a check
+python3 test_wingman.py      # 92 offline tests, standard library only: no Bluetooth, no takectl
+python3 offline_check.py     # the adapter against the real takectl on test/mock-mimolive.mjs: 16 steps
+python3 falsify.py           # 67 mutants, each one mechanism broken: every one must fail a check
 ```
 
 The tests read their authorities at run time: `captures.txt` (packets the real Surface sent),
@@ -139,7 +168,8 @@ landed (15–20 ms) before the next arrived; the guard is covered by the tests a
 5. **Fast presses.** Press PREVIEW 1 and 3 together, several times: a press may be dropped (the log says
    so), nothing arrives late, Preview ends on one of them.
 6. **During a TAKE.** RATE 3 s, TAKE on the panel, then PREVIEW 1 at once: the log shows takectl refusing it.
-7. **The rest.** PROGRAM 1, ON AIR, TITLE ON: logged only; nothing on air changes.
+7. **The rest.** PROGRAM 1, ON AIR, TITLE ON: logged only; nothing on air changes. (Since 2026-11-19 TITLE ON
+   toggles a downstream key: see the DSK walk below.)
 8. **Power.** Switch the Surface off: the log says it disconnected. Press buttons while it is off, switch it
    on: it reconnects, and nothing is sent until you press again.
 9. **takectl away.** Stop takectl, press PREVIEW 1: `not reachable; nothing sent`. Start it again: the next
@@ -231,9 +261,41 @@ Answer y or n to each; q or Ctrl-C stops it, and both banks are darkened however
 typed, and anything heard on FFE1 go to `lamp_walk.txt`. The adapter lighting key 5 or 6 from takectl's state
 is covered by the tests, not by this walk.
 
+**Downstream keys** (`--arm --tally --raw`), **not yet run.** All three shows running, PH-MASTER's File
+Recording off, no streaming output, both of the bench's downstream keys off (Bug and Clock). The bench has two,
+so the walk runs twice, with the two settings files here: the first puts LOGO ON on Bug and TITLE ON on Clock,
+the second U.N-TITLE ON on Bug and SUPER FG ON on Clock. In each, the other two buttons keep defaults the bench
+does not have. Stop any other adapter, then run it from Terminal.app:
+
+```bash
+.venv/bin/python wingman_abswitch.py --arm --tally --raw --config dsk_walk_1.json 2>&1 | tee -i dsk-walk.txt
+```
+
+- D1. **Start.** Before scanning, the log lists MASTER's downstream keys (Clock, Bug), `LOGO ON: DSK Bug`,
+  `TITLE ON: DSK Clock`, and for U.N-TITLE ON and SUPER FG ON `no "DSK …" layer in MASTER; this button sends
+  nothing`. Red and amber as usual.
+- D2. **LOGO ON.** The logo appears on Program and the panel's Bug key lights; Program and Preview do not
+  change. Again: the logo goes and the key goes dark.
+- D3. **TITLE ON.** The clock appears and the panel's Clock key lights. Again: it goes.
+- D4. **U.N-TITLE ON, then SUPER FG ON.** Each: the log says `no "DSK …" layer in MASTER`, `nothing sent`;
+  nothing changes.
+- D5. **Mid-transition.** MIX, RATE 5.0 s on the panel. Press AUTO; once the log says `sent /take`, during
+  the dissolve, press LOGO ON: the logo appears while the dissolve runs, and the TAKE lands as usual. After
+  it lands, LOGO ON again: the logo goes.
+- D6. **In SAFE.** PANIC on the panel (hold). Press TITLE ON: the clock appears and Program stays on SAFE.
+  Again: it goes. Then TAKE out of SAFE on the panel.
+- D7. **The other two buttons.** Ctrl-C (both banks go dark). Run it again with `--config dsk_walk_2.json`
+  (`tee -i -a dsk-walk.txt`): the start lines say `U.N-TITLE ON: DSK Bug`, `SUPER FG ON: DSK Clock`, and that
+  LOGO ON and TITLE ON send nothing. U.N-TITLE ON twice: the logo on, then off. SUPER FG ON twice: the
+  clock on, then off. LOGO ON and TITLE ON: `nothing sent`.
+- D8. **Stop.** Ctrl-C: both banks go dark; both downstream keys are off, as at the start.
+
 ## Known limits
 
-- PREVIEW, AUTO and CUT so far; looks 7 and 8 have no button.
+- PREVIEW, AUTO, CUT and the four graphics buttons so far; looks 7 and 8 have no button.
+- No lamp but the two tally banks is written (ruled 2026-11-14), so the graphics buttons have no lamp: a
+  key's state shows on the panel only, and a refused press is in the log only. Lighting them needs a capture
+  of what the iPad app writes to light them.
 - Two buttons pressed at the same instant can reach the Mac as one notification of two 8-byte records
   (captures.txt). Ruled 2026-11-14: each record is checked on its own and judged in the order it came, as if it
   had come alone, so the first press acts and the in-flight rule drops the second, as for two presses one after
@@ -275,4 +337,7 @@ is covered by the tests, not by this walk.
 - `lamp_walk.py`: every tally position lit on its own and asked about, FFE2 only, no takectl; `lamp_walk.txt`:
   its last result, with the answers as typed
 - `hardware-check.txt`: the hardware checks on the real Surface, 2026-11-13 and 14
+- `dsk_walk_1.json`, `dsk_walk_2.json`: the settings for the two halves of the downstream-key walk, on the
+  bench's two keys
+- `wingman.config.json`: your own settings, if you make one (gitignored)
 - `requirements.txt`: Bleak, pinned

@@ -2,7 +2,7 @@
 // tally-repair-check: on 7.0b3 a TALLY layer told setOff ~15 ms after setLive stays in "shutdown"
 // and then ignores setLive until it gets another setOff (found 2026-11-09 by panic-check round 0;
 // reproduced with no takectl). takectl reads TALLY back 800 ms after each command and repairs it.
-//   node test/tally-repair-check.mjs      (takectl must NOT already be running; MASTER on slot 1)
+//   node test/tally-repair-check.mjs      (refuses if a takectl answers on takectl's own port; --beside-takectl runs it anyway, logged; MASTER on slot 1)
 // 1. With PGM A, B's TALLY is forced into the stuck state straight through the API (retried: the
 //    fault does not fire every time).
 // 2. /take to B: B goes on air, and its TALLY must end up live (it would stay dark without the repair).
@@ -11,12 +11,15 @@ import { spawn } from "node:child_process";
 import { mkdirSync, openSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { RP, benchConfig, benchConfigFile, benchCopy, refuseUnlessClear, startBenchTakectl } from "./bench-guard.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = process.env.TAKECTL_DIR || dirname(HERE);
 const OUT = process.env.TAKECTL_DIR ? join(ROOT, "out") : HERE;
 mkdirSync(OUT, { recursive: true });
-const B = "http://localhost:8989/api/v1", T = "http://localhost:8991";
+const B = "http://localhost:8989/api/v1", T = `http://localhost:${RP}`;
+await refuseUnlessClear("tally-repair-check");
+const RUN = benchCopy(ROOT), OWN_CFG = benchConfigFile(join(ROOT, "takectl.config.json")); // its own takectl and config, on :18992: bench-guard.mjs
 const j = (u) => fetch(u).then((r) => (r.status === 204 ? null : r.json()));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const out = [];
@@ -38,7 +41,7 @@ const was = { counter: { A: (await layer("A", "COUNTER"))?.attributes["live-stat
 for (const r of ["A", "B"]) { const c = await layer(r, "COUNTER"); if (c) await j(`${B}/documents/${D[r]}/layers/${c.id}/setOff`); }
 
 const logPath = join(OUT, "takectl-tally-repair.log");
-const tk = spawn("node", ["takectl.mjs"], { cwd: ROOT, stdio: ["ignore", openSync(logPath, "w"), openSync(logPath, "a")] });
+const tk = await startBenchTakectl(RUN, OWN_CFG, { stdio: ["ignore", openSync(logPath, "w"), openSync(logPath, "a")] });
 let st = null;
 for (let i = 0; i < 40 && !st; i++) { await sleep(250); st = await j(`${T}/state`).catch(() => null); }
 try {

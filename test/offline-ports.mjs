@@ -43,11 +43,11 @@ export async function refuseIfTaken(name) {
   process.exit(2);
 }
 
-export function ownCopy(root) {
+export function ownCopy(root, port = TP) {
   const dir = mkdtempSync(join(tmpdir(), "abswitch-own-"));
   for (const f of readdirSync(root)) if (f === "takectl.mjs" || f === "start.command" || f.endsWith(".html")) copyFileSync(join(root, f), join(dir, f));
   const example = JSON.parse(readFileSync(join(root, "takectl.config.example.json"), "utf8"));
-  writeFileSync(join(dir, "takectl.config.example.json"), JSON.stringify({ ...example, port: TP }, null, 2) + "\n");
+  writeFileSync(join(dir, "takectl.config.example.json"), JSON.stringify({ ...example, port }, null, 2) + "\n");
   return dir;
 }
 

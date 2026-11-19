@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // witness-check: source tally is a witness, never a fact (ruling 2026-11-09).
-//   node test/witness-check.mjs           (takectl must NOT already be running; MASTER on slot 1)
+//   node test/witness-check.mjs           (refuses if a takectl answers on takectl's own port; --beside-takectl runs it anyway, logged; MASTER on slot 1)
 // A real disagreement, made in mimoLive: slot 1 (A's slot) is pointed at NDI PH-B for a while. The
 // switcher then says slot 1 = A is on air, while source tally says B=program and A is not.
 //   1. agreement: /state.warning is null; roles A.
@@ -13,12 +13,15 @@ import { spawn } from "node:child_process";
 import { mkdirSync, openSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { RP, benchConfig, benchConfigFile, benchCopy, refuseUnlessClear, startBenchTakectl } from "./bench-guard.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = process.env.TAKECTL_DIR || dirname(HERE);
 const OUT = process.env.TAKECTL_DIR ? join(ROOT, "out") : HERE;
 mkdirSync(OUT, { recursive: true });
-const B = "http://localhost:8989/api/v1", T = "http://localhost:8991";
+const B = "http://localhost:8989/api/v1", T = `http://localhost:${RP}`;
+await refuseUnlessClear("witness-check");
+const RUN = benchCopy(ROOT), OWN_CFG = benchConfigFile(join(ROOT, "takectl.config.json")); // its own takectl and config, on :18992: bench-guard.mjs
 const j = (u, o) => fetch(u, o).then((r) => (r.status === 204 ? null : r.json()));
 const put = (u, body) => j(u, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -41,7 +44,7 @@ const tally0 = await tallies();
 if (iv0.tvGroup_Hidden_Inputs__currentLiveSource !== 1 || iv0.tvIn_VideoSourceAImage !== SA) { console.error("needs MASTER on slot 1 with NDI PH-A in slot 1"); process.exit(2); }
 
 const logPath = join(OUT, "takectl-witness.log");
-const tk = spawn("node", ["takectl.mjs"], { cwd: ROOT, stdio: ["ignore", openSync(logPath, "w"), openSync(logPath, "a")] });
+const tk = await startBenchTakectl(RUN, OWN_CFG, { stdio: ["ignore", openSync(logPath, "w"), openSync(logPath, "a")] });
 let st = null;
 for (let i = 0; i < 40 && !st; i++) { await sleep(250); st = await j(`${T}/state`).catch(() => null); }
 const warnLines = () => readFileSync(logPath, "utf8").split("\n").filter((l) => /WARNING source tally disagrees/.test(l));

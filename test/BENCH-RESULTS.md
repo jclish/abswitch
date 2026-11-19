@@ -30,6 +30,7 @@ Logs and watcher output referenced below are in this folder; raw API responses i
 | — | Panic wins, in-flight never decides (second ruling of 2026-11-09) | **PASS**; 11, 12 and verify falsified against the takectl from the first ruling — see below |
 | — | takectl against the mock, offline (`mock-smoke.txt`) | **PASS**: not evidence about mimoLive |
 | — | The offline suites on their own ports, :18989 and :18991, never :8991 (`offline-ports-check.txt`, `offline-ports-falsify.txt`; ruling 2026-11-14) | **PASS**: all seven suites pass with an operator's takectl up on :8991, as many checks as before; they refuse when their ports are taken, and send nothing until the process listening is their own. The check passes 35/35, and all 14 mutants are caught. Details: CHANGES.md, "the offline suites on their own ports" |
+| — | No check drives a takectl it didn't start: the 18 real-app checks on their own takectl, :18992 (`offline-ports-check.txt`, `offline-ports-falsify.txt`; ruling 2026-11-19) | **PASS offline**: with a real takectl up on :8991, all 18 refuse, naming it, and send it no command; with :18992 held they refuse; `--beside-takectl` runs and is logged. The check passes 95/95; all 24 mutants are caught. **Not yet run on the real app since the change.** Details: CHANGES.md, "no check drives a takectl it didn't start" |
 
 ## Operator page, PVW Layer Sets, stall warning, TALLY repair — PASS (UI brief of 2026-11-09)
 

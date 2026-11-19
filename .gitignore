@@ -5,3 +5,5 @@ takectl.config.backup-*.json
 # Runtime: the look keys' stills, taken from the running show
 thumbs/
 .DS_Store
+# A deliberate --beside-takectl run logs here (test/bench-guard.mjs); it names processes, so it stays on this Mac
+test/override-log.txt
